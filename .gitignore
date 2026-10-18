@@ -1,0 +1,33 @@
+# Local binaries & tools
+tectonic_bin/
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# LaTeX compilation intermediates
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.xdv
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
