@@ -1,0 +1,328 @@
+% ==================================================================
+%  WEEK 11
+% ==================================================================
+\chapter{Emerging Paradigms: Dew Computing, Serverless Architecture, and Sustainable Cloud}
+
+\section{Introduction and Week Overview}
+Week 11 investigates modern evolutionary paradigms that transcend traditional centralized server infrastructure. As distributed computing advances toward the extreme network edge and operational costs skyrocket, the curriculum addresses three cutting-edge domains:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Dew Computing (DC):} Bringing cloud microservice capabilities directly to end devices to eliminate absolute internet dependency, balancing independence and cloud collaboration.
+  \item \textbf{Serverless Computing and Function-as-a-Service (FaaS):} Fine-grained, event-driven execution abstractions that completely mask server administration, scale to zero, and bill strictly for resource runtime.
+  \item \textbf{Sustainable and Green Cloud Computing:} Architectural frameworks, power-regulation strategies, and economic models designed to curb the escalating multi-terawatt energy consumption and carbon footprints of hyperscale Cloud Data Centers (CDCs).
+\end{enumerate}
+
+\section{Dew Computing Foundations}
+\subsection{Motivation: Overcoming the Internet Dependency Bottleneck}
+While Cloud Computing provides virtually infinite computation and storage, it exhibits a fundamental vulnerability: \textbf{mandatory continuous Internet connectivity}. If network access is severed due to infrastructure failure, remote geography, or catastrophic events, traditional cloud services become entirely inaccessible.
+
+\begin{defbox}{Dew Computing (DC)}
+\textbf{Dew Computing} is an information technology paradigm where on-premises personal computing devices (smartphones, PCs, edge gateways) host lightweight, autonomous microservices that operate independently of an active Internet connection while collaborating with the centralized cloud whenever network connectivity is available.
+\end{defbox}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, font=\small]
+  \node[dark, minimum width=10cm, minimum height=0.9cm] (cloud) {\textbf{Cloud Layer (Remote Hyperscale Servers)}\\Global Big Data Warehousing, Deep Learning, Permanent Archive};
+  \node[mid, below=0.8cm of cloud, minimum width=10cm, minimum height=0.9cm] (fog) {\textbf{Fog Layer (Local Gateways, ISP Nodes, Base Stations)}\\Regional Aggregation, Protocol Translation, Local Network Routing};
+  \node[gold, below=0.8cm of fog, minimum width=10cm, minimum height=0.9cm] (dew) {\textbf{Dew Layer (End Devices: Smartphones, Laptops, Wearables)}\\Autonomous Offline Processing, Local Data Caching, Instant User Interaction};
+
+  \draw[arr, <->] (cloud) -- node[right, font=\scriptsize] {Intermittent Synchronization} (fog);
+  \draw[arr, <->] (fog) -- node[right, font=\scriptsize] {Local P2P / Single-Super-Hybrid Link} (dew);
+\end{tikzpicture}
+\caption{The Meteorological Hierarchy: Cloud (Sky) $\to$ Fog (Near Ground) $\to$ Dew (On the Ground).}
+\end{figure}
+
+\subsection{Core Principles: Independence and Collaboration}
+Introduced by Yingwei Wang, the operational philosophy of Dew Computing rests upon two dual pillars:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Independence:} The local device must provide full or graceful core service functionality entirely offline without depending on continuous Internet or remote server availability.
+  \item \textbf{Collaboration:} When network connectivity is established, local applications must automatically discover cloud endpoints, synchronize delta state modifications, and reconcile conflicts seamlessly.
+\end{itemize}
+
+A canonical everyday realization of Dew Computing is \textbf{Dropbox} or \textbf{Google Drive Desktop}: users read, edit, create, and delete files locally inside an offline directory without network access (independence). The moment an Internet connection is detected, background synchronization daemons propagate file deltas to the remote cloud server (collaboration).
+
+\subsection{Dew Service Architecture Taxonomy}
+Analogous to the classical SPI model of cloud computing, Dew Computing introduces a granular service taxonomy:
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X X}
+\toprule
+Dew Service Model & Definition & Exemplary Realization\\
+\midrule
+Software-In-Dew (SiD) & Software configuration, license ownership, and code metadata are mastered in the cloud, while local runtime binaries execute independently offline on the end device. & Local office productivity suites with cloud license sync; offline mobile apps.\\
+\addlinespace
+Platform-In-Dew (PiD) & Development runtime environments, APIs, and micro-frameworks exist on the local device, enabling local compilation and execution with cloud registry synchronization. & Local Docker container runtimes, offline Python/Node development toolchains.\\
+\addlinespace
+Infrastructure-As-Dew (IaD) & Hardware capabilities (CPU, RAM, local storage) of diverse end devices are virtualized and pooled into local ad-hoc processing clusters. & P2P distributed file storage across office PCs; local Bluetooth mesh processing.\\
+\addlinespace
+Database-In-Dew (DbID) & A lightweight local database engine (e.g., SQLite, Realm) processes queries locally with sub-millisecond response and synchronizes transactional deltas to cloud databases. & Mobile banking offline transaction caching; offline relational records.\\
+\addlinespace
+Website-In-Dew (WiD) & A complete local web server instance runs directly on the client machine, rendering pages locally from cached templates and syncing dynamic content on reconnect. & Progressive Web Apps (PWAs) with Service Workers caching dynamic offline assets.\\
+\addlinespace
+Storage-In-Dew (StID) & File data resides permanently in local non-volatile storage while background threads synchronize snapshots to remote cloud buckets. & Dropbox local file sync; OneDrive Smart Files offline mirrors.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Serverless Computing and Function-as-a-Service (FaaS)}
+\subsection{The Paradigm Shift from Servers to Applications}
+In classical IaaS, developers rent virtual machines and must manage operating system patches, kernel configurations, firewall rules, and scaling thresholds. In PaaS, while OS management is abstracted, developers still configure server instances, manage runtime pools, and pay for idle compute capacity.
+
+\textbf{Serverless Computing} elevates abstraction to the highest level: the cloud customer writes only modular, stateless business logic functions. The cloud provider assumes $100\%$ of operational responsibilities—including provisioning hardware, container lifecycle management, automated horizontal scaling, high availability, and fault tolerance.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.8cm, font=\small]
+  \node[dark, minimum width=2.8cm, minimum height=2.2cm] (iaas) {\textbf{IaaS}\\VM Instances\\OS Management\\Capacity Planning};
+  \node[mid, right=1.2cm of iaas, minimum width=2.8cm, minimum height=2.2cm] (paas) {\textbf{PaaS}\\Application Stacks\\Managed Runtimes\\Server Sizing};
+  \node[gold, right=1.2cm of paas, minimum width=3.4cm, minimum height=2.2cm] (serverless) {\textbf{Serverless / FaaS}\\Event-Driven Code\\Zero Administration\\Scale-to-Zero\\Pay-per-Execution};
+
+  \draw[arr, ->] (iaas) -- node[above, font=\scriptsize] {Abstract OS} (paas);
+  \draw[arr, ->] (paas) -- node[above, font=\scriptsize] {Abstract Servers} (serverless);
+\end{tikzpicture}
+\caption{Evolutionary Trajectory of Cloud Abstraction Layers.}
+\end{figure}
+
+\subsection{Architectural Characteristics of FaaS}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Fine-Grained Granularity:} Applications are partitioned into discrete, single-purpose functions (e.g., resizing an image, validating an authentication token, parsing an incoming webhook).
+  \item \textbf{Event-Driven Activation:} Functions execute strictly in response to designated asynchronous or synchronous triggers:
+    \begin{itemize}
+      \item HTTP REST requests via API Gateways.
+      \item Object storage notifications (e.g., file uploaded to AWS S3 bucket).
+      \item Message broker streams (e.g., Apache Kafka, AWS Kinesis, RabbitMQ).
+      \item Cron-like scheduled timers.
+    \end{itemize}
+  \item \textbf{Stateless Execution:} Functions retain no persistent internal state across invocations. Any required session state must be committed to external storage (e.g., Amazon DynamoDB, Redis, S3).
+  \item \textbf{Automatic Scale-to-Zero and Scale-to-Infinity:} If zero requests arrive, zero instances run, and the customer incurs \textbf{\$0.00 cost}. If 10,000 concurrent requests arrive simultaneously, the cloud platform automatically spins up 10,000 isolated execution environments in parallel.
+\end{itemize}
+
+\subsection{The Serverless Cold Start Challenge}
+When an incoming event triggers a serverless function that has no pre-warmed idle container ready in memory:
+\begin{enumerate}[leftmargin=*]
+  \item The FaaS control plane selects a physical host.
+  \item It downloads the container image or code package.
+  \item It instantiates an isolated sandbox (using microVMs such as AWS Firecracker).
+  \item It initializes the language runtime (JVM, Python, Node.js) and executes global initialization code.
+\end{enumerate}
+This sequence introduces a \textbf{Cold Start Latency} (ranging from $100\text{ ms}$ for Node/Python to $>2\text{ seconds}$ for Java/JVM). Subsequent invocations reuse the warm container, executing with minimal latency ($< 10\text{ ms}$) until the container is recycled after an idle timeout window (typically 5 to 15 minutes).
+
+\subsection{Serverless Economic Billing Formulation}
+Serverless billing abandons hourly instance leasing in favor of exact sub-second consumption metering:
+\begin{equation}
+\text{Total FaaS Cost} = N_{\text{req}} \times C_{\text{req}} + \sum_{i=1}^{N_{\text{req}}} \left( M_i \times T_i \right) \times C_{\text{GB-sec}}
+\end{equation}
+Where:
+\begin{itemize}[leftmargin=*]
+  \item $N_{\text{req}}$: Total number of function invocations.
+  \item $C_{\text{req}}$: Cost per million invocations (standardly $\$0.20$ per $10^6$ calls).
+  \item $M_i$: Memory allocated to the function (in GB, e.g., $512\text{ MB} = 0.5\text{ GB}$).
+  \item $T_i$: Execution duration of invocation $i$ rounded to the nearest millisecond.
+  \item $C_{\text{GB-sec}}$: Unit cost per Gigabyte-second (standardly $\approx \$0.0000166667 / \text{GB}\cdot\text{s}$).
+\end{itemize}
+
+\section{Sustainable and Green Cloud Computing}
+\subsection{The Data Center Energy Dilemma}
+Hyperscale Cloud Data Centers (CDCs) have become the most power-dense industrial facilities on earth. Driven by machine learning training, real-time video streaming, and global cloud workflows:
+\begin{itemize}[leftmargin=*]
+  \item Global data center electricity consumption exceeded $200\text{ TWh}$ in 2020 and is projected to reach \textbf{8,000 TeraWatt-hours (TWh) by 2030} (representing nearly $10\%$ to $15\%$ of global electrical generation).
+  \item Substantial electricity is generated from fossil fuel grids, translating directly into millions of metric tons of atmospheric $\text{CO}_2$ emissions.
+\end{itemize}
+
+\subsection{Energy Breakdown Within a Cloud Data Center}
+Empirical measurements across modern enterprise data centers reveal that electricity consumption is distributed across five primary subsystems:
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l c X}
+\toprule
+Subsystem & Typical Energy \% & Primary Operational Drivers\\
+\midrule
+Processors (CPUs / GPUs) & $45\%$ & Active computation, transistor switching, leakage current.\\
+Cooling & $20\%$ & Chilled water plants, air handlers, CRAH units, fan walls.\\
+Main Memory (RAM) & $15\%$ & Continuous capacitive DRAM refresh cycles.\\
+Storage Subsystems & $10\%$ & Mechanical HDD spindle spinning, SSD flash controllers.\\
+Networking Equipment & $10\%$ & Spine-leaf switches, optical transceivers, routers.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Energy Efficiency Metrics: PUE and DCiE}
+To benchmark environmental performance, the Green Grid consortium defined standardized metrics:
+\begin{equation}
+\text{Power Usage Effectiveness (PUE)} = \frac{\text{Total Facility Energy Consumption}}{\text{IT Equipment Energy Consumption}} = \frac{P_{\text{IT}} + P_{\text{Cooling}} + P_{\text{Lighting}} + P_{\text{Losses}}}{P_{\text{IT}}}
+\end{equation}
+An ideal theoretical data center with zero cooling or power conversion overhead has $\text{PUE} = 1.0$. Historical enterprise facilities operated at $\text{PUE} \approx 2.0$, whereas state-of-the-art hyperscale facilities (Google, Microsoft) achieve $\text{PUE} \approx 1.10 - 1.15$ using advanced evaporative cooling, AI-controlled temperature set-points, and direct-to-chip liquid cooling.
+
+The reciprocal metric is \textbf{Data Center Infrastructure Efficiency (DCiE)}:
+\begin{equation}
+\text{DCiE} = \frac{1}{\text{PUE}} = \frac{\text{IT Equipment Energy Consumption}}{\text{Total Facility Energy Consumption}} \times 100\%
+\end{equation}
+A $\text{PUE}$ of $1.25$ corresponds to $\text{DCiE} = 80\%$.
+
+\subsection{Power Management and Conservation Approaches}
+Following the conceptual framework by Rajkumar Buyya and Sukhpal Singh Gill:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Dynamic Voltage and Frequency Scaling (DVFS):} CMOS CPU dynamic power scales cubically with clock frequency ($P \propto V^2 f \approx f^3$). Throttling clock frequency during light loads yields substantial energy savings. \emph{Tradeoff:} Lower frequencies prolong execution times, risking SLA response time violations.
+  \item \textbf{Dynamic VM Consolidation:} Migrating VMs from lightly loaded servers onto a compact set of physical blades and switching empty hosts into low-power ACPI sleep states (e.g., C6/S3 states consuming $<10\text{ W}$ instead of $150\text{ W}$ idle power).
+  \item \textbf{Thermal-Aware Scheduling:} Directing computationally heavy workloads to server racks located in cooler physical aisles or during nighttime hours to decrease refrigeration workload.
+  \item \textbf{Renewable Energy Microgrids:} Powering data centers directly with co-located solar arrays, wind farms, and battery energy storage systems (BESS).
+\end{itemize}
+
+\section{Comprehensive Solved NPTEL-Style Questions (Week 11)}
+
+\begin{solved}{Dew Computing Core Tenets (NPTEL Assessment Problem)}
+\Given What are the two foundational operational principles that define the Dew Computing paradigm, and how do they interact?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Independence:} The client application executes autonomously on local device hardware without requiring an active or continuous Internet connection.
+  \item \textbf{Collaboration:} The application detects cloud connectivity and synchronizes data updates, configurations, and state modifications with centralized cloud servers.
+\end{enumerate}
+\Answer \textbf{Independence and Collaboration}.
+\end{solved}
+
+\begin{solved}{Dew Service Model Classification}
+\Given A mobile banking app allows a field loan officer to record customer transactions in a local SQLite database in offline villages. When returning to the branch office, the app automatically syncs transactional records to the bank's central Oracle database in the cloud. Which Dew service model is exemplified?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The core mechanism is a local structured database engine handling queries locally and synchronizing transactional deltas with a cloud database.
+  \item By taxonomy definition, this matches Database-In-Dew (DbID).
+\end{enumerate}
+\Answer \textbf{Database-In-Dew (DbID)}.
+\end{solved}
+
+\begin{solved}{Serverless FaaS Economic Cost Calculation}
+\Given A microservice deployed on AWS Lambda executes $10,000,000$ invocations in a month. Each invocation runs for an average duration of $200\text{ ms}$ and is configured with $512\text{ MB}$ ($0.5\text{ GB}$) of RAM. Given pricing:
+\begin{itemize}
+  \item Invocation charge: $\$0.20$ per $1,000,000$ requests.
+  \item Compute charge: $\$0.0000166667$ per $\text{GB}\cdot\text{second}$.
+\end{itemize}
+Calculate the total monthly serverless execution cost.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Invocation Request Cost:}
+  \begin{equation}
+  \text{Cost}_{\text{req}} = \frac{10,000,000}{1,000,000} \times \$0.20 = 10 \times \$0.20 = \$2.00
+  \end{equation}
+  \item \textbf{Compute Duration in GB-Seconds:}
+  \begin{equation}
+  \text{Execution Time per Request} = 200\text{ ms} = 0.20\text{ seconds}
+  \end{equation}
+  \begin{equation}
+  \text{GB-seconds per Request} = 0.5\text{ GB} \times 0.20\text{ s} = 0.10\text{ GB}\cdot\text{s}
+  \end{equation}
+  \begin{equation}
+  \text{Total GB-seconds} = 10,000,000 \times 0.10\text{ GB}\cdot\text{s} = 1,000,000\text{ GB}\cdot\text{s}
+  \end{equation}
+  \item \textbf{Compute Charge:}
+  \begin{equation}
+  \text{Cost}_{\text{compute}} = 1,000,000 \times \$0.0000166667 = \$16.67
+  \end{equation}
+  \item \textbf{Total Monthly Settlement:}
+  \begin{equation}
+  \text{Total Cost} = \$2.00 + \$16.67 = \$18.67
+  \end{equation}
+\end{enumerate}
+\Answer Total monthly serverless cost is \textbf{\$18.67}.
+\end{solved}
+
+\begin{solved}{Serverless Cold Start Optimization Mechanism}
+\Given Which of the following strategies is most effective for mitigating cold-start latency in production FaaS architectures?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Cold starts occur when the provider must instantiate a new runtime container sandbox from scratch.
+  \item Provisioned Concurrency / Pre-warming keeps a predetermined number of initialized container sandboxes permanently resident in memory, eliminating runtime initialization delay for latency-critical traffic.
+\end{enumerate}
+\Answer \textbf{Provisioned Concurrency (Pre-warming container instances)}.
+\end{solved}
+
+\begin{solved}{Data Center PUE and DCiE Formulation}
+\Given A cloud data center consumes a total of $25\text{ MegaWatts (MW)}$ of electrical power. Measurements indicate that internal IT equipment (servers, storage arrays, switches) consumes $16\text{ MW}$, while cooling, lighting, and power distribution account for the remaining $9\text{ MW}$. Find the Power Usage Effectiveness (PUE) and Data Center Infrastructure Efficiency (DCiE).
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Compute PUE:}
+  \begin{equation}
+  \text{PUE} = \frac{\text{Total Power}}{\text{IT Power}} = \frac{25\text{ MW}}{16\text{ MW}} = 1.5625
+  \end{equation}
+  \item \textbf{Compute DCiE:}
+  \begin{equation}
+  \text{DCiE} = \frac{\text{IT Power}}{\text{Total Power}} \times 100\% = \frac{16}{25} \times 100\% = 64.0\%
+  \end{equation}
+  \begin{equation}
+  \text{Verification: } \text{DCiE} = \frac{1}{\text{PUE}} = \frac{1}{1.5625} = 0.64 = 64\%
+  \end{equation}
+\end{enumerate}
+\Answer \textbf{$\text{PUE} = 1.5625$}, \textbf{$\text{DCiE} = 64.0\%$}.
+\end{solved}
+
+\begin{solved}{Component Energy Distribution in Hyperscale Data Centers}
+\Given According to empirical data center surveys highlighted in NPTEL Lecture 54, which subsystem consumes the single largest fraction of electrical energy inside a cloud data center?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Empirical energy breakdown: Processors (CPUs/GPUs) account for $\approx 45\%$, Cooling for $\approx 20\%$, Memory for $\approx 15\%$, Storage for $\approx 10\%$, and Networking for $\approx 10\%$.
+\end{enumerate}
+\Answer \textbf{Processors (CPUs / GPUs) at approximately 45\% of total energy}.
+\end{solved}
+
+\begin{solved}{DVFS Power vs Latency Tradeoff}
+\Given A server CPU operates at voltage $V = 1.2\text{ V}$ and frequency $f = 3.0\text{ GHz}$, drawing dynamic power $P_1 = 100\text{ W}$. If the hypervisor lowers the frequency to $f' = 2.0\text{ GHz}$ and reduces supply voltage to $V' = 1.0\text{ V}$, compute the new dynamic power dissipation $P_2$ assuming $P \propto V^2 f$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Using the CMOS power formula:
+  \begin{equation}
+  \frac{P_2}{P_1} = \frac{(V')^2 \cdot f'}{V^2 \cdot f} = \frac{(1.0)^2 \times 2.0}{(1.2)^2 \times 3.0} = \frac{1.0 \times 2.0}{1.44 \times 3.0} = \frac{2.0}{4.32} \approx 0.463
+  \end{equation}
+  \item New dynamic power:
+  \begin{equation}
+  P_2 = 100\text{ W} \times 0.463 = 46.3\text{ Watts}
+  \end{equation}
+  \item \textbf{Observation:} Energy dissipation drops by $53.7\%$, but task execution duration increases by $50\%$ ($\frac{3.0}{2.0} = 1.5$), which can violate tight SLA deadlines.
+\end{enumerate}
+\Answer New dynamic power is \textbf{46.3 Watts} ($53.7\%$ reduction).
+\end{solved}
+
+\begin{solved}{State Management in Serverless Function Architecture}
+\Given Why are serverless functions strictly mandated to be stateless by cloud providers?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Statelessness allows the provider to dynamically spawn, destroy, or route requests to any function instance across arbitrary physical nodes without synchronizing internal memory states.
+  \item State persistence must be delegated to scalable shared external data stores (e.g., DynamoDB, Redis, S3).
+\end{enumerate}
+\Answer \textbf{To enable arbitrary horizontal scalability, rapid instantiation, and zero-downtime routing without cross-instance synchronization overhead}.
+\end{solved}
+
+\begin{solved}{Website-In-Dew (WiD) Operational Mechanism}
+\Given In the Dew Computing framework, how does Website-In-Dew (WiD) serve web applications during complete network disconnection?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item WiD deploys a lightweight local web server or Progressive Web App Service Worker on the user's client machine.
+  \item Static assets and dynamic data templates cached locally are rendered without querying the remote web server. Delta updates sync automatically upon reconnecting.
+\end{enumerate}
+\Answer \textbf{A local web service instance renders cached web content locally on the client machine, maintaining usability offline}.
+\end{solved}
+
+\begin{solved}{Dynamic VM Consolidation Energy Savings}
+\Given A data center contains 200 servers. Each idle active server consumes $160\text{ W}$, while an active server running at $80\%$ load consumes $280\text{ W}$. A sleeping server in ACPI C6 state consumes $10\text{ W}$. Currently, 100 lightly loaded servers run at $20\%$ load (consuming $190\text{ W}$ each). By live migration, these workloads are consolidated onto 25 servers running at $80\%$ load, and the remaining 75 servers are placed into C6 sleep mode. Calculate the total power saved.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Initial Power Consumption:}
+  \begin{equation}
+  P_{\text{initial}} = 100 \times 190\text{ W} = 19,000\text{ Watts}
+  \end{equation}
+  \item \textbf{Post-Consolidation Power Consumption:}
+  \begin{equation}
+  P_{\text{active}} = 25 \times 280\text{ W} = 7,000\text{ Watts}
+  \end{equation}
+  \begin{equation}
+  P_{\text{sleep}} = 75 \times 10\text{ W} = 750\text{ Watts}
+  \end{equation}
+  \begin{equation}
+  P_{\text{final}} = 7,000 + 750 = 7,750\text{ Watts}
+  \end{equation}
+  \item \textbf{Net Power Savings:}
+  \begin{equation}
+  \Delta P = 19,000\text{ W} - 7,750\text{ W} = 11,250\text{ Watts} = 11.25\text{ kW}
+  \end{equation}
+  \begin{equation}
+  \text{Percentage Reduction} = \frac{11,250}{19,000} \times 100\% = 59.21\%
+  \end{equation}
+\end{enumerate}
+\Answer Total power saved is \textbf{11,250 Watts (11.25 kW)}, representing a \textbf{59.21\% reduction}.
+\end{solved}

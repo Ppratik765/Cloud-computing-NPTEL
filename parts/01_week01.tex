@@ -1,0 +1,586 @@
+% ==================================================================
+%  WEEK 1
+% ==================================================================
+\chapter{Introduction, NIST Model and Cloud Architecture Basics}
+
+\section{Overview of Computing}
+The ACM Computing Curricula 2005 defines \emph{computing} as ``any goal-oriented activity
+requiring, benefiting from, or creating computers''. It therefore covers designing and
+building hardware and software systems, processing and managing information, scientific
+studies using computers, making systems behave intelligently, creating and using
+communication and entertainment media, and finding and gathering relevant information.
+
+\subsection{Course Roadmap}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Introduction:} overview of computing, NIST model, properties, characteristics,
+        disadvantages, role of open standards.
+  \item \textbf{Architecture:} cloud stack, service models (IaaS, PaaS, SaaS), deployment models.
+  \item \textbf{Service management:} Service Level Agreements (SLAs) and cloud economics.
+  \item \textbf{Resource management} in cloud computing.
+  \item \textbf{Data management:} scalability, databases and data stores, large-scale data
+        processing.
+  \item \textbf{Cloud security:} infrastructure security, data security and storage,
+        identity and access management, access control, trust, reputation, risk.
+  \item \textbf{Case studies:} open-source and commercial clouds, cloud simulators.
+  \item \textbf{Research trends:} fog computing and others.
+\end{enumerate}
+
+\subsection{Trends in Computing}
+The lecture traces the evolution \emph{Distributed Computing $\rightarrow$ Grid Computing
+$\rightarrow$ Cluster Computing $\rightarrow$ Utility Computing $\rightarrow$ Cloud Computing}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=6mm]
+  \node[dark,minimum width=2.5cm] (a) {Distributed};
+  \node[box,minimum width=2.5cm,right=of a] (b) {Grid};
+  \node[box,minimum width=2.5cm,right=of b] (c) {Cluster};
+  \node[box,minimum width=2.5cm,right=of c] (d) {Utility};
+  \node[dark,minimum width=2.5cm,right=of d] (e) {Cloud};
+  \draw[arr] (a)--(b); \draw[arr] (b)--(c); \draw[arr] (c)--(d); \draw[arr] (d)--(e);
+\end{tikzpicture}
+\caption{Evolution of computing paradigms leading to cloud computing.}
+\end{figure}
+
+\section{Distributed Computing}
+\begin{defbox}{Distributed System}
+A distributed system consists of several \textbf{autonomous computational entities}, each
+with its \textbf{own local memory}, that communicate with each other by \textbf{message passing}
+(Wikipedia). In \emph{Operating System Concepts}, processors communicate through lines such as
+high-speed buses or telephone lines, and each processor has its own local memory.
+\emph{Distributed computing} is the field that studies distributed systems and uses them to
+solve computational problems.
+\end{defbox}
+
+Early computing used a single processor (\emph{uni-processor} or \emph{centralized}
+computing). Examples of distributed systems are the Internet, ATM (bank) machines,
+intranets/workgroups, and the emerging landscape of ubiquitous network-connected devices.
+
+\subsection{Computers in a Distributed System}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Workstations:} used by end users to perform computing.
+  \item \textbf{Server systems:} provide resources and services.
+  \item \textbf{Personal assistance devices:} handheld computers connected over wireless links.
+\end{itemize}
+
+\subsection{Common Properties}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Fault tolerance:} when one or some nodes fail, the system still works
+        (only performance degrades); the status of every node must be checked.
+  \item \textbf{Partial role of each node:} each computer has a limited, incomplete view of
+        the system and may know only one part of the input.
+  \item \textbf{Resource sharing:} users share computing power and storage.
+  \item \textbf{Load sharing:} dispatching tasks to different nodes balances system load.
+  \item \textbf{Easy expansion:} adding nodes should take little or no time.
+  \item \textbf{Performance:} parallel computing is considered a subset of distributed computing.
+\end{itemize}
+
+\subsection{Why Distributed Computing?}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Nature of application.}
+  \item \textbf{Performance:} \emph{computing-intensive} tasks (e.g.\ Monte Carlo
+        estimation of $\pi$) and \emph{data-intensive} tasks (e.g.\ Facebook, Large Hadron
+        Collider data processing).
+  \item \textbf{Robustness:} no \emph{Single Point Of Failure} (SPOF); other nodes can execute
+        the task of a failed node.
+\end{itemize}
+
+\subsection{Distributed Applications: Client-Server vs.\ Peer-to-Peer}
+A distributed application is a set of processes distributed across a network of machines that
+work as an ensemble to solve a common problem. In the past most were \textbf{client-server}
+(resource management centralised at the server). \textbf{Peer-to-peer (P2P)} computing
+represents a movement toward ``truly'' distributed applications.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  % client-server
+  \node[dark] (s) at (0,0) {Server};
+  \foreach \i/\ang in {1/150,2/180,3/210,4/30,5/0,6/330}{
+    \node[box,minimum width=1.2cm] (c\i) at ($(s)+(\ang:2.2cm)$) {\scriptsize Client};
+    \draw[darr] (s)--(c\i);
+  }
+  \node at (0,-2.6) {\small (a) Clients invoke servers};
+  % p2p
+  \foreach \i/\ang in {1/90,2/162,3/234,4/306,5/18}{
+    \node[box,minimum width=1.2cm] (p\i) at ($(8,0)+(\ang:1.6cm)$) {\scriptsize Peer};
+  }
+  \foreach \i/\j in {1/2,2/3,3/4,4/5,5/1,1/3,2/4,3/5,4/1,5/2}{
+    \draw[darr] (p\i)--(p\j);
+  }
+  \node at (8,-2.6) {\small (b) Peer processes};
+\end{tikzpicture}
+\caption{Client-server versus peer-to-peer distributed applications.}
+\end{figure}
+
+\section{Grid Computing}
+\begin{defbox}{Grid Computing}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Pcwebopedia:} harnesses \emph{unused processing cycles} of all computers in a
+        network for problems too intensive for any stand-alone machine.
+  \item \textbf{IBM:} enables the \emph{virtualization} of distributed computing and data
+        resources (processing, network bandwidth, storage) to create a \emph{single system
+        image}; a grid user sees one large virtual computer.
+  \item \textbf{Sun Microsystems:} infrastructure providing \emph{dependable, consistent,
+        pervasive and inexpensive} access to computational capabilities.
+\end{itemize}
+\end{defbox}
+
+\textbf{Electrical power grid analogy.} Users plug into a wall socket without caring where the
+electricity is generated; the power grid links many kinds of power plants. Likewise, grid users
+get processors, storage, data and applications as needed with little or no knowledge of where
+resources are or what hardware/OS lies beneath; ``the Grid'' links PCs, workstations, servers and
+storage elements and provides the mechanism to access them.
+
+\textbf{Features of grids:} (1) share more than information -- data, computing power and
+applications in a dynamic, multi-institutional \emph{virtual organisation}; (2) efficient use of
+resources at many institutes; (3) join local communities; (4) interaction with the underlying
+layers must be \emph{transparent and seamless}.
+
+\textbf{Need:} today's science is based on computation, data analysis, visualization and
+collaboration; simulation and modelling are more cost effective than experiments; problems are
+increasingly complex and need accurate solutions quickly; data visualization is important; and
+under-utilised resources can be exploited.
+
+\subsection{Types of Grids}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lX}
+\toprule
+Computational grid & Secure access to a huge pool of shared processing power for
+high-throughput and computation-intensive applications.\\
+Data grid & Infrastructure for storage, discovery, handling, publication and manipulation of
+large data volumes stored in heterogeneous databases and file systems.\\
+Collaboration grid & Supports collaboration, e.g.\ people from different companies in a virtual
+enterprise working on components of a CAD project without disclosing proprietary technology.\\
+Network grid & Fault-tolerant, high-performance communication; each node acts as a data router
+providing caching to speed up communication.\\
+Utility grid & Ultimate form: not only data and cycles but software and special equipment are
+shared; applications run on one machine and users send data and receive results.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Cluster Computing}
+\begin{defbox}{Cluster}
+A cluster is a type of parallel or distributed computer system consisting of a collection of
+\textbf{inter-connected stand-alone computers} working together as a \textbf{single integrated
+computing resource}. Key components: multiple standalone computers (PCs, workstations or SMPs),
+operating systems, high-performance interconnects, middleware, parallel programming environments
+and applications.
+\end{defbox}
+Clusters improve speed and/or reliability over a single computer and are more cost effective than
+a single computer of comparable speed or reliability. In a typical cluster the network is faster
+and closer than a LAN, uses low-latency protocols, and is \emph{more loosely coupled than SMP}.
+
+\textbf{Types:} High Availability (failover) clusters; Load-Balancing clusters; Parallel/Distributed
+processing clusters. \textbf{Components:} cluster nodes, cluster network, network characterisation.
+
+\textbf{Benefits:} system availability (redundant hardware, OS and applications); hardware fault
+tolerance (e.g.\ disk RAID); OS and application reliability; scalability (add servers or clusters);
+high performance for cluster-enabled programs.
+
+\begin{notebox}{Grid versus Cluster (Assignment 1, Q10)}
+A \textbf{grid} is a form of distributed computing in which a large number of geographically
+dispersed, often heterogeneous resources across multiple administrative domains are
+\emph{loosely coupled} to work on a large-scale task. A \textbf{cluster} is tightly coupled and
+co-located; a node is a single machine; a hypervisor is virtualization software.
+\end{notebox}
+
+\section{Utility Computing}
+\begin{defbox}{Utility Computing}
+Utility computing is a \emph{service provisioning model} in which a provider makes computing
+resources and infrastructure management available to the customer as needed and charges for
+\textbf{specific usage rather than a flat rate}. There is low or no initial cost; resources are
+essentially rented. The analogy is electricity: fluctuating customer demand, charged by usage
+(\emph{pay-per-use}). Utility computing is purely a concept which cloud computing practically
+implements, usually with virtualization so that available storage/computing power is far larger
+than that of a single time-sharing computer.
+\end{defbox}
+
+\textbf{Key elements:} (a) pay-for-use pricing model, (b) data-centre virtualization and
+provisioning, (c) solves the resource-utilization problem, (d) outsourcing, (e) web services
+delivery, (f) automation.
+
+\textbf{Payment models:} flat rate, tiered, subscription, metered, pay-as-you-go, standing charges;
+different customers get different models depending on scale, commitment and payment frequency; the
+price expresses the provider's cost plus a profit margin.
+
+\textbf{Risks:} data backup, data security, partner competency, defining the SLA, getting value
+from charge-back.
+
+\section{Cloud Computing: NIST Definition}
+\begin{defbox}{Cloud Computing (NIST)}
+Cloud computing is a model for enabling \textbf{ubiquitous, convenient, on-demand network access}
+to a \textbf{shared pool of configurable computing resources} (e.g.\ networks, servers, storage,
+applications and services) that can be \textbf{rapidly provisioned and released with minimal
+management effort or service provider interaction}.
+\end{defbox}
+
+\subsection{Five Essential Characteristics}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{On-demand self-service:} a consumer can unilaterally provision capabilities such
+        as server time and network storage automatically, without human interaction with each
+        provider.
+  \item \textbf{Broad network access:} capabilities are available over the network and accessed
+        by standard mechanisms that promote use by heterogeneous thin or thick clients (mobile
+        phones, tablets, laptops, workstations).
+  \item \textbf{Resource pooling:} the provider's resources are pooled to serve many consumers
+        using a \emph{multi-tenant model}, with physical and virtual resources dynamically
+        assigned and reassigned according to demand.
+  \item \textbf{Rapid elasticity:} capabilities can be elastically provisioned and released,
+        sometimes automatically, to scale outward and inward with demand; to the consumer they
+        often appear unlimited.
+  \item \textbf{Measured service:} resource use is automatically controlled and optimised using a
+        metering capability (storage, processing, bandwidth, active user accounts) and can be
+        monitored, controlled and reported, giving transparency to provider and consumer.
+\end{enumerate}
+
+\subsection{Common Characteristics}
+Massive scale, resilient computing, homogeneity, geographic distribution, virtualization,
+service orientation, low-cost software, advanced security.
+
+\begin{solved}{Identifying the characteristic (Assignment 1, Q1)}
+\Given Statement: ``Computing resources are dynamically assigned to multiple customers using a
+shared infrastructure.''
+\Formula Match the statement to a NIST essential characteristic.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Many customers share the same physical hardware $\Rightarrow$ multi-tenancy.
+  \item Assignment and reassignment follows demand $\Rightarrow$ dynamic.
+  \item These two properties together define \emph{resource pooling}.
+\end{enumerate}
+\Answer Resource pooling (option B in the assignment).
+\end{solved}
+
+\section{Cloud Service Models}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lXX}
+\toprule
+Model & Capability provided to the consumer & Consumer controls\\
+\midrule
+SaaS & Use provider's applications on cloud infrastructure via thin client (web browser) or
+program interface. Example: Google Spreadsheet. & Nothing underneath; at most limited user-specific
+configuration.\\
+PaaS & Deploy consumer-created or acquired applications using languages, libraries, services and
+tools supported by the provider. Examples: Microsoft Azure, Google App Engine. & Deployed
+applications and possibly hosting-environment configuration; not network, servers, OS, storage.\\
+IaaS & Provision processing, storage, networks and other fundamental resources; consumer deploys
+arbitrary software. Examples: Amazon Web Services, Flexiscale, EC2. & OS, storage, deployed
+applications and possibly some networking components.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \foreach \kk/\xx/\nm in {9/0/Classical,5/3.2/IaaS,2/6.4/PaaS,0/9.6/SaaS}{
+    \node[font=\bfseries\small,text=navy] at (\xx+1.5,0.35) {\nm};
+    \foreach \rw/\lay in {1/Applications,2/Data,3/Runtime,4/Middleware,5/OS,6/Virtualization,7/Servers,8/Storage,9/Network}{
+      \ifnum\rw>\kk
+        \draw[fill=slate!30,draw=slate] (\xx,{-\rw*0.6}) rectangle ++(3,0.6);
+      \else
+        \draw[fill=navy!25,draw=navy] (\xx,{-\rw*0.6}) rectangle ++(3,0.6);
+      \fi
+      \node[font=\scriptsize] at (\xx+1.5,{-\rw*0.6+0.3}) {\lay};
+    }
+  }
+  \fill[navy!25,draw=navy] (0,-6.4) rectangle ++(0.4,0.3);
+  \node[anchor=west,font=\scriptsize] at (0.5,-6.25) {Managed by user};
+  \fill[slate!30,draw=slate] (4,-6.4) rectangle ++(0.4,0.3);
+  \node[anchor=west,font=\scriptsize] at (4.5,-6.25) {Managed by service provider};
+\end{tikzpicture}
+\caption{Responsibility split in the classical model, IaaS, PaaS and SaaS.}
+\end{figure}
+
+\begin{solved}{Classify the service model (Assignment 1, Q2)}
+\Given A startup rents Amazon EC2 virtual servers; the team installs and patches its own OS,
+configures the web server, manages runtime and applications. The provider supplies only
+virtualized compute, storage and networking.
+\Formula Service model = determined by the lowest layer the provider manages and the first layer the
+consumer manages.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Provider manages: virtualization, servers, storage, network.
+  \item Consumer manages: OS, middleware/runtime, applications, data.
+  \item This matches the right-most boundary of the IaaS column in the figure above.
+\end{enumerate}
+\Answer \textbf{IaaS}. SaaS (no consumer control), PaaS (OS is provider-managed) and FaaS are rejected.
+\end{solved}
+
+\subsection{Simplified Descriptions and Analogy}
+SaaS applications are designed for end users and delivered over the web; PaaS is the set of tools
+and services that makes coding and deploying applications quick and efficient; IaaS is the hardware
+and software that powers it all -- servers, storage, networks, operating systems. In the
+\textbf{transportation analogy}, roads are the infrastructure (IaaS), cars and trucks are the platform
+(PaaS) and the people and goods are software and information (SaaS).
+
+\section{Deployment Models}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Private cloud:} operated solely for one organization (e.g.\ Windows Server Hyper-V).
+  \item \textbf{Community cloud:} shared by several organizations supporting a specific community goal.
+  \item \textbf{Public cloud:} made available to the general public (e.g.\ Google Docs, Spreadsheet).
+  \item \textbf{Hybrid cloud:} composition of two or more clouds (private, community or public),
+        e.g.\ \emph{cloud bursting} for load balancing between clouds.
+\end{itemize}
+
+\section{Cloud and Virtualization}
+\textbf{Virtual workspaces} are abstractions of an execution environment, dynamically available to
+authorised clients through well-defined protocols, with a resource quota (CPU, memory share) and a
+software configuration (OS). They are implemented on \textbf{virtual machines (VMs)}: an abstraction
+of a physical host machine. A \textbf{hypervisor} (VMM) intercepts and emulates VM instructions and
+manages VMs (VMware, Xen, KVM). Para-virtualization (e.g.\ Xen) approaches raw physical performance.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[dark,minimum width=9cm] (hw) at (0,0) {Hardware};
+  \node[mid,minimum width=9cm,above=2mm of hw] (hv) {Hypervisor / Virtual Machine Monitor (Xen, VMware, KVM)};
+  \node[box,minimum width=2.8cm,above=2mm of hv,xshift=-3cm] (g1) {Guest OS\\(Linux)};
+  \node[box,minimum width=2.8cm,above=2mm of hv] (g2) {Guest OS\\(NetBSD)};
+  \node[box,minimum width=2.8cm,above=2mm of hv,xshift=3cm] (g3) {Guest OS\\(Windows)};
+  \foreach \g in {g1,g2,g3}{
+    \node[gold,minimum width=1.2cm,above=2mm of \g.north west,anchor=south west] {\scriptsize App};
+    \node[gold,minimum width=1.2cm,above=2mm of \g.north east,anchor=south east] {\scriptsize App};
+  }
+\end{tikzpicture}
+\caption{Virtualized stack: several guest operating systems share one physical machine.}
+\end{figure}
+
+\textbf{Advantages of VMs:} run OSs where physical hardware is unavailable; easy to create and back up
+machines; software testing on clean installs; emulate more machines than physically available;
+timeshare lightly loaded systems on one host; debug by suspend/resume; easy migration; run legacy
+systems.
+
+\begin{solved}{Virtualization statements (Assignment 1, Q4 and Q7)}
+\Given Four statements about VMs and hypervisors.
+\Formula A VM provides a virtual machine with its own guest OS; Type-1 hypervisors run on bare metal,
+Type-2 run as applications on a host OS.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item ``Each VM always shares the host kernel'' describes \emph{containers}, not VMs -- false.
+  \item Multiple VMs can run different OSs simultaneously on one machine -- \textbf{true}.
+  \item Virtualization pre-dates cloud, so ``only possible in cloud'' is false.
+  \item Overcommitment (CPU/memory) is a commonly used feature, not something virtualization prevents.
+  \item Type-2 (hosted) hypervisors (VirtualBox, VMware Workstation) run as an application on a host OS.
+\end{enumerate}
+\Answer VMs of different OSs coexist (Q4: B); Type-2 hypervisor runs on top of a host OS (Q7: B).
+\end{solved}
+
+\section{Cloud-sourcing, Cloud Storage, Advantages and Disadvantages}
+\textbf{Why cloud-sourcing matters:} high-scale low-cost providers, any time/place access via browser,
+rapid scalability with incremental cost and load sharing, and no need to focus on local IT.
+\textbf{Concerns:} performance, reliability and SLAs; control of data and service parameters;
+application features and choices; interaction between providers; no standard API (mix of SOAP and REST);
+privacy, security, compliance, trust.
+\textbf{Cloud storage:} large web companies rent out spare storage (e.g.\ Amazon EC2 and S3).
+
+\subsection{Advantages}
+Lower computer costs; improved performance; reduced software costs; instant software updates; improved
+document-format compatibility; unlimited storage capacity (hundreds of petabytes versus a 1~TB drive);
+increased data reliability (e.g.\ Dropbox, SkyDrive); universal information access; latest-version
+availability; easier group collaboration; device independence.
+
+\subsection{Disadvantages}
+Requires a constant Internet connection; does not work well with low-speed connections; features may be
+limited (e.g.\ PowerPoint versus web presentation tools); can be slow; stored data might not be secure;
+stored data can be lost; HPC applications using MPI/OpenMP are difficult (co-location of VMs needed to
+minimise latency); general concerns -- different protocols and APIs per cloud, proprietary database and
+workflow systems requiring application adaptation.
+
+\section{Business Drivers and Cloud Economics (Introductory)}
+Public clouds can significantly reduce IT cost. To the end user, the cloud gives the illusion of
+potentially infinite capacity with rapid scale and pay-per-use. In contrast, private data centres must be
+\emph{provisioned for peak capacity}, giving a low average utilization of \textbf{5--20\%}.
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+ & In-house server & Cloud server\\
+\midrule
+Purchase cost & \$9600 & 0\\
+Cost/hr (over 3 years) & \$0.36 & \$0.68\\
+Cost ratio Cloud/In-house & \multicolumn{2}{c}{1.88}\\
+Efficiency & 40\% & 80\%\\
+Cost per effective hour & \$0.90 & \$0.85\\
+Power and cooling & \$0.36 & 0\\
+Management cost & \$0.10 & \$0.01\\
+\textbf{Total cost/effective hour} & \textbf{\$1.36} & \textbf{\$0.86}\\
+Cost ratio In-house/Cloud & \multicolumn{2}{c}{1.58}\\
+\bottomrule
+\end{tabular}
+\end{center}
+The in-house server in the table is an x86 machine with three quad-core processors, 12~GB RAM and a 300~GB disk.
+
+\begin{solved}{IaaS economics: why the dearer cloud server is cheaper per useful hour}
+\Given In-house: \$0.36/hr, efficiency 40\%, power and cooling \$0.36, management \$0.10.
+Cloud: \$0.68/hr, efficiency 80\%, power and cooling \$0, management \$0.01.
+\Formula Cost per effective hour $= \dfrac{\text{cost per hour}}{\text{efficiency}}$;\quad
+total $=$ cost per effective hour $+$ power and cooling $+$ management.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item In-house: $0.36/0.40 = 0.90$; total $= 0.90 + 0.36 + 0.10 = 1.36$.
+  \item Cloud: $0.68/0.80 = 0.85$; total $= 0.85 + 0 + 0.01 = 0.86$.
+  \item Raw price ratio: $0.68/0.36 = 1.88$ (cloud dearer per hour).
+  \item Total ratio: $1.36/0.86 = 1.58$.
+\end{enumerate}
+\Answer Total cost per effective hour: in-house \$1.36, cloud \$0.86, ratio $\approx 1.58$ in favour of the cloud.
+\end{solved}
+
+\textbf{Benefits for end users of public cloud:} high utilization and scalability; no hardware
+procurement; no power cost; no IT administration; user-friendly SLAs (about 99\% availability with
+compensation on a miss); rent to prototype before investing; portability standards (Cloud Computing
+Interoperability Forum, Open Cloud Consortium; Amazon EC2 and Eucalyptus share the same API);
+startups avoid capital investment. \textbf{Benefits for SMBs (fewer than 250 employees)} follow the same
+lines. \textbf{Benefits of private cloud:} one 12-core 12~GB server costs far less than twelve 1-core 1~GB
+servers; data confidentiality preserved; VMs cheaper and faster to provision than physical machines.
+
+\textbf{Economics of PaaS versus IaaS:} for a 24x7 web application with unpredictable volume, IaaS requires
+a minimum set of servers always provisioned, while deploying on PaaS costs nothing at rest, costs are
+incurred by usage, and the platform scales automatically. \textbf{PaaS benefits:} no scaling or load
+balancing by the user; web-based IDE; easier migration from development to production; no separate IDE
+licences. \textbf{SaaS benefits:} subscribe instead of buying and licensing software; use free tools such as
+Google Docs; enterprises use web-based CRM instead of installing servers.
+
+\textbf{Purposes of cloud in organizations:} IT platform for multi-organization processes; backup; CRM,
+ERP, supply-chain; personal productivity and collaboration; development and test; storing and archiving
+large files; analysing customer/operations data; e-business and e-government sites; R\&D analysis; handling
+demand spikes; batch processing (conversion, risk modelling, rendering); sharing information with
+regulators; consumer entertainment. \textbf{Top cloud applications:} mail and messaging, archiving, backup,
+storage, security, virtual servers, CRM, cross-enterprise collaboration, hosted PBX, video conferencing.
+
+\section{Cloud Computing Architecture}
+\subsection{Building Blocks}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Technical architecture:} structuring by the XaaS stack; adopting cloud paradigms;
+        structuring services and components; relationships and external endpoints; middleware and
+        communication; management and security.
+  \item \textbf{Deployment/operation architecture:} geo-location check (legal issues, export control);
+        operation and monitoring.
+\end{itemize}
+
+\subsection{XaaS}
+\begin{defbox}{XaaS}
+Combining Service-Oriented Infrastructure (SOI) with cloud computing realises \textbf{XaaS}: ``anything'' or
+``everything'' as a Service -- a growing number of services delivered over the Internet rather than
+locally. \textbf{Broad network access + resource pooling (cloud) + business-driven infrastructure on demand +
+service orientation (SOI) = XaaS}, which fulfils the CSP demands: increase productivity, end-user
+satisfaction, innovation and agility.
+\end{defbox}
+Other XaaS examples: Business Process as a Service (BPaaS), Storage as a Service, Security as a Service
+(SECaaS), Database as a Service (DaaS), Monitoring/Management as a Service (MaaS), Communications, Content and
+Computing as a Service (CaaS), Identity as a Service (IDaaS), Backup as a Service (BaaS), Desktop as a Service.
+
+\begin{notebox}{Assignment 1, Q6}
+The combination of SOA and cloud computing leading to ``almost any IT capability delivered as a service'' is
+called \textbf{XaaS}. FaaS (Functions as a Service) is just one specific model.
+\end{notebox}
+
+\subsection{Classical (Legacy) Model versus Evergreen IT}
+In the classical model all layers (hardware, OS, development tools, applications) are managed by users who
+bear the hardware, maintenance and technology cost; systems are custom build-to-order, deployed as
+tightly coupled vertical stacks of layers (no single part easily replaced), with manual provisioning --
+\emph{Legacy IT}. Cloud simplifies the stack towards \emph{Evergreen IT}: dedicated infrastructure,
+application and end-user devices form a simplified IT stack.
+
+\subsection{Client-Server Model versus Cloud Model}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}XXX}
+\toprule
+ & Client-server model & Cloud computing model\\
+\midrule
+Service model & Simple: server services client requests & Variety of complex models (IaaS, PaaS, SaaS)\\
+Load balancing & May or may not be load balanced & Load balanced\\
+Scalability & Scalable to some extent in a cluster & Theoretically infinitely scalable\\
+Virtualization & No concept of virtualization & Virtualization is the core concept\\
+\bottomrule
+\end{tabularx}
+\end{center}
+A three-tier client-server architecture has presentation, application and data tiers; the client is often a
+thin client, and the server may be a load-balanced cluster or a stand-alone machine.
+
+\subsection{SaaS, PaaS, IaaS in Detail}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lXXX}
+\toprule
+ & SaaS & PaaS & IaaS\\
+\midrule
+Definition & Software deployed over the Internet, licensed on demand, by subscription, pay-as-you-go, or free
+(ad/user-list revenue). & Platform for creating web applications quickly without buying and maintaining
+underlying software and infrastructure. & Servers, storage, network and OS delivered as an on-demand,
+outsourced service.\\
+Characteristics & Web access to commercial software; managed from a central location; one-to-many delivery;
+no upgrades or patches by users; APIs for integration. & Integrated development, test, deploy, host and
+maintain services; web-based UI tools; multi-tenant; built-in scalability, load balancing and failover;
+web-service/database integration; team collaboration; billing and subscription tools. & Resources
+distributed as a service; dynamic scaling; variable utility pricing; multiple users per hardware.\\
+Good fit & Interplay with the outside world (e.g.\ email campaigns); web/mobile access; short-term use;
+demand spikes (tax/billing); e.g.\ Salesforce CRM. & Multiple developers or external parties; automated
+test and deployment; agile development; e.g.\ Azure, Google App Engine. & Volatile demand; new
+organizations without capital; rapid growth; limiting CAPEX in favour of OPEX; trial or temporary needs.\\
+Poor fit & Extremely fast real-time processing; regulations forbidding external hosting; existing on-premise
+solution suffices. & Highly portable applications; proprietary languages causing lock-in; need to
+customise underlying hardware/software. & Regulatory limits on offshoring/outsourcing data; highest
+performance needs met by on-premise hardware.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{solved}{Advantages of PaaS (Assignment 1, Q8)}
+\Given Four claimed advantages: (i) developers focus on application development, (ii) automatic software
+updates of the underlying platform, (iii) complete control over physical server hardware, (iv) faster
+application deployment.
+\Formula PaaS abstracts infrastructure management and offers managed runtime environments.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item (i) true -- infrastructure is abstracted. (ii) true -- the provider updates the platform.
+  \item (iii) false -- physical hardware is the provider's responsibility.
+  \item (iv) true -- ready-made runtime and IDE speed deployment.
+\end{enumerate}
+\Answer (i), (ii) and (iv) -- option A.
+\end{solved}
+
+\section{Role of Networking and Network Function Virtualization}
+Network resources can be provisioned dynamically in the cloud. Core concepts: Virtual LANs, Virtual
+Private Networks and protocol layers; tools such as OpenSSH and OpenVPN set up topologies and
+configurations.
+
+\begin{defbox}{Network Functions Virtualisation (ETSI NFV)}
+NFV aims to transform how operators architect networks by evolving standard IT virtualisation technology to
+consolidate many network-equipment types onto industry-standard high-volume servers, switches and storage in
+data centres, network nodes and end-user premises. Network functions are implemented in software that can be
+moved to, or instantiated in, various locations as required, without installing new equipment.
+\end{defbox}
+
+\section{Week 1 Assignment Review}
+\begin{center}
+\begin{tabularx}{\textwidth}{cXc}
+\toprule
+Q & Concept tested & Answer\\
+\midrule
+1 & Resource pooling (multi-tenant shared resources) & B\\
+2 & EC2 rented VM with user-managed OS $\Rightarrow$ IaaS & C\\
+3 & Private cloud: exclusive use, on-premises or third-party hosted & D\\
+4 & Different OS VMs simultaneously on one machine & B\\
+5 & Distributed systems: scalability and fault tolerance, \emph{not} guaranteed lower latency & A\\
+6 & SOA + cloud $\Rightarrow$ XaaS & C\\
+7 & Type-2 hypervisor runs as an application on a host OS & B\\
+8 & PaaS advantages (i), (ii), (iv) & A\\
+9 & Amazon EC2 is IaaS & B\\
+10 & Grid: geographically dispersed, heterogeneous, loosely coupled & B\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{solved}{Distributed system statements (Assignment 1, Q5)}
+\Given (i) adding nodes improves scalability; (ii) replication increases fault tolerance;
+(iii) distribution guarantees lower latency for every operation than a centralized system.
+\Formula Distribution adds network communication and coordination overhead.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item (i) True: horizontal scaling.
+  \item (ii) True: replication of data and services.
+  \item (iii) False: remote calls and coordination can make some operations slower.
+\end{enumerate}
+\Answer (i) and (ii) only -- option A.
+\end{solved}

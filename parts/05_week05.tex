@@ -1,0 +1,391 @@
+% ==================================================================
+%  WEEK 5
+% ==================================================================
+\chapter{Service Level Agreements, Cloud Economics, and Green Computing}
+
+\section{Introduction and Week Overview}
+Week 5 investigates the operational, contractual, and environmental dimensions of cloud infrastructure. The core pillars covered in this module include:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Service Level Agreements (SLAs) and Availability Modeling:} Contractual metrics, Service Level Objectives (SLOs), uptime and downtime mathematics, and tiered service credit penalty formulations.
+  \item \textbf{Cloud Economics and Utility Pricing:} Total Cost of Ownership (TCO), peak-to-average demand analysis, utility premium thresholds ($U < P/A$), and penalty integrals under dynamic workloads.
+  \item \textbf{Big Data Processing with Hadoop and HDFS:} Distributed file storage architectures, input split calculations, NameNode metadata management, and MapReduce execution mechanics (Partitioner vs Combiner).
+  \item \textbf{Green Cloud Computing and Energy Efficiency:} Data center power consumption breakdown, dynamic server energy behavior, Power Usage Effectiveness (PUE), Data Center Infrastructure Efficiency (DCiE), and Dynamic Voltage and Frequency Scaling (DVFS).
+\end{enumerate}
+
+\section{Service Level Agreements (SLAs) in Cloud Computing}
+\subsection{Contractual Foundations and Definitions}
+\begin{defbox}{Service Level Agreement (SLA)}
+A \textbf{Service Level Agreement (SLA)} is a legally binding formal contract negotiated between a Cloud Service Provider (CSP) and a Cloud Consumer. It codifies the minimum expected quality of service, availability guarantees, performance baselines, measurement methodologies, and financial liabilities (service credits/penalties) incurred when guarantees are breached.
+\end{defbox}
+
+An SLA is composed of discrete, quantifiable criteria known as \textbf{Service Level Objectives (SLOs)}:
+\begin{equation}
+\text{SLO}_i = \langle \text{Service Metric}, \text{Comparison Operator}, \text{Target Value}, \text{Measurement Window} \rangle
+\end{equation}
+Typical SLO parameters include:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Availability (Uptime):} Percentage of time the service responds to valid HTTP requests with non-error status codes.
+  \item \textbf{Latency / Response Time:} Round-trip processing delay for API calls (e.g., $99^{\text{th}}$ percentile latency $< 150\text{ ms}$).
+  \item \textbf{Throughput:} Number of discrete transactions or input/output operations per second (IOPS).
+  \item \textbf{Data Durability:} Probability of preventing permanent data loss over a one-year period (e.g., AWS S3 guarantees $99.999999999\%$ ``eleven nines'' durability).
+\end{itemize}
+
+\subsection{Availability Mathematics and ``Nines'' Notation}
+Service availability $A$ is mathematically defined as the ratio of scheduled operational uptime to total scheduled duration:
+\begin{equation}
+A = \frac{\text{MTBF}}{\text{MTBF} + \text{MTTR}} = \frac{T_{\text{scheduled}} - T_{\text{downtime}}}{T_{\text{scheduled}}} \times 100\%
+\end{equation}
+where $\text{MTBF}$ is the \textbf{Mean Time Between Failures} and $\text{MTTR}$ is the \textbf{Mean Time To Repair}.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l l X X}
+\toprule
+Availability Level & Percentage & Allowable Downtime / Year & Allowable Downtime / Month (30 Days)\\
+\midrule
+Two Nines & $99.0\%$ & $87.6$ hours ($3.65$ days) & $7.20$ hours\\
+Three Nines & $99.9\%$ & $8.76$ hours & $43.8$ minutes\\
+Four Nines & $99.99\%$ & $52.56$ minutes & $4.38$ minutes\\
+Five Nines & $99.999\%$ & $5.26$ minutes & $26.3$ seconds\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Scheduled Operational Hours Downtime Formulation}
+In enterprise contexts, customer applications frequently run on partial daily schedules rather than continuously. When an SLA availability guarantee $A_{\text{target}}$ applies to a service operating $h$ hours per day across $D$ calendar days:
+\begin{equation}
+T_{\text{scheduled}} = h \times D
+\end{equation}
+\begin{equation}
+T_{\text{allowable downtime}} = (1 - A_{\text{target}}) \times T_{\text{scheduled}}
+\end{equation}
+
+\begin{solved}{SLA Outage Evaluation (Lecture Tutorial Problem 1)}
+\Given A cloud provider guarantees $99\%$ service availability. A third-party client application runs for $h = 12\text{ hours/day}$ over a $D = 30\text{-day}$ billing month. An audit reveals a total outage of $T_{\text{actual}} = 10.75\text{ hours}$. Determine if the provider violated the SLA.
+\Formula
+\begin{equation}
+T_{\text{allowable}} = (1 - 0.99) \times (12 \times 30) = 0.01 \times 360 = 3.6\text{ hours}
+\end{equation}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Compute total scheduled operational time: $T_{\text{scheduled}} = 12 \times 30 = 360\text{ hours}$.
+  \item Compute allowable outage duration: $0.01 \times 360 = 3.6\text{ hours}$.
+  \item Compare actual outage against threshold: $T_{\text{actual}} = 10.75\text{ hours} > 3.6\text{ hours}$.
+  \item Measured availability achieved:
+  \begin{equation}
+  A_{\text{actual}} = \frac{360 - 10.75}{360} \times 100\% = \frac{349.25}{360} \times 100\% \approx 97.01\%
+  \end{equation}
+\end{enumerate}
+\Answer The SLA guarantee was severely violated ($97.01\% < 99.0\%$). Actual downtime exceeded allowable downtime by $7.15\text{ hours}$.
+\end{solved}
+
+\subsection{Service Credit Penalty Models}
+CSPs do not pay cash damages for SLA breaches; instead, they issue \textbf{Service Credits} that discount future billing cycles according to a tiered schedule:
+
+\begin{solved}{Comprehensive SLA Credit Settlement (Lecture Tutorial Problem 2)}
+\Given A company contracts a cloud service from Provider P for a $D = 30\text{-day}$ period with:
+\begin{itemize}
+  \item Target availability: $99.95\%$.
+  \item Maximum operational hours: $h = 12\text{ hours/day}$.
+  \item Base daily billing rate: $\$50/\text{day}$ (Total nominal fee: $30 \times \$50 = \$1500$).
+  \item Tiered Service Credit policy:
+    \begin{itemize}
+      \item $\text{Uptime} < 99.95\% \implies 10\%$ credit discount.
+      \item $\text{Uptime} < 99.00\% \implies 25\%$ credit discount.
+    \end{itemize}
+  \item Recorded outages across 5 separate incidents:
+    $5\text{ h}$, $30\text{ min}$ ($0.5\text{ h}$), $1\text{ h } 30\text{ min}$ ($1.5\text{ h}$), $15\text{ min}$ ($0.25\text{ h}$), and $2\text{ h } 25\text{ min}$ ($2.4167\text{ h}$).
+\end{itemize}
+\Formula
+\begin{equation}
+T_{\text{outage}} = \sum_{k=1}^{5} t_k, \quad A = \frac{T_{\text{scheduled}} - T_{\text{outage}}}{T_{\text{scheduled}}} \times 100\%
+\end{equation}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Total scheduled service duration:
+  \begin{equation}
+  T_{\text{scheduled}} = 12 \times 30 = 360\text{ hours}
+  \end{equation}
+  \item Sum of all discrete outage durations:
+  \begin{equation}
+  T_{\text{outage}} = 5.0 + 0.5 + 1.5 + 0.25 + 2.4167 = 9.6667\text{ hours} \quad (9\text{ h } 40\text{ min})
+  \end{equation}
+  \item Calculate realized monthly uptime percentage:
+  \begin{equation}
+  A = \frac{360 - 9.6667}{360} \times 100\% = \frac{350.3333}{360} \times 100\% \approx 97.315\%
+  \end{equation}
+  \item Evaluate penalty tier:
+  Since $97.315\% < 99.00\%$, the violation triggers the higher \textbf{25\% Service Credit}.
+  \item Compute effective billing settlement:
+  \begin{equation}
+  \text{Nominal Cost} = 30 \times \$50 = \$1500
+  \end{equation}
+  \begin{equation}
+  \text{Service Credit Awarded} = 0.25 \times \$1500 = \$375
+  \end{equation}
+  \begin{equation}
+  \text{Effective Payable Cost} = \$1500 - \$375 = \$1125
+  \end{equation}
+\end{enumerate}
+\Answer Effective amount payable is \textbf{\$1,125.00} (with \$375 awarded as SLA penalty credits).
+\end{solved}
+
+\section{Cloud Economics and Utility Pricing}
+\subsection{Economic Drivers of Cloud Adoption}
+Traditional IT infrastructure demands that enterprises size on-premises data centers to satisfy \textbf{Peak Demand} ($P$). Because physical server procurement requires long lead times, hardware sits idle during periods of average demand ($A$), generating waste.
+
+Cloud computing transforms capital expenses (\textbf{CapEx}) into operational expenses (\textbf{OpEx}) through:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Common Infrastructure:} Standardized resource pools yielding statistical multiplexing gains.
+  \item \textbf{Location Independence:} Aggregating demand across global time zones to smooth aggregate utilization curves.
+  \item \textbf{Elasticity and Pay-As-You-Go:} Provisioning and releasing resources instantaneously to mirror real-time load.
+\end{itemize}
+
+\subsection{Formal Utility Premium Break-Even Analysis}
+Let:
+\begin{itemize}[leftmargin=*]
+  \item $D(t)$: Instantaneous resource demand at time $t$ over time interval $[0, T]$.
+  \item $P = \max_{0 \le t \le T} D(t)$: Peak resource demand.
+  \item $A = \frac{1}{T} \int_{0}^{T} D(t)\, dt$: Average resource demand.
+  \item $B$: Unit cost per unit time of owned (in-house baseline) infrastructure.
+  \item $C$: Unit cost per unit time of utility cloud infrastructure.
+  \item $U = \frac{C}{B}$: \textbf{Utility Premium} (the pricing multiple charged by the cloud provider over bare raw hardware ownership).
+\end{itemize}
+
+\begin{thmbox}{Cloud vs In-House Cost Break-Even Theorem}
+Total in-house baseline cost ($B_T$) must provision for peak demand $P$:
+\begin{equation}
+B_T = P \times B \times T
+\end{equation}
+Total cloud cost ($C_T$) meters exact demand over time:
+\begin{equation}
+C_T = \int_{0}^{T} C \cdot D(t)\, dt = C \int_{0}^{T} D(t)\, dt = (U \cdot B) \cdot (A \cdot T) = A \cdot U \cdot B \cdot T
+\end{equation}
+Cloud computing is economically superior to owning physical hardware if and only if:
+\begin{equation}
+C_T < B_T \iff A \cdot U \cdot B \cdot T < P \cdot B \cdot T \iff U < \frac{P}{A}
+\end{equation}
+\textbf{Conclusion:} Cloud computing is cheaper than owning private hardware whenever the utility premium $U$ is strictly less than the \textbf{Peak-to-Average demand ratio} ($P/A$).
+\end{thmbox}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=12cm, height=5.5cm,
+    xlabel={Time $t$}, ylabel={Workload Demand $D(t)$},
+    xmin=0, xmax=10, ymin=0, ymax=10,
+    legend pos=north east,
+    axis lines=left,
+    xtick=\empty, ytick={3, 8},
+    yticklabels={$A$ (Average), $P$ (Peak)}
+]
+\addplot[thick, navy, domain=0:10, samples=100] {5 + 3*sin(deg(x*1.5)) - cos(deg(x*0.5))};
+\addlegendentry{Dynamic Demand $D(t)$}
+
+\addplot[dashed, darkred, thick, domain=0:10] {8};
+\addlegendentry{In-House Owned Capacity ($P$)}
+
+\addplot[dotted, slate, thick, domain=0:10] {4.7};
+\addlegendentry{Average Demand ($A$)}
+\end{axis}
+\end{tikzpicture}
+\caption{Dynamic Demand vs In-House Static Over-Provisioning.}
+\end{figure}
+
+\subsection{Workload Penalty Integrals for Static Provisioning}
+When an organization owns fixed resources $R(t)$, any divergence between available capacity $R(t)$ and instantaneous workload demand $D(t)$ incurs financial and operational penalties:
+\begin{equation}
+\text{Penalty Cost} \propto \int_{0}^{T} |D(t) - R(t)|\, dt
+\end{equation}
+\begin{itemize}[leftmargin=*]
+  \item If $R(t) > D(t)$: The organization wastes capital paying for idle hardware, power, cooling, and software licensing.
+  \item If $R(t) < D(t)$: The system suffers performance degradation, latency spikes, dropped transactions, and lost customer revenue.
+\end{itemize}
+
+Under exponential workload growth ($D(t) = e^t$), periodic static procurement with interval $t_p$ produces provisioning $R(t) = e^{t - t_p}$. The shortfall increases exponentially:
+\begin{equation}
+\text{Deficit}(t) = D(t) - R(t) = e^t - e^{t - t_p} = e^t (1 - e^{-t_p})
+\end{equation}
+demonstrating that fixed provisioning cycles can never keep pace with exponential demand growth.
+
+\section{Big Data Architecture: Hadoop and HDFS}
+\subsection{Hadoop Distributed File System (HDFS) Architecture}
+HDFS is designed to store multi-terabyte and petabyte files reliably across large clusters of commodity hardware. It adopts a master/worker topology:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{NameNode (Master):} Maintains the directory tree and file metadata in system RAM. File metadata maps filenames to a sequence of block IDs. Modifications are recorded durably in the \texttt{EditLog} on disk and consolidated periodically with the \texttt{FsImage} checkpoint file via the \textbf{Secondary NameNode}.
+  \item \textbf{DataNodes (Workers):} Store actual data blocks as discrete files on local ext4/xfs filesystems. They handle block read/write operations from clients and emit heartbeat signals every 3 seconds to confirm node health.
+\end{itemize}
+
+\subsection{Block Size and Input Split Mathematics}
+Unlike traditional filesystems with 4 KB disk clusters, HDFS employs very large block sizes (typically 64 MB, 128 MB, or 256 MB) to amortize disk seek times against sequential transfer rates.
+
+When an input file of size $S$ is loaded into an HDFS cluster configured with block size $B$:
+\begin{equation}
+N_{\text{blocks}} = \left\lceil \frac{S}{B} \right\rceil
+\end{equation}
+In standard MapReduce configurations, Hadoop assigns exactly one \textbf{Mapper task} per logical \textbf{InputSplit} (which aligns 1:1 with HDFS physical blocks).
+
+\begin{solved}{HDFS Mapper Task Allocation (Assignment 5, Q4)}
+\Given An HDFS cluster operates with block size $B = 128\text{ MB}$. A client uploads an input file of size $S = 700\text{ MB}$ to execute a MapReduce job. Assuming default mapping of one map task per HDFS block, calculate the number of mapper tasks created.
+\Formula
+\begin{equation}
+N_{\text{mappers}} = \left\lceil \frac{S}{B} \right\rceil
+\end{equation}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Decompose 700 MB across 128 MB block allocations:
+  \begin{align*}
+  \text{Block 1:} & \quad 128\text{ MB} & \text{Block 4:} & \quad 128\text{ MB}\\
+  \text{Block 2:} & \quad 128\text{ MB} & \text{Block 5:} & \quad 128\text{ MB}\\
+  \text{Block 3:} & \quad 128\text{ MB} & \text{Block 6:} & \quad 60\text{ MB} \quad (\text{Partial Block})
+  \end{align*}
+  \item Total allocated blocks: $5 \times 128\text{ MB} + 60\text{ MB} = 700\text{ MB} \implies 6\text{ blocks}$.
+  \item Each block corresponds to an input split: $N_{\text{mappers}} = 6$.
+\end{enumerate}
+\Answer Exactly \textbf{6 mapper tasks} are spawned.
+\end{solved}
+
+\subsection{MapReduce Execution Pipeline: Partitioner vs Combiner}
+The lecture highlights two critical intermediate optimization components in MapReduce:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Combiner (Mini-Reducer):} An \emph{optional} optimization component executed on the map worker node prior to network shuffle. It performs local pre-aggregation on intermediate key-value pairs (e.g., computing sub-totals in a word count job), drastically decreasing the volume of intermediate data transmitted across the cluster network. The execution of a Combiner is never guaranteed; Hadoop may run it zero, one, or multiple times depending on memory pressure.
+  \item \textbf{Partitioner:} A \emph{mandatory} component that determines which physical Reducer instance receives each intermediate key. By default, Hadoop utilizes the \textbf{HashPartitioner}:
+  \begin{equation}
+  \text{Reducer ID} = (\text{key.hashCode()} \ \& \ \text{Integer.MAX\_VALUE}) \pmod{N_{\text{reducers}}}
+  \end{equation}
+  This guarantees that all intermediate values associated with the identical key arrive at the exact same Reducer node.
+\end{itemize}
+
+\section{Green Cloud Computing and Server Energy Dynamics}
+\subsection{Data Center Energy Footprint and Efficiency Metrics}
+Massive data centers consume hundreds of megawatts of electricity. Energy consumption is divided into two broad categories:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{IT Equipment Power ($P_{\text{IT}}$):} Compute servers, storage arrays, and network switches.
+  \item \textbf{Infrastructure Overhead Power ($P_{\text{overhead}}$):} Chiller plants, cooling towers, fans, uninterruptible power supplies (UPS), power distribution units (PDUs), and facility lighting.
+\end{enumerate}
+
+\begin{defbox}{Power Usage Effectiveness (PUE) and DCiE}
+The industry standard metric established by The Green Grid is \textbf{Power Usage Effectiveness (PUE)}:
+\begin{equation}
+\text{PUE} = \frac{\text{Total Facility Power}}{\text{IT Equipment Power}} = \frac{P_{\text{IT}} + P_{\text{overhead}}}{P_{\text{IT}}} \ge 1.0
+\end{equation}
+A PUE of $2.0$ indicates that for every 1 Watt powering servers, another 1 Watt is consumed by cooling and power delivery. Modern hyperscale facilities (Google, Microsoft) achieve PUE values between $1.1$ and $1.2$.\\
+The inverse metric is \textbf{Data Center Infrastructure Efficiency (DCiE)}:
+\begin{equation}
+\text{DCiE} = \frac{1}{\text{PUE}} \times 100\%
+\end{equation}
+\end{defbox}
+
+\subsection{Server Power Dynamics and Core Utilization}
+A physical server's power consumption is not static; it scales with CPU utilization and active hardware components:
+\begin{equation}
+P(u) = P_{\text{idle}} + (P_{\text{peak}} - P_{\text{idle}}) \times u
+\end{equation}
+where $P_{\text{idle}}$ is the idle power draw (typically $50\%$ to $60\%$ of peak power $P_{\text{peak}}$), and $u \in [0, 1]$ represents CPU utilization.
+
+\begin{thmbox}{Impact of Dynamic Core Activation on Power Draw}
+When a multi-core server detects a workload spike and dynamically switches CPU cores from low-power C-states (sleep states) to active C0 execution states:
+\begin{enumerate}[leftmargin=*]
+  \item Each active core draws dynamic switching power: $P_{\text{dynamic}} = \alpha \cdot C_L \cdot V^2 \cdot f$ (where $\alpha$ is activity factor, $C_L$ load capacitance, $V$ operating voltage, and $f$ clock frequency).
+  \item Static leakage current power increases proportionally with core temperature.
+  \item \textbf{Net Effect:} Total server power consumption \textbf{increases} as additional CPU cores become active, even if workload execution time per core drops.
+\end{enumerate}
+\end{thmbox}
+
+\section{Comprehensive Solved Assignment Problems (Week 5)}
+
+\begin{solved}{SLA Downtime Allowance Calculation (Assignment 5, Q1)}
+\Given A cloud provider commits to a 99\% uptime SLA. The client's application runs 12 hours/day for 30 days. Find maximum allowable downtime.
+\Steps
+\begin{equation}
+T_{\text{scheduled}} = 12\text{ h/day} \times 30\text{ days} = 360\text{ hours}
+\end{equation}
+\begin{equation}
+T_{\text{allowed downtime}} = (1 - 0.99) \times 360 = 0.01 \times 360 = 3.6\text{ hours}
+\end{equation}
+\Answer \textbf{Option A: 3.6 hours}.
+\end{solved}
+
+\begin{solved}{Multi-Core Server Power Consumption (Assignment 5, Q2)}
+\Given A cloud server dynamically activates additional CPU cores to handle a sudden surge in user requests.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Activating dormant processor cores draws additional dynamic switching power and leakage current.
+  \item While techniques like DVFS reduce voltage at lower frequencies, adding active cores increases total aggregate wattage drawn by the system.
+\end{enumerate}
+\Answer \textbf{Option C: Power consumption increases as additional CPU cores become active}.
+\end{solved}
+
+\begin{solved}{Mitigating Upfront Capital Expenditure (Assignment 5, Q3)}
+\Given Which cloud characteristic directly eliminates massive upfront hardware purchases?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Pay-as-you-go pricing} converts Capital Expenditure (CapEx) into Operational Expenditure (OpEx), allowing organizations to pay strictly for consumed compute time and storage without purchasing servers upfront.
+\end{enumerate}
+\Answer \textbf{Option B: Pay-as-you-go pricing}.
+\end{solved}
+
+\begin{solved}{HDFS Block Input Splits and Map Tasks (Assignment 5, Q4)}
+\Given Block size $B = 128\text{ MB}$, input file $S = 700\text{ MB}$.
+\Steps
+\begin{equation}
+N = \left\lceil \frac{700}{128} \right\rceil = \left\lceil 5.46875 \right\rceil = 6
+\end{equation}
+\Answer \textbf{Option B: 6}.
+\end{solved}
+
+\begin{solved}{Primary Virtualization Management Entity (Assignment 5, Q5)}
+\Given Identify the virtualization layer component responsible for creating, running, and managing virtual machines.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The \textbf{Hypervisor} (or Virtual Machine Monitor, VMM) abstracts physical hardware resources and mediates guest virtual machine execution.
+\end{enumerate}
+\Answer \textbf{Option B: Hypervisor}.
+\end{solved}
+
+\begin{solved}{MapReduce Key-to-Reducer Assignment (Assignment 5, Q6)}
+\Given Identify the MapReduce subsystem that routes each intermediate key to its designated Reducer.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The \textbf{Partitioner} calculates the destination reducer index for each key (typically via hash modulo operations).
+\end{enumerate}
+\Answer \textbf{Option B: Partitioner}.
+\end{solved}
+
+\begin{solved}{Optional MapReduce Optimization Phase (Assignment 5, Q7)}
+\Given Identify the MapReduce component that is optional and may execute zero, one, or multiple times.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The \textbf{Combiner} operates as a semi-reducer on local map output. Hadoop does not guarantee its execution; therefore, MapReduce job logic must remain algebraically valid even when the Combiner is skipped entirely.
+\end{enumerate}
+\Answer \textbf{Option C: Combiner}.
+\end{solved}
+
+\begin{solved}{Data Center Energy Consumption Contributors (Assignment 5, Q8)}
+\Given Which data center subsystems contribute directly to overall energy consumption?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item IT server equipment (processors, memory, disks).
+  \item Air conditioning chillers, cooling towers, and ventilation fans.
+  \item Power distribution units (PDUs) and uninterruptible power supply (UPS) transformers.
+\end{enumerate}
+\Answer \textbf{Option D: All of the above}.
+\end{solved}
+
+\begin{solved}{Server Consolidation Impact on Green Computing (Assignment 5, Q9)}
+\Given How does server consolidation via live VM migration promote green cloud computing?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Packing virtual machines onto fewer physical hosts allows underutilized hosts to be powered down into deep sleep states, eliminating idle power waste.
+\end{enumerate}
+\Answer \textbf{Option A: Reduces total energy consumption by powering down idle physical servers}.
+\end{solved}
+
+\begin{solved}{HDFS Data Integrity and Fault Tolerance (Assignment 5, Q10)}
+\Given How does HDFS achieve fault tolerance against DataNode drive crashes without relying on RAID hardware?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item HDFS replicates each data block across multiple physically independent DataNodes (default replication factor $R = 3$) with rack awareness.
+\end{enumerate}
+\Answer \textbf{Option B: Block Replication across multiple nodes}.
+\end{solved}

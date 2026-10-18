@@ -1,0 +1,164 @@
+\documentclass[11pt,a4paper,openany]{report}
+
+% ------------------------------------------------------------------
+%  PACKAGES
+% ------------------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[a4paper,top=2.6cm,bottom=2.4cm,left=2.5cm,right=2.5cm,headheight=15pt]{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{circuitikz}
+\usepackage[most]{tcolorbox}
+\usepackage[colorlinks=true,linkcolor=navy,urlcolor=slate,citecolor=navy]{hyperref}
+
+\pgfplotsset{compat=1.16}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,fit,backgrounds}
+
+\emergencystretch=3em
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 1pt minus 1pt}
+\renewcommand{\arraystretch}{1.2}
+
+% ------------------------------------------------------------------
+%  COLOURS (deep navy primary, slate secondary, neutral dark text)
+% ------------------------------------------------------------------
+\definecolor{navy}{HTML}{14274E}
+\definecolor{slate}{HTML}{394867}
+\definecolor{steel}{HTML}{9BA4B4}
+\definecolor{paleblue}{HTML}{EEF2F9}
+\definecolor{palegold}{HTML}{FFF6E0}
+\definecolor{gold}{HTML}{C58B00}
+\definecolor{palered}{HTML}{FDECEC}
+\definecolor{darkred}{HTML}{9B2226}
+\definecolor{palegreen}{HTML}{E9F5EC}
+\definecolor{darkgreen}{HTML}{1B6B3A}
+\definecolor{textdark}{HTML}{1F2430}
+\color{textdark}
+
+% ------------------------------------------------------------------
+%  CALL-OUT BOXES
+% ------------------------------------------------------------------
+\newtcolorbox{defbox}[1]{enhanced,breakable,colback=paleblue,colframe=navy,
+  fonttitle=\bfseries,title={Definition: #1},arc=2mm,boxrule=0.8pt,
+  left=3mm,right=3mm,top=2mm,bottom=2mm}
+\newtcolorbox{thmbox}[1]{enhanced,breakable,colback=palegreen,colframe=darkgreen,
+  fonttitle=\bfseries,title={Key Result: #1},arc=2mm,boxrule=0.8pt,
+  left=3mm,right=3mm,top=2mm,bottom=2mm}
+\newtcolorbox{warnbox}[1]{enhanced,breakable,colback=palered,colframe=darkred,
+  fonttitle=\bfseries,title={Warning: #1},arc=2mm,boxrule=0.8pt,
+  left=3mm,right=3mm,top=2mm,bottom=2mm}
+\newtcolorbox{notebox}[1]{enhanced,breakable,colback=palegold,colframe=gold,
+  fonttitle=\bfseries,title={Note: #1},arc=2mm,boxrule=0.8pt,
+  left=3mm,right=3mm,top=2mm,bottom=2mm}
+\newtcolorbox{solved}[1]{enhanced,breakable,colback=white,colframe=slate,
+  colbacktitle=slate,coltitle=white,fonttitle=\bfseries,
+  title={Solved Example: #1},arc=2mm,boxrule=0.8pt,
+  left=3mm,right=3mm,top=2mm,bottom=2mm}
+
+% Step labels used inside solved examples
+\newcommand{\Given}{\par\textbf{\textcolor{navy}{Given:}} }
+\newcommand{\Formula}{\par\textbf{\textcolor{navy}{Formula:}} }
+\newcommand{\Steps}{\par\textbf{\textcolor{navy}{Step-by-step substitution:}}\par}
+\newcommand{\Answer}{\par\textbf{\textcolor{darkgreen}{Final Answer:}} }
+\newcommand{\code}[1]{\texttt{#1}}
+
+% ------------------------------------------------------------------
+%  LISTINGS
+% ------------------------------------------------------------------
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,breakatwhitespace=false,
+  frame=single,rulecolor=\color{steel},backgroundcolor=\color{paleblue},
+  columns=fullflexible,keepspaces=true,xleftmargin=2mm,xrightmargin=2mm,
+  showstringspaces=false,aboveskip=6pt,belowskip=6pt}
+
+% ------------------------------------------------------------------
+%  TIKZ STYLES
+% ------------------------------------------------------------------
+\tikzset{
+  box/.style={draw=navy,fill=paleblue,rounded corners=2pt,minimum height=7mm,
+              align=center,font=\small,inner sep=3pt},
+  dark/.style={draw=navy,fill=navy,text=white,rounded corners=2pt,minimum height=7mm,
+              align=center,font=\small,inner sep=3pt},
+  mid/.style={draw=slate,fill=slate!25,rounded corners=2pt,minimum height=7mm,
+              align=center,font=\small,inner sep=3pt},
+  gold/.style={draw=gold,fill=palegold,rounded corners=2pt,minimum height=7mm,
+              align=center,font=\small,inner sep=3pt},
+  arr/.style={-{Stealth[length=2.2mm]},thick,color=slate},
+  darr/.style={{Stealth[length=2.2mm]}-{Stealth[length=2.2mm]},thick,color=slate}
+}
+
+% ------------------------------------------------------------------
+%  CHAPTER / SECTION STYLE
+% ------------------------------------------------------------------
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\color{navy}}
+  {\filleft\Large\scshape Week \thechapter}
+  {1ex}
+  {\titlerule[2pt]\vspace{1.5ex}\filright\Huge}
+  [\vspace{1ex}\titlerule]
+\titlespacing*{\chapter}{0pt}{-10pt}{22pt}
+\titleformat{\section}{\normalfont\Large\bfseries\color{navy}}{\thesection}{0.7em}{}[\color{steel}\titlerule]
+\titleformat{\subsection}{\normalfont\large\bfseries\color{slate}}{\thesubsection}{0.7em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries\color{slate}}{\thesubsubsection}{0.7em}{}
+
+% ------------------------------------------------------------------
+%  HEADERS AND FOOTERS
+% ------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{slate}\textsc{Cloud Computing -- NPTEL}}
+\fancyhead[R]{\small\color{slate}\leftmark}
+\fancyfoot[C]{\small\color{slate}\thepage}
+\renewcommand{\headrulewidth}{0.6pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{navy}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\chaptermark}[1]{\markboth{Week \thechapter: #1}{}}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\color{slate}\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+\begin{document}
+
+% ------------------------------------------------------------------
+%  TITLE PAGE
+% ------------------------------------------------------------------
+\begin{titlepage}
+\thispagestyle{empty}
+\vspace*{1.5cm}
+\begin{tcolorbox}[colback=navy,colframe=slate,boxrule=3pt,arc=3mm,
+  left=10mm,right=10mm,top=14mm,bottom=14mm]
+{\color{white}\Huge\bfseries Cloud Computing\par}
+\vspace{0.5cm}
+{\color{white}\LARGE Comprehensive Study Notes\par}
+\vspace{0.5cm}
+{\color{white}\large Weeks 1 -- 10 \quad $\bullet$ \quad Lectures and Assignments\par}
+\end{tcolorbox}
+\vspace{3cm}
+\begin{tcolorbox}[colback=paleblue,colframe=navy,arc=2mm]
+\textbf{Course:} NPTEL Cloud Computing (Prof.\ Soumya K.\ Ghosh, IIT Kharagpur)\\[2pt]
+\textbf{Coverage:} Overview of computing, NIST cloud model, architecture, deployment
+models, virtualization, XML and web services, SLAs, cloud economics, data management
+(GFS, BigTable, Dynamo, MapReduce), OpenStack, Azure and GCP, resource management,
+cloud security, mobile cloud, fog and edge computing, sensor cloud, IoT cloud,
+cloud federation, VM migration, containers, Docker and Kubernetes.\\[2pt]
+\textbf{Each week includes:} concept notes, TikZ diagrams, solved numerical examples,
+and a worked review of the weekly assignment topics.
+\end{tcolorbox}
+\vfill
+{\color{slate}\small Prepared from the lecture slides and weekly assignments (Weeks 1--10).
+Week 11 and Week 12 are intentionally excluded because their assignments are not yet available.}
+\end{titlepage}
+
+\pagestyle{fancy}
+\tableofcontents
+\clearpage

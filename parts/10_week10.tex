@@ -1,0 +1,285 @@
+% ==================================================================
+%  WEEK 10
+% ==================================================================
+\chapter{Virtual Machine Migration, Container Primitives, and Cloud Orchestration}
+
+\section{Introduction and Week Overview}
+Week 10 concludes the technical core of the NPTEL Cloud Computing curriculum by investigating dynamic runtime relocation of compute instances and the deep operating-system primitives governing modern container engines. The curriculum covers:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Virtual Machine Migration Taxonomy:} Motivations (load balancing, hardware maintenance, energy consolidation, fault tolerance), what to migrate (CPU state, memory pages, network connections, storage), and Cold vs Live migration.
+  \item \textbf{Live Migration Paradigms:}
+    \begin{itemize}
+      \item \emph{Pre-Copy Iterative Migration:} Push phase, iterative dirty-page tracking, mathematical convergence criteria ($D < R$), and stop-and-copy downtime.
+      \item \emph{Post-Copy Migration:} Rapid CPU context handover, target-first execution, and on-demand network page faulting (Pull phase).
+    \end{itemize}
+  \item \textbf{Linux Kernel Container Primitives:} The deep mechanics of Linux Namespaces (process isolation) versus Control Groups / cgroups (resource quotas and metering).
+  \item \textbf{Docker Storage Persistence:} Ephemeral writable layers vs Docker Named Volumes.
+\end{enumerate}
+
+\section{Virtual Machine Migration Fundamentals}
+\subsection{Motivation and Operational Drivers}
+In a production cloud data center, virtual machines cannot remain permanently pinned to a single physical blade. Dynamic instance relocation is required for:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Dynamic Load Balancing:} Relieving resource congestion when a physical server experiences CPU, RAM, or I/O saturation.
+  \item \textbf{Zero-Downtime Hardware Maintenance:} Evacuating all active tenant VMs from a physical server prior to hardware upgrades, firmware flashes, or operating system patches.
+  \item \textbf{Green Energy Consolidation:} Packing lightly loaded VMs onto fewer physical servers during off-peak hours and powering off redundant hosts into low-power ACPI sleep states.
+  \item \textbf{Proactive Fault Tolerance:} Migrating VMs away from hardware nodes exhibiting escalating memory ECC error rates or thermal warnings before fatal crashes occur.
+\end{itemize}
+
+\subsection{The Migration State Tuple}
+A virtual machine is fully encapsulated as a state tuple:
+\begin{equation}
+\mathcal{S}_{\text{VM}} = \langle \mathcal{C}_{\text{CPU}}, \mathcal{M}_{\text{RAM}}, \mathcal{D}_{\text{Storage}}, \mathcal{N}_{\text{Network}}, \mathcal{I}_{\text{I/O}} \rangle
+\end{equation}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{CPU Context ($\mathcal{C}_{\text{CPU}}$):} Register states, Program Counter (PC), translation lookaside buffer (TLB) state, and virtual interrupt controllers. Size: Kilobytes; transfer time: milliseconds.
+  \item \textbf{Main Memory ($\mathcal{M}_{\text{RAM}}$):} The entire physical memory space allocated to the guest OS ($2\text{ GB}$ to $512\text{ GB}$). Migrating active memory while guest processes continuously modify memory pages is the central algorithmic challenge of live migration.
+  \item \textbf{Persistent Storage ($\mathcal{D}_{\text{Storage}}$):} In enterprise clouds, storage disks reside on shared network-attached storage (NAS, SAN, or Ceph). The virtual disk is accessible from both source and destination physical hosts, avoiding the need to transfer multi-terabyte disk images across the migration link.
+  \item \textbf{Network State ($\mathcal{N}_{\text{Network}}$):} The VM must retain its IP address and open TCP connections. Upon migration completion to a new switch port, the target hypervisor emits a \textbf{Gratuitous ARP (GARP)} broadcast, updating network switch forwarding tables (CAM tables) without severing established client sessions.
+\end{itemize}
+
+\section{Cold vs Live Migration Taxonomy}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X X}
+\toprule
+Dimension & Cold (Offline / Non-Live) Migration & Live (Hot / Online) Migration\\
+\midrule
+VM State During Transfer & Powered off, halted, or suspended. & Actively running and processing user requests.\\
+Service Downtime & Long ($T_{\text{downtime}} = T_{\text{transfer}}$). Equal to total migration duration. & Near-zero ($T_{\text{downtime}} \ll T_{\text{transfer}}$), typically $50\text{ ms} - 500\text{ ms}$.\\
+Implementation Complexity & Trivial (copy memory/disk snapshot file and boot on target). & High (requires continuous dirty-page tracking or on-demand page pulling).\\
+Application Impact & Unacceptable for latency-sensitive, real-time, or transactional services. & Undetectable by end users and active TCP sessions.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Cold Migration Transfer Duration Formulation}
+In cold migration, the entire memory footprint $V_m$ must be transferred over a network connection with usable sustained throughput $R$:
+\begin{equation}
+T_{\text{transfer}} = \frac{V_m}{R}
+\end{equation}
+
+\begin{solved}{Cold VM Migration Duration Calculation (Assignment 10, Q8)}
+\Given A virtual machine has memory $V_m = 32\text{ GB}$. The migration link provides a sustained throughput $R = 16\text{ MB/s}$. Calculate the transfer duration for a non-live migration. (Use $1\text{ GB} = 2^{30}\text{ bytes}$, $1\text{ MB} = 2^{20}\text{ bytes}$).
+\Formula
+\begin{equation}
+T = \frac{V_m}{R}
+\end{equation}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Convert gigabytes to megabytes:
+  \begin{equation}
+  V_m = 32\text{ GB} = 32 \times 1024\text{ MB} = 32,768\text{ MB}
+  \end{equation}
+  \item Compute duration in seconds:
+  \begin{equation}
+  T = \frac{32,768\text{ MB}}{16\text{ MB/s}} = 2048\text{ seconds}
+  \end{equation}
+  \item Convert to minutes:
+  \begin{equation}
+  T_{\text{minutes}} = \frac{2048}{60} \approx 34.133\text{ minutes} \quad (\approx 34\text{ minutes})
+  \end{equation}
+\end{enumerate}
+\Answer The transfer duration is approximately \textbf{34 minutes} ($2048$ seconds).
+\end{solved}
+
+\section{Live Migration Paradigms: Pre-Copy vs Post-Copy}
+Live migration decouples total migration time from service downtime through two primary algorithmic strategies:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\footnotesize]
+  % Pre-Copy Flow
+  \node[dark, minimum width=6cm] (pre1) {Phase 1: Warm-up (Copy Full $V_m$ to Destination)};
+  \node[mid, below=0.3cm of pre1, minimum width=6cm] (pre2) {Phase 2: Iterative Push of Dirtied Memory Pages};
+  \node[gold, below=0.3cm of pre2, minimum width=6cm] (pre3) {Phase 3: Stop-and-Copy (Suspend VM, Copy Final Pages + CPU)};
+  \node[steel, below=0.3cm of pre3, minimum width=6cm] (pre4) {Phase 4: Resume VM on Target (Emit Gratuitous ARP)};
+  \draw[arr] (pre1) -- (pre2); \draw[arr] (pre2) -- (pre3); \draw[arr] (pre3) -- (pre4);
+  \node[above=0.1cm of pre1, font=\bfseries] {(a) Pre-Copy Live Migration (Push Phase First)};
+
+  % Post-Copy Flow
+  \node[gold, right=1.5cm of pre1, minimum width=6cm] (post1) {Phase 1: Suspend VM at Source \& Transfer CPU Context};
+  \node[steel, below=0.3cm of post1, minimum width=6cm] (post2) {Phase 2: Resume VM on Destination Immediately};
+  \node[mid, below=0.3cm of post2, minimum width=6cm] (post3) {Phase 3: On-Demand Network Page Faulting (Pull Phase)};
+  \node[dark, below=0.3cm of post3, minimum width=6cm] (post4) {Phase 4: Background Memory Page Streaming};
+  \draw[arr] (post1) -- (post2); \draw[arr] (post2) -- (post3); \draw[arr] (post3) -- (post4);
+  \node[above=0.1cm of post1, font=\bfseries] {(b) Post-Copy Live Migration (Pull Phase)};
+\end{tikzpicture}
+\caption{Algorithmic Comparison: Pre-Copy vs Post-Copy Live Migration.}
+\end{figure}
+
+\subsection{Pre-Copy Iterative Live Migration}
+Employed by Xen, KVM, and VMware ESXi, Pre-Copy migration relies on a \textbf{Push} model:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Pre-Copy Initialization:} The source VM continues executing normally while the hypervisor copies the entire memory space ($V_m$) to the target host.
+  \item \textbf{Iterative Pre-Copying:} As the guest OS executes, it modifies memory pages (creating ``dirty pages''). The hypervisor uses shadow page tables or hardware dirty-bit tracking to log modified pages and re-transmits them in successive iterations.
+  \item \textbf{Mathematical Convergence Criterion:}
+    Let $D$ denote the memory dirtying rate (MB/s) and $R$ the network transmission rate (MB/s). The data remaining to be sent in iteration $k+1$ is:
+    \begin{equation}
+    V_{k+1} = V_k \times \left( \frac{D}{R} \right) = V_m \cdot r^{k+1}, \quad \text{where } r = \frac{D}{R}
+    \end{equation}
+    \begin{thmbox}{Pre-Copy Convergence Condition}
+    The iterative series converges to zero if and only if the dirtying rate is strictly less than the network transmission rate:
+    \begin{equation}
+    r = \frac{D}{R} < 1 \iff D < R
+    \end{equation}
+    If the VM executes a write-intensive workload where $D \ge R$, memory is dirtied faster than the network can transmit it. The iterative process will \textbf{never converge}, dramatically increasing migration duration and network bandwidth consumption!
+    \end{thmbox}
+  \item \textbf{Stop-and-Copy Phase:} When remaining dirty pages drop below a threshold (or a maximum round limit is reached), the source VM is suspended. The remaining dirty pages and CPU execution state are transmitted.
+  \item \textbf{Resume Phase:} The VM is resumed on the target host.
+\end{enumerate}
+
+\subsection{Post-Copy Live Migration}
+Post-Copy reverses the sequence:
+\begin{enumerate}[leftmargin=*]
+  \item The VM is suspended immediately on the source host.
+  \item Its minimal processor state ($\mathcal{C}_{\text{CPU}}$) is transferred to the destination.
+  \item The VM is \textbf{resumed on the destination immediately}!
+  \item When the VM accesses a memory page not yet present on the target, a network page fault traps execution, pulling the required page from the source host on demand (\textbf{Pull Phase}).
+  \item Remaining pages are pushed in the background.
+  \item \textbf{Key Advantage:} Every memory page is transmitted across the network \textbf{at most once}, guaranteeing that total data transferred equals exactly $V_m$, minimizing energy consumption and eliminating convergence failure.
+\end{enumerate}
+
+\section{Linux Kernel Container Primitives}
+Modern container runtimes (Docker, containerd, CRI-O) do not use hypervisors; they construct isolated user-space sandboxes using two fundamental Linux kernel subsystems:
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\small]
+  \node[dark, minimum width=6cm, minimum height=1cm] (ns) {\textbf{Namespaces}\\Isolation \& Visibility Boundary\\(\emph{``What processes can SEE''})};
+  \node[mid, right=1.5cm of ns, minimum width=6cm, minimum height=1cm] (cg) {\textbf{Control Groups (cgroups)}\\Resource Metering \& Throttling\\(\emph{``What processes can USE''})};
+\end{tikzpicture}
+\caption{The Two Pillars of Linux Container Virtualization.}
+\end{figure}
+
+\subsection{Linux Namespaces: Isolation of System Views}
+Namespaces wrap global system resources in an abstraction that makes it appear to processes within the namespace that they possess their own isolated instance of the resource:
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l l X}
+\toprule
+Namespace & Flag & Isolated System Resource\\
+\midrule
+PID & \texttt{CLONE\_NEWPID} & Process IDs. A container process sees itself as PID 1 (init), isolated from host PIDs.\\
+NET & \texttt{CLONE\_NEWNET} & Network devices, IP routing tables, port bindings, firewall rules (iptables).\\
+MNT & \texttt{CLONE\_NEWNS} & Filesystem mount points. Isolates container rootfs from the host root directory.\\
+IPC & \texttt{CLONE\_NEWIPC} & System V Inter-Process Communication and POSIX message queues.\\
+UTS & \texttt{CLONE\_NEWUTS} & Hostname and NIS domain name.\\
+USER & \texttt{CLONE\_NEWUSER} & User and Group ID mappings. Allows root inside a container to map to an unprivileged user outside.\\
+CGROUP & \texttt{CLONE\_NEWCGROUP} & Cgroup hierarchy visibility.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Control Groups (cgroups): Resource Allocation and Quotas}
+While namespaces prevent a container from seeing other processes, they do not restrict resource consumption. Without cgroups, a malicious container could execute an infinite loop or memory leak, starving the host. \textbf{Control Groups (cgroups)} meter, prioritize, and enforce hard limits on:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{CPU Shares and Quotas (\texttt{cpu.cfs\_quota\_us}):} Enforcing strict CPU bandwidth allocations.
+  \item \textbf{Memory Limits (\texttt{memory.limit\_in\_bytes}):} Enforcing hard memory ceilings; triggers Out-Of-Memory (OOM) killer if exceeded.
+  \item \textbf{Block I/O (\texttt{blkio}):} Throttling disk read/write bandwidth and IOPS.
+  \item \textbf{Device Access (\texttt{devices}):} Restricting access to physical character and block devices.
+\end{itemize}
+
+\subsection{Docker Storage Persistence: Named Volumes}
+Docker container writable layers are ephemeral; deleting a container purges all files written to its top layer. To persist data (e.g., database files):
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Docker Named Volumes:} Persistent storage directories managed by Docker located on the host filesystem (\texttt{/var/lib/docker/volumes/}).
+  \item \textbf{Lifecycle Decoupling:} If a database container is stopped or deleted, data residing inside an attached Docker named volume \textbf{remains completely intact and unaffected}.
+\end{itemize}
+
+\section{Comprehensive Solved Assignment Problems (Week 10)}
+
+\begin{solved}{Condition Increasing Live Migration Duration (Assignment 10, Q1)}
+\Given During live VM migration, which condition is most likely to increase the total migration time?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item In pre-copy live migration, the hypervisor iteratively copies dirty pages.
+  \item If the guest application modifies memory rapidly (\textbf{high rate of memory-page modification}, $D \ge R$), each iteration generates massive volumes of dirty pages, preventing rapid convergence and increasing total migration time.
+\end{enumerate}
+\Answer \textbf{Option B: High rate of memory-page modification by the VM}.
+\end{solved}
+
+\begin{solved}{Post-Copy Live Migration Mechanics (Assignment 10, Q2)}
+\Given Which live VM migration technique starts the VM on the destination first and then fetches memory pages from the source on demand as they are accessed?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Post-Copy Migration} suspends the VM, transfers the execution context to resume on the target immediately, and pulls memory pages across the network on-demand when page faults occur.
+\end{enumerate}
+\Answer \textbf{Option C: Post-copy migration}.
+\end{solved}
+
+\begin{solved}{Minimizing Data and Energy in Pre-Copy Migration (Assignment 10, Q3)}
+\Given Which technique is most likely to reduce the total data transferred and energy consumed during pre-copy live migration?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Compressing memory pages before network transmission reduces the total number of bytes transferred over the link, saving network bandwidth and transceiver energy.
+\end{enumerate}
+\Answer \textbf{Option B: Compressing memory pages before transmission}.
+\end{solved}
+
+\begin{solved}{Resource Management to Prevent Fog Overload (Assignment 10, Q4)}
+\Given What resource management strategy is most important to prevent overload when many edge devices send telemetry to nearby fog nodes?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Implementing dynamic load balancing and cooperative workload shedding across neighboring fog nodes distributes load evenly and avoids localized saturation.
+\end{enumerate}
+\Answer \textbf{Option C: Dynamic load balancing and workload offloading among fog nodes}.
+\end{solved}
+
+\begin{solved}{Kubernetes Pod Placement Component (Assignment 10, Q5)}
+\Given Which Kubernetes component assigns newly created Pods to appropriate worker nodes based on resource constraints?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The \textbf{\texttt{kube-scheduler}} filters and scores candidate nodes based on CPU/RAM availability, taints, tolerations, and affinity rules to select the optimal host for each Pod.
+\end{enumerate}
+\Answer \textbf{Option A: \texttt{kube-scheduler}}.
+\end{solved}
+
+\begin{solved}{Docker Build Output Artifact (Assignment 10, Q6)}
+\Given In the workflow: \texttt{Dockerfile $\to$ docker build $\to$ \_\_\_\_\_\_ $\to$ docker run}, which entity is produced?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The \texttt{docker build} command compiles the declarative instructions of a Dockerfile into an immutable, multi-layered \textbf{Docker image}.
+\end{enumerate}
+\Answer \textbf{Option B: Docker image}.
+\end{solved}
+
+\begin{solved}{Roles of Linux Namespaces and cgroups (Assignment 10, Q7)}
+\Given Which statement correctly describes the division of responsibilities between Linux namespaces and cgroups?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Namespaces} isolate system views (processes, networks, mounts).
+  \item \textbf{Control groups (cgroups)} meter, prioritize, and limit hardware resource consumption (CPU, memory, disk I/O).
+\end{enumerate}
+\Answer \textbf{Option B: Namespaces provide isolation of processes and system resources, while cgroups regulate resource usage}.
+\end{solved}
+
+\begin{solved}{Cold Migration Duration Computation (Assignment 10, Q8)}
+\Given Memory size $V_m = 32\text{ GB}$, usable network bandwidth $R = 16\text{ MB/s}$. Find approximate transfer duration.
+\Steps
+\begin{equation}
+V_m = 32 \times 1024\text{ MB} = 32,768\text{ MB}
+\end{equation}
+\begin{equation}
+T = \frac{32,768\text{ MB}}{16\text{ MB/s}} = 2048\text{ s} \approx 34.13\text{ minutes}
+\end{equation}
+\Answer \textbf{Option B: About 34 minutes}.
+\end{solved}
+
+\begin{solved}{Docker Named Volume Data Persistence (Assignment 10, Q9)}
+\Given A database container is accidentally deleted, but its data files were stored in a Docker named volume. What happens to the data?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Docker named volumes exist independently of container lifecycles on the host filesystem.
+  \item Deleting the container has zero impact on the volume; the data remains completely intact and can be mounted to a new container.
+\end{enumerate}
+\Answer \textbf{Option B: The data persists safely within the named volume on the host}.
+\end{solved}
+
+\begin{solved}{Core Comparison Between Containers and VMs (Assignment 10, Q10)}
+\Given Which statement about containers and virtual machines is correct?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Virtual Machines virtualize physical hardware and execute separate guest OS kernels.
+  \item Containers share the host operating system kernel and isolate applications at the process level.
+\end{enumerate}
+\Answer \textbf{Option C: Containers share the host operating system kernel, whereas virtual machines run separate guest operating systems}.
+\end{solved}

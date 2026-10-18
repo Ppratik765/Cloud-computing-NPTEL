@@ -1,0 +1,500 @@
+% ==================================================================
+%  WEEK 2
+% ==================================================================
+\chapter{Deployment Models, Virtualization, XML and Web Services}
+
+\section{Deployment Models in Depth}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lXX}
+\toprule
+Model & Definition & Examples\\
+\midrule
+Public & Infrastructure provisioned for open use by the general public; owned, managed and operated by a
+business, academic or government organization; exists on the provider's premises. & Google App Engine,
+Microsoft Windows Azure, IBM SmartCloud, Amazon EC2\\
+Private & Provisioned for exclusive use by a single organization with multiple consumers (business
+units); owned and operated by the organization, a third party or both; on or off premises. & Eucalyptus,
+Ubuntu Enterprise Cloud, Amazon VPC, VMware Cloud Infrastructure Suite\\
+Community & Provisioned for a specific community with shared concerns (mission, security, policy,
+compliance); owned and operated by one or more members, a third party, or both. & Google Apps for
+Government, Microsoft Government Community Cloud\\
+Hybrid & Composition of two or more distinct clouds (private, community, public) that remain unique
+entities but are bound by standardized or proprietary technology enabling data and application
+portability. & Windows Azure (hybrid capable), VMware vCloud\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Public Cloud: Issues}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Hidden workload location:} the provider may migrate workloads anywhere at any time
+        (e.g.\ to low-cost data centres) unless location-restriction policies are offered.
+  \item \textbf{Multi-tenancy risk:} a machine may host workloads of competitors or adversaries
+        (reliability and security risk).
+  \item \textbf{Network dependency:} access over the public Internet depends on DNS servers, router
+        infrastructure and inter-router links.
+  \item \textbf{Limited visibility and control:} provider operations and software are proprietary; a
+        subscriber cannot verify complete deletion of data.
+  \item \textbf{Elasticity:} illusion of unlimited resources; high flexibility in moving workloads.
+  \item \textbf{Low up-front cost}, but \textbf{restrictive default SLAs}.
+\end{itemize}
+
+\subsection{Private Cloud: On-site versus Outsourced}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lXX}
+\toprule
+Aspect & On-site private & Outsourced private\\
+\midrule
+Security perimeter & One perimeter around subscriber resources and private cloud & Two perimeters
+(subscriber and provider) joined by a protected link; security depends on both and the link\\
+Up-front cost & Significant to high (install and manage cloud software even if free) & Modest to
+significant (negotiating SLA, upgrading network, porting, training)\\
+Resources & Fixed capacity sized for anticipated workloads & Extensive; rent any quantity offered\\
+Data import/export & Limited by on-site network capacity & Limited by provider-subscriber link, but
+adjustable by provisioning high-performance links\\
+IT skills & Traditional plus cloud IT skills required & Less in-house operation\\
+Multi-tenancy & Workloads of different clients separated only by access policies; a software or policy
+flaw can expose workloads & Same implications\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Community and Hybrid Clouds}
+In a community cloud, each participant organization may provide services, consume services, or both
+(at least one must provide) and each implements its own security perimeter; perimeters are linked by
+boundary controllers. Access policy can be complex: with $N$ members a sharing decision must be made
+between each pair, expressed with role-based (RBAC) or attribute-based access control. Costs for a
+participant vary widely depending on whether it consumes only or also provides. An \emph{outsourced
+community cloud} resembles an outsourced private cloud but with multiple protected links.
+A hybrid cloud can be extremely complex and may change over time as constituent clouds join and leave.
+
+\section{IaaS: Provider-Subscriber View and Architecture}
+A subscriber gets access to virtual computers, network-accessible storage, network components such as
+firewalls, and configuration services. Fees are typically per CPU-hour, GB stored per hour, bandwidth,
+network infrastructure used (e.g.\ IP addresses per hour) and value-added services (monitoring,
+auto-scaling). The provider keeps spare VMs (e.g.\ clients A, B, C hold vm1--vm6 while the provider
+retains vm7--vmN).
+
+\textbf{Scope of control:} the IaaS stack comprises hardware, OS (split into a privileged hypervisor/VMM layer and
+a guest OS layer), middleware and applications. The provider keeps total control of hardware and
+administrative control of the hypervisor; the subscriber controls the guest OS, middleware and
+applications and may load any supported OS image. A hypervisor synthesizes VMs, each \emph{``an efficient,
+isolated duplicate of a real machine''}.
+
+\subsection{Three-level Hierarchy}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[dark,minimum width=4cm] (cm) at (0,0) {Cloud Manager};
+  \node[gold,minimum width=3.2cm] (dos) at (6,0) {Data Object Storage};
+  \node[mid,minimum width=3.2cm] (c1) at (-3,-2) {Cluster Manager 1};
+  \node[mid,minimum width=3.2cm] (c2) at (3,-2) {Cluster Manager 2};
+  \node[box,minimum width=2.2cm] (n1) at (-4.5,-4) {Computer Mgr};
+  \node[box,minimum width=2.2cm] (n2) at (-1.5,-4) {Computer Mgr};
+  \node[box,minimum width=2.2cm] (n3) at (1.5,-4) {Computer Mgr};
+  \node[box,minimum width=2.2cm] (n4) at (4.5,-4) {Computer Mgr};
+  \draw[arr] (cm)--(c1); \draw[arr] (cm)--(c2);
+  \draw[arr] (c1)--(n1); \draw[arr] (c1)--(n2); \draw[arr] (c2)--(n3); \draw[arr] (c2)--(n4);
+  \draw[darr] (cm)--(dos);
+  \node[font=\scriptsize,anchor=west] at (7.4,-2) {Persistent local storage per cluster};
+\end{tikzpicture}
+\caption{Logical view of an IaaS cloud: top, middle and bottom levels.}
+\end{figure}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Cloud Manager:} public access point where subscribers sign up, manage rented resources and
+        access data; authenticates subscribers, generates/validates access credentials, performs top-level
+        resource management, and decides if the cloud has enough free resources.
+  \item \textbf{Data Object Storage (DOS):} stores subscriber metadata such as credentials and OS images;
+        usually one service per cloud.
+  \item \textbf{Cluster Manager:} manages a collection of computers on a high-speed LAN (clusters may be
+        geographically distributed); receives allocation commands from the Cloud Manager, queries Computer
+        Managers for availability, instructs allocation, and reconfigures virtual networking; attached to
+        \emph{Persistent Local Storage (PLS)} giving disk-like storage to VMs.
+  \item \textbf{Computer Manager:} runs on each host; uses virtualization to provide VMs; tracks how many VMs
+        run and how many can start; uses the hypervisor command interface to start, stop, suspend and
+        reconfigure VMs.
+\end{itemize}
+
+\begin{solved}{Capacity check by the hierarchy}
+\Given Two clusters, each with 10 computers; each computer can host at most 8 VMs; 60 VMs already running; a subscriber requests 25 more VMs.
+\Formula Free slots $=$ (clusters $\times$ computers $\times$ slots) $-$ running VMs.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Total capacity $= 2 \times 10 \times 8 = 160$ VM slots.
+  \item Free slots $= 160 - 60 = 100$.
+  \item The Cluster Managers report availability upward; $25 \le 100$, so the Cloud Manager can satisfy the request.
+\end{enumerate}
+\Answer Request accepted; 75 slots remain free after allocation.
+\end{solved}
+
+\section{Virtualization}
+Virtualization lets one computer do the job of several by sharing a single hardware platform among multiple
+isolated environments; the focus here is \emph{platform virtualization}. Unlike dual-boot, both OSes run
+\emph{simultaneously} and are completely isolated.
+
+\subsection{Hypervisor and Popek--Goldberg Requirements}
+A hypervisor runs the guest OS directly on the CPU in user mode, so privileged instructions must be
+intercepted. Popek and Goldberg (CACM 1974) give three goals:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Equivalence:} VM indistinguishable from the real hardware.
+  \item \textbf{Resource control:} VMM fully controls virtualized resources.
+  \item \textbf{Efficiency:} most instructions execute directly on the CPU without the hypervisor.
+\end{itemize}
+Instructions are \emph{privileged} (trap in user mode) or \emph{sensitive} (change underlying resources --
+\emph{control sensitive}, or reveal the privilege level -- \emph{behavior sensitive}).
+
+\begin{thmbox}{Popek--Goldberg theorem}
+For any conventional third-generation computer, a VMM may be constructed if the set of sensitive
+instructions is a \textbf{subset} of the set of privileged instructions:
+\[ \text{Sensitive} \subseteq \text{Privileged}. \]
+A machine is \emph{recursively virtualizable} if it is virtualizable and a VMM without timing dependencies
+can be built for it.
+\end{thmbox}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \draw[fill=paleblue,draw=navy] (0,0) ellipse (2.6cm and 1.5cm);
+  \node[font=\small,anchor=south] at (0,1.5) {Privileged};
+  \draw[fill=slate!25,draw=slate] (-0.2,-0.2) ellipse (1.6cm and 0.85cm);
+  \node[font=\small] at (-0.2,-0.2) {Sensitive};
+  \node[font=\small,align=left,anchor=west] at (3.2,0) {Sensitive $\subseteq$ Privileged\\$\Rightarrow$ every sensitive\\instruction traps to the VMM};
+\end{tikzpicture}
+\caption{Virtualizable architecture: sensitive instructions lie inside the privileged set.}
+\end{figure}
+
+\begin{solved}{Is the instruction set virtualizable?}
+\Given Architecture A: privileged $=\{\texttt{HLT},\texttt{LGDT},\texttt{OUT},\texttt{IN},\texttt{LIDT}\}$, sensitive $=\{\texttt{LGDT},\texttt{OUT},\texttt{IN}\}$.
+Architecture B: same privileged set, sensitive $=\{\texttt{LGDT},\texttt{OUT},\texttt{POPF}\}$ where \texttt{POPF} silently ignores flag changes in user mode.
+\Formula VMM constructible iff Sensitive $\subseteq$ Privileged.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item A: all three sensitive instructions appear in the privileged set, so subset holds.
+  \item B: \texttt{POPF} is sensitive but not privileged (does not trap), so the subset fails.
+\end{enumerate}
+\Answer A is classically virtualizable; B is not (needs binary translation or hardware assistance).
+\end{solved}
+
+\subsection{Approaches to Server Virtualization}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lXXX}
+\toprule
+ & Full virtualization & Para-virtualization & Hardware-assisted\\
+\midrule
+Generation & 1st (binary rewriting, software based) & 2nd (cooperative) & 3rd (silicon based)\\
+Guest OS & Unmodified; unaware of emulation & \textbf{Modified}; uses hypercalls/specialized API &
+Unmodified\\
+Mechanism & Dynamic binary translation; all hardware including CPU emulated (QEMU, Bochs) & Guest runs
+kernel operations at ring 1; no privileged-instruction translation by VMM & CPU extensions (Intel VT-x,
+AMD-V) intercept privileged operations; guest at ring 0, VMM in a more privileged ``ring $-1$''\\
+Pros & Isolation; total VM portability across dissimilar hosts & Low overhead, close to native & Runs
+legacy unmodified OSs\\
+Cons & Emulation performance cost; guest forced to ring 1/3 so VMM must trap and emulate & Requires modified OS or
+para-virtual drivers (recompiling kernel or installing drivers) & Speed/flexibility: unmodified OS cannot
+exploit virtualization features (partly solved by para-virtual drivers)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \foreach \xx/\ttl/\rings in {0/{Traditional x86}/{App: Ring 3\\OS: Ring 0},
+                               5.4/{Full virtualization}/{App: Ring 3\\Guest OS: Ring 1/3\\VMM: Ring 0}}{
+    \node[font=\bfseries\small,text=navy] at (\xx+2,1.6) {\ttl};
+    \node[box,minimum width=4cm,minimum height=2.2cm,align=center] at (\xx+2,0) {\rings};
+  }
+\end{tikzpicture}
+\caption{Privilege rings: full virtualization forces the guest kernel out of ring 0.}
+\end{figure}
+
+\begin{solved}{Para-virtualization recognition (Assignment 2, Q1, Q2)}
+\Given A guest OS must issue \emph{hypercalls} instead of executing certain privileged instructions.
+\Formula Hypercalls $\Leftrightarrow$ modified guest OS $\Leftrightarrow$ para-virtualization.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Full / hardware-assisted virtualization runs an \emph{unmodified} guest; privileged instructions handled
+        by hypervisor and VT-x/AMD-V.
+  \item Hypercalls require OS modification, reducing overhead.
+\end{enumerate}
+\Answer Para-virtualization (Q1: C). Full virtualization is characterised by an unmodified guest with
+CPU extensions and hypervisor (Q2: B).
+\end{solved}
+
+\subsection{Host OS, Guest OS and Hypervisor}
+The hypervisor creates and manages VMs; each guest OS runs inside a VM; for a Type-2 hypervisor the host OS is
+the OS on which the hypervisor runs (Assignment 2, Q5: B).
+
+\section{Network Virtualization}
+Network virtualization makes one physical network appear as multiple logical networks.
+\textbf{Motivation:} the Internet is ``paralyzed'' by makeshift fixes (overlays); a one-size-fits-all
+architecture is hard, so build an \emph{all-sizes-fit-into-one} open, expandable architecture and a testbed for
+future protocols. \textbf{Related concepts:} VPNs (not customizable enough), active and programmable networks,
+overlay networks (not flexible enough).
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Business model roles:} Infrastructure Providers (InPs) manage physical networks; Service
+        Providers (SPs) create virtual networks and deploy end-to-end services; End Users buy services; Brokers
+        mediate.
+  \item \textbf{Design principles:} concurrence of multiple heterogeneous virtual networks; recursion; inheritance
+        of architectural attributes; revisitation of virtual nodes.
+  \item \textbf{Design goals:} flexibility; manageability (policy separated from mechanism); scalability;
+        security, privacy and isolation; programmability; heterogeneity; experimental and deployment
+        facility (PlanetLab, GENI, VINI); legacy support.
+\end{itemize}
+
+\begin{defbox}{Network Virtualization}
+A networking environment that allows multiple service providers to dynamically compose multiple heterogeneous
+virtual networks that coexist in isolation, to deploy customized end-to-end services on the fly and manage them
+for end users, by effectively sharing underlying network resources leased from multiple infrastructure providers.
+\end{defbox}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[dark,minimum width=3cm] (u) at (0,0) {End User};
+  \node[mid,minimum width=3cm] (sp) at (4,0) {Service Provider};
+  \node[box,minimum width=3cm] (inp) at (8,0) {Infrastructure Provider};
+  \node[gold,minimum width=3cm] (br) at (4,-1.8) {Broker};
+  \draw[darr] (u)--(sp); \draw[darr] (sp)--(inp);
+  \draw[darr] (br)--(sp); \draw[darr] (br)--(u); \draw[darr] (br)--(inp);
+\end{tikzpicture}
+\caption{Business model of network virtualization.}
+\end{figure}
+
+\section{XML: eXtensible Markup Language}
+XML is a syntax for encoding text-based data using printable Unicode characters. It is \textbf{extensible} (you define
+your own elements within the syntax rules) and a \textbf{universal format}: syntax rules ensure all processing
+software handles a given document identically. The data model is a \textbf{tree} of elements, attributes and text; it is
+self-describing, designed for distributed environments and can mix vocabularies.
+
+\begin{lstlisting}[language=XML]
+<?xml version="1.0" encoding="utf-8"?>
+<partorders>
+  <order ref="x23-2112-2342" date="25aug1999-12:34:23h">
+    <desc>Gold sprockel grommets</desc>
+    <part number="23-23221-a12" />
+    <quantity units="gross">12</quantity>
+    <deliveryDate date="27aug1999-12:00h" />
+  </order>
+</partorders>
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[level distance=1.2cm,sibling distance=2.6cm,every node/.style={box,font=\scriptsize}]
+  \node {partorders} child {node {order}
+      child {node {desc}} child {node {part}} child {node {quantity}} child {node {deliveryDate}}};
+\end{tikzpicture}
+\caption{XML data model: a hierarchical tree.}
+\end{figure}
+
+\subsection{Well-formedness, Entities and Parsers}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Well-formed:} syntactically correct; the minimal requirement ``to be'' XML. A parser \emph{must stop}
+        (raise an exception) if data is not well-formed.
+  \item \textbf{Internal entities} (declared in the DTD, e.g.\ \verb|<!ENTITY messageHeader "...">|, referenced as
+        \verb|&messageHeader;|) and \textbf{external entities} (\verb|SYSTEM "URL"|, shared among documents).
+        References are replaced recursively.
+  \item \textbf{Validating parser:} must retrieve all entities and process all DTD content, stopping on failure.
+        \textbf{Non-validating parser:} tries to retrieve entities but stops DTD processing at the first missing
+        one without error.
+  \item \textbf{Characters:} use character references such as \verb|&#9824;| for characters outside the encoding;
+        binary data must be encoded as printable characters.
+\end{itemize}
+
+\begin{solved}{Well-formed or not?}
+\Given Documents: (1) \verb|<a><b>x</b></a>|; (2) \verb|<a><b>x</a></b>|; (3) \verb|<a x=1/>|; (4) \verb|<a x="1"/>|.
+\Formula Well-formed: single root, properly nested tags, all tags closed, attribute values quoted.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item (1) properly nested -- well-formed.
+  \item (2) tags overlap -- not well-formed.
+  \item (3) unquoted attribute value -- not well-formed.
+  \item (4) quoted attribute, empty element closed -- well-formed.
+\end{enumerate}
+\Answer (1) and (4) are well-formed; (2) and (3) force a parser to halt.
+\end{solved}
+
+\subsection{DTD, XML Schema and Namespaces}
+\textbf{Well-formed} means syntactically correct; \textbf{valid} means well-formed and consistent with a DTD or Schema.
+A DTD specifies allowed element and attribute names, nesting rules and content restrictions.
+
+\begin{lstlisting}[language=XML]
+<!DOCTYPE transfers [
+  <!ELEMENT transfers (fundsTransfer)+>
+  <!ELEMENT fundsTransfer (from, to)>
+  <!ATTLIST fundsTransfer date CDATA #REQUIRED>
+  <!ELEMENT from (amount, transitID?, accountID, acknowledgeReceipt)>
+  <!ATTLIST from type (intrabank|internal|other) #REQUIRED>
+  <!ELEMENT amount (#PCDATA)>
+  <!ELEMENT to EMPTY>
+  <!ATTLIST to account CDATA #REQUIRED>
+]>
+\end{lstlisting}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lXX}
+\toprule
+ & DTD & XML Schema (2001)\\
+\midrule
+Syntax & Special DTD grammar (part of core XML) & Pure XML\\
+Types & Limited (CDATA, PCDATA) & Integers, dates, real numbers in a range, enumerations\\
+Entities & Can declare entities & Cannot declare entities\\
+Use & Basic structure validation & Type validation; relating database schemas to XML models\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Namespaces} identify different ``spaces'' for element names via the \texttt{xmlns} attribute (a URL string that
+need not point to anything), so \verb|<key/>| as a security key differs from \verb|<key/>| as a database key. They
+allow mixing dialects, e.g.\ XHTML with a \texttt{mt:} prefix for MathML.
+
+\subsection{XML Parser APIs and Processing}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lXX}
+\toprule
+API & Model & Suitable when\\
+\midrule
+SAX & Event-based, push, forward-only & Large documents, streaming, low memory\\
+StAX & Event-based, pull, forward-only & Streaming with application control\\
+DOM & Object/tree in memory; random access and modification & Moderately sized documents needing navigation and
+editing\\
+JDOM / dom4j & Java-specific tree models & Java-friendly tree processing\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\textbf{XSLT} (eXtensible Stylesheet Language Transformations) transforms XML into other XML, HTML or text using a
+stylesheet written in XML. \textbf{XML messaging} uses XML as the format for messages between systems, commonly over
+HTTP, with standard formats that ``wrap'' remote-procedure-call style data.
+
+\begin{solved}{Choosing a parser (Assignment 2, Q4)}
+\Given An application repeatedly navigates, randomly accesses and modifies elements of a moderately sized XML
+document held in memory.
+\Formula Random access plus modification $\Rightarrow$ in-memory tree.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item SAX and StAX are forward-only streams: no random access or modification.
+  \item DOM builds the whole tree in memory: supports both.
+\end{enumerate}
+\Answer \textbf{DOM}.
+\end{solved}
+
+\section{Web Services and Service-Oriented Architecture}
+\begin{defbox}{Web Service}
+A software application identified by a URI whose interfaces and bindings can be defined, described and
+discovered as XML artifacts, supporting direct interactions with other applications using XML-based messages over
+Internet protocols.
+\end{defbox}
+History: structured programming $\rightarrow$ object-oriented programming $\rightarrow$ distributed computing (RPC,
+CORBA, DCOM, RMI) and Electronic Data Interchange (EDI) $\rightarrow$ web services. Web services build on OOP
+principles, provide EDI-like capability over the Internet and solve three problems: \emph{interoperability},
+\emph{firewall traversal} (standard HTTP/HTTPS) and \emph{complexity}.
+
+\subsection{SOA Roles and Operations}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[mid,minimum width=3.4cm] (reg) at (4,2.4) {Service Registry\\(UDDI)};
+  \node[dark,minimum width=3.4cm] (prov) at (0,0) {Service Provider};
+  \node[dark,minimum width=3.4cm] (req) at (8,0) {Service Requestor};
+  \draw[arr] (prov) -- node[above left,font=\scriptsize] {1. Publish (WSDL)} (reg);
+  \draw[arr] (req) -- node[above right,font=\scriptsize] {2. Find} (reg);
+  \draw[arr] (req) -- node[below,font=\scriptsize] {3. Bind and invoke (SOAP)} (prov);
+\end{tikzpicture}
+\caption{The publish--find--bind triangle of SOA.}
+\end{figure}
+
+\begin{solved}{SOA interactions (Assignment 2, Q10)}
+\Given Roles: service provider, registry, requestor.
+\Formula Publish: provider $\to$ registry; Find: requestor $\to$ registry; Bind: requestor $\to$ provider.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The provider describes the service in WSDL and publishes it to the registry.
+  \item The requestor queries the registry and finds a suitable service.
+  \item The requestor binds directly to the provider and invokes operations.
+\end{enumerate}
+\Answer Option A: Publish, Find, Bind as stated.
+\end{solved}
+
+\subsection{The Web Service Stack}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lX}
+\toprule
+Layer & Role\\
+\midrule
+XML & Uniform data format (derived from SGML); tags are user-defined; describes data, whereas HTML describes
+display\\
+SOAP & Simple Object Access Protocol: message format over Internet protocols\\
+WSDL & Web Service Description Language: operations, messages, binding\\
+UDDI & Universal Description, Discovery and Integration: registry\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{SOAP building blocks:} Envelope (required; identifies the document as SOAP), Header (optional), Body (required;
+call and response data), Fault (optional). Messages are request/response over HTTP (POST). SOAP is extensible, neutral
+(any transport) and independent (any programming model). Usage models: RPC-like exchange and document-style messaging.
+SOAP uses HTTP and can therefore use HTTPS for security; the WS-Security family adds message-level security.
+
+\begin{lstlisting}[language=XML]
+POST /InStock HTTP/1.1
+Host: www.stock.org
+Content-Type: application/soap+xml; charset=utf-8
+
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  <soap:Body>
+    <m:GetStockPrice xmlns:m="http://www.stock.org/stock">
+      <m:StockName>IBM</m:StockName>
+    </m:GetStockPrice>
+  </soap:Body>
+</soap:Envelope>
+\end{lstlisting}
+
+\textbf{WSDL document structure:} \texttt{types}, \texttt{message} (with \texttt{part}s), \texttt{portType} (operations),
+\texttt{binding} and \texttt{service}. Example fragment: a message \texttt{getTermRequest} with part \texttt{term} of
+type \texttt{xs:string}, and a response message \texttt{getTermResponse}.
+
+\textbf{UDDI:} a framework to describe services, discover businesses and integrate business services; provides a service
+registry supporting publish and find. Benefits: discovering the right business from millions online, defining how services
+interact, and describing services and business processes programmatically.
+The WS-* family (WS-Security, WS-Policy, WS-Trust, WS-Privacy, WS-SecureConversation, WS-Federation) extends SOAP.
+
+\begin{solved}{What do traditional web services solve? (Assignment 2, Q7--Q9)}
+\Given Candidate capabilities: HTTP/HTTPS firewall passage, cross-language interoperability, ultra-low-latency
+real-time communication, UDDI discovery.
+\Formula XML/SOAP overhead $\Rightarrow$ no ultra-low latency; WSDL names the interface; UDDI discovers.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item HTTP/HTTPS: addressed. XML/SOAP/WSDL interoperability: addressed. UDDI discovery: addressed.
+  \item XML parsing and SOAP overhead add delay, so microsecond-level real-time messaging is \emph{not} addressed.
+  \item The interface (operations, messages, binding) is described by \textbf{WSDL}; UDDI only registers and discovers.
+\end{enumerate}
+\Answer Items (i), (ii), (iv) addressed, (iii) not (Q9: B); WSDL describes the interface (Q7: B); SOAP provides (i), (ii),
+(iii) (Q8: A).
+\end{solved}
+
+\subsection{Web Service Example: Web-based Purchase}
+A purchase order service calls invoice and consolidation services; the workflow is composed through SOAP messages
+discovered via a registry, illustrating loose coupling and platform independence.
+
+\section{Week 2 Assignment Review}
+\begin{center}
+\begin{tabularx}{\textwidth}{cXc}
+\toprule
+Q & Concept tested & Answer\\
+\midrule
+1 & Hypercalls $\Rightarrow$ para-virtualization & C\\
+2 & Full (hardware-assisted): unmodified guest, CPU extensions & B\\
+3 & Public cloud: open use, owned by provider & B\\
+4 & DOM for random access and modification & C\\
+5 & Hypervisor / guest OS / host OS roles & B\\
+6 & Hosted private cloud: SLA, compliance, latency all matter & D\\
+7 & WSDL describes the web service interface & B\\
+8 & SOAP: platform independence, XML, UDDI discovery & A\\
+9 & Web services do not address ultra-low latency & B\\
+10 & SOA publish--find--bind & A\\
+\bottomrule
+\end{tabularx}
+\end{center}

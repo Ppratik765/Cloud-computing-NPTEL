@@ -1,0 +1,517 @@
+% ==================================================================
+%  WEEK 3
+% ==================================================================
+\chapter{SLAs, Cloud Economics, Data Management, MapReduce and OpenStack}
+
+\section{Service Level Agreements (SLA)}
+\begin{defbox}{Service Level Agreement}
+A formal contract between a service provider and a consumer that specifies the services to be delivered,
+the measurable level of service (Service Level Objectives), how it is monitored, and the remedies or penalties
+when objectives are missed.
+\end{defbox}
+
+\textbf{SLA contents:} the set of services the provider will deliver; a complete, specific definition of each
+service; responsibilities of provider and consumer; the efficiency/quality metrics; how performance is monitored,
+audited and reported; the procedure for dispute resolution; and the consequences (credits, penalties) of
+non-compliance, including how the SLA is changed or terminated.
+
+\textbf{Web-service SLA:} \emph{WS-Agreement} is an XML-based language and protocol for negotiating, establishing and
+managing agreements. \textbf{Cloud SLA versus web-service SLA:} traditional QoS parameters (response time,
+throughput) are supplemented in the cloud by availability, resource capacity, scalability, elasticity and
+provisioning-time parameters.
+
+\textbf{Types of SLA:} \emph{off-the-shelf} (non-negotiable, standard terms of the provider) and \emph{negotiated}
+(customised). \textbf{Multilevel SLA:} corporate level (applies to all customers), customer level (specific to a
+customer) and service level (specific service).
+
+\textbf{Service Level Objectives (SLOs)} are objectively measurable conditions for the service (for example
+availability $\ge 99.9\%$, response time below 200~ms). \textbf{Service-level management} means monitoring and measuring
+service performance against SLOs.
+
+\textbf{Considerations for an SLA:} business-level objectives; responsibilities of provider and consumer;
+business continuity and disaster recovery; maintenance; data location and portability; security controls;
+regulatory compliance; and exit (termination) terms.
+
+\textbf{Key Performance Indicators (KPIs):} low-level resource metrics (CPU, memory, bandwidth) are combined into
+higher-level indicators; the questions are who should monitor (consumer, provider or third party) and how often.
+\textbf{Metrics for monitoring and auditing:} throughput (how quickly the service responds), reliability, load balancing,
+durability, elasticity, linearity, agility (how quickly the provider responds to change) and automation, performance
+and cost metrics.
+
+\textbf{Expected SLA parameters by model:} \emph{IaaS} -- CPU capacity, memory, storage, network, availability,
+provisioning time; \emph{PaaS} -- integration, scalability, pay-as-you-go billing, environment; \emph{SaaS} --
+reliability, usability, scalability, availability, customizability.
+
+\textbf{Limitations:} service measurement is restricted to uptime percentage; measurement is often the customer's
+burden; there is a gap between QoS hype and the SLA offerings in reality; credits are small compared with business
+loss.
+
+\subsection{Availability and Downtime}
+\begin{thmbox}{Allowed downtime}
+\[ \text{Allowed downtime} = (1 - A)\times T_{\text{service}}, \qquad
+   A_{\text{achieved}} = \frac{T_{\text{service}} - T_{\text{outage}}}{T_{\text{service}}}. \]
+$T_{\text{service}}$ is the agreed \emph{scheduled} service time, which may be less than 24 hours a day.
+\end{thmbox}
+
+\begin{solved}{99.9\% availability per 30-day month (Assignment 3, Q5)}
+\Given $A = 99.9\%$, month $= 30 \times 24 = 720$ hours.
+\Formula Allowed downtime $= (1 - A) \times T$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item $1 - 0.999 = 0.001$.
+  \item $0.001 \times 720 = 0.72$ hours.
+  \item $0.72 \times 60 = 43.2$ minutes.
+\end{enumerate}
+\Answer About \textbf{0.72 hours} ($\approx 43$ minutes).
+\end{solved}
+
+\begin{solved}{Multilevel SLA conflict (Assignment 3, Q2, Q3)}
+\Given Corporate level 95\%, customer level 98\%, service level 99.9\% uptime.
+\Formula The most specific, most granular level governs accountability for the actual service.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item A multilevel SLA consists of all three levels: corporate, customer and service.
+  \item In a conflict, the service-level SLA (99.9\%) is the binding, most specific commitment.
+\end{enumerate}
+\Answer Service-level SLA (Q3: C); a multilevel SLA includes (i), (ii) and (iii) (Q2: D).
+\end{solved}
+
+\begin{notebox}{What belongs in an SLA? (Assignment 3, Q1, Q4)}
+RTO, MTTR, penalty/credit calculation and availability percentage are SLA items. The exact encryption algorithm and
+key-storage procedure belong to security documents, not the SLA. Reliability and recoverability are quantified by
+\textbf{availability} and \textbf{Mean Time To Recovery (MTTR)}.
+\end{notebox}
+
+\section{Cloud Economics}
+Economic properties of the cloud:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Common infrastructure:} pooled standardized resources with benefits from statistical multiplexing.
+  \item \textbf{Location independence:} ubiquitous availability with latency reduction and better user experience.
+  \item \textbf{Online connectivity:} the enabler of other attributes.
+  \item \textbf{Utility pricing:} pay-per-use, beneficial where demand varies.
+  \item \textbf{On-demand resources:} elastic provisioning without delay or change cost.
+\end{itemize}
+
+\subsection{Value of Common Infrastructure: Statistics of Scale}
+Multiplexing demand raises utilization and lowers cost per delivered resource. Smoothness is measured by the
+\textbf{coefficient of variation}
+\[ C_v = \frac{\sigma}{|\mu|}. \]
+\begin{thmbox}{Aggregating independent demands}
+For $n$ independent demands $X_1,\dots,X_n$ with identical mean $\mu$ and standard deviation $\sigma$:
+mean $= n\mu$, variance $= n\sigma^2$, so
+\[ C_v^{\text{agg}} = \frac{\sqrt{n}\,\sigma}{n\mu} = \frac{C_v}{\sqrt{n}}. \]
+Perfectly correlated demands ($n X$) leave $C_v$ unchanged; negatively correlated demands ($X$ and $1-X$) smooth the sum
+to a constant.
+\end{thmbox}
+
+\begin{solved}{Smoothing by aggregation}
+\Given 100 independent workloads, each with $\mu = 40$ units and $\sigma = 20$ units.
+\Formula $C_v = \sigma/\mu$; $C_v^{\text{agg}} = C_v/\sqrt{n}$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Single workload: $C_v = 20/40 = 0.5$.
+  \item Aggregate: $C_v^{\text{agg}} = 0.5/\sqrt{100} = 0.5/10 = 0.05$.
+  \item Check: mean $= 4000$, std $= \sqrt{100}\times 20 = 200$, $200/4000 = 0.05$.
+\end{enumerate}
+\Answer $C_v$ falls from 0.5 to 0.05: aggregating 100 workloads reduces the penalty to 10\%.
+\end{solved}
+
+\subsection{Value of Location Independence}
+Latency depends strongly on distance and (second order) on routing; light in fibre covers only about 124 miles per
+millisecond; human response latency is tens to hundreds of ms; VoIP with latency above about 200~ms degrades.
+A global user base needs a dispersed architecture, raising coordination, consistency, availability and partition-tolerance issues.
+
+\subsection{Value of Utility Pricing}
+Cloud services need not be cheaper per unit to be economical: renting a car at INR 45,000 per day versus owning at INR 10,000 per day is
+cheaper if you need it for only two days. Let $D(t)$ be demand for $0<t<T$, $P=\max D(t)$ the peak, $A=\operatorname{avg} D(t)$
+the average, $B$ the baseline (owned) unit cost, $C$ the cloud unit cost, and $U = C/B$ the \emph{utility premium}.
+\begin{align*}
+ C_T &= U\,B\int_0^T D(t)\,dt = A\,U\,B\,T, &
+ B_T &= P\,B\,T \quad(\text{baseline must handle peak}).
+\end{align*}
+\begin{thmbox}{When is the cloud cheaper?}
+\[ C_T < B_T \iff U < \frac{P}{A}. \]
+The cloud is cheaper when the utility premium is less than the ratio of peak to average demand.
+\end{thmbox}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=11cm,height=6cm,xlabel={Utility premium $U$},ylabel={Total cost (relative to $B T$)},
+  xmin=0,xmax=5,ymin=0,ymax=2.2,legend pos=north west,legend style={font=\small},grid=major]
+  \addplot[navy,very thick,domain=0:5] {x/3};
+  \addplot[darkred,very thick,domain=0:5] {1};
+  \draw[dashed,slate] (axis cs:3,0) -- (axis cs:3,1);
+  \node[font=\small,anchor=north west] at (axis cs:3.05,0.95) {break-even $U=P/A=3$};
+  \legend{Cloud cost $C_T/(BT)=U A/P$,Own cost $B_T/(BT)=1$}
+\end{axis}
+\end{tikzpicture}
+\caption{Cloud versus owned cost for $P/A = 3$: break-even at $U = 3$.}
+\end{figure}
+
+\begin{solved}{Own or rent? (Assignment 5, Q10)}
+\Given Average demand $A = 75$, peak demand $P = 225$, utility premium $U = 2.8$.
+\Formula Cloud cheaper iff $U < P/A$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item $P/A = 225/75 = 3$.
+  \item $U = 2.8 < 3$.
+\end{enumerate}
+\Answer Cloud cost $<$ owning cost.
+\end{solved}
+
+\textbf{Real-world note:} demand is often spiky (promotions, tax season, flash crowds); a hybrid model is often best; network
+cost, interoperability overhead, reliability and accessibility must also be considered.
+
+\subsection{Value of On-demand Services and Penalty Cost}
+Owned resources incur a penalty whenever resources $R(t)$ do not match demand $D(t)$:
+$\text{Penalty} \propto \int |D(t) - R(t)|\,dt$. If demand is flat, the penalty is zero; for linear demand periodic provisioning is
+acceptable; for exponential demand $D(t) = e^t$ with provisioning delay $t_p$, $R(t) = e^{t-t_p}$ and
+$D - R = e^t(1 - e^{-t_p}) = k_1 e^t$, so the penalty grows exponentially.
+
+\begin{solved}{Penalty with provisioning delay (tutorial Assignment 1)}
+\Given Peak demand 120 units; $D(t) = 50\sin t$ for $0 \le t < \pi/2$ and $20\sin t$ for $\pi/2 \le t < \pi$;
+$R(t) = D(t) + \delta\,\dfrac{dD}{dt}$ with $\delta = \pi/12$; unit cost 0.9.
+\Formula Penalty $= 0.9 \int |D(t) - R(t)|\,dt = 0.9\,\delta \int |D'(t)|\,dt$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item $D - R = -\delta D'(t)$, hence $|D - R| = \delta |D'(t)|$.
+  \item On $[0,\pi/2)$: $D' = 50\cos t$, $\int_0^{\pi/2} 50\cos t\,dt = 50$.
+  \item On $[\pi/2,\pi)$: $|D'| = 20|\cos t|$, $\int_{\pi/2}^{\pi} 20|\cos t|\,dt = 20$.
+  \item Total $\int |D'|\,dt = 70$ (the jump at $t=\pi/2$ is treated as a single instant and ignored).
+  \item Penalty $= 0.9 \times \dfrac{\pi}{12} \times 70 = 5.25\pi$.
+\end{enumerate}
+\Answer Penalty $\approx 16.5$ cost units; the provisioning delay makes the cloud under-supply on the rising part of demand and
+over-supply on the falling part.
+\end{solved}
+
+\begin{solved}{Cloud versus owned for decaying demand (tutorial Assignment 2)}
+\Given $D(t) = 50(1 + e^{-t})$, peak $P=100$ (at $t=0$), baseline unit cost $B = 120$, cloud unit cost $C = 200$, period $T = 100$.
+\Formula $B_T = P\,B\,T$; $C_T = C\int_0^T D(t)\,dt$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item $B_T = 100 \times 120 \times 100 = 1{,}200{,}000$.
+  \item $\int_0^{100} 50(1 + e^{-t})\,dt = 50\,[\,100 + (1 - e^{-100})\,] \approx 5050$.
+  \item $C_T = 200 \times 5050 = 1{,}010{,}000$.
+  \item Cross-check: $A \approx 50.5$, $U = 200/120 = 1.67 < P/A = 100/50.5 = 1.98$.
+\end{enumerate}
+\Answer Yes, cloud cost $1.01\times10^6 <$ own cost $1.2\times10^6$.
+\end{solved}
+
+\section{Managing Data in the Cloud}
+\subsection{Relational and Parallel Databases}
+Relational databases are the default storage and retrieval mechanism, accessed through SQL by applications; the
+database file-system layer provides indexing and transaction support. \textbf{Row-oriented storage} is optimal
+for write-intensive transactional workloads; \textbf{column-oriented storage} is optimal for read-heavy analytics
+(only needed columns are read, and similar values compress well).
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}lXX}
+\toprule
+Architecture & Description & Suitable for\\
+\midrule
+Shared memory & CPUs share one address space managed by an SMP operating system & Servers with multiple CPUs\\
+Shared disk & Independent servers share storage over a high-speed network (NAS or SAN; Ethernet, Fibre Channel or Infiniband)
+& Hybrid, moderate scale\\
+Shared nothing & Cluster of independent servers each with own disk, connected by a network; tables partitioned across nodes &
+Massively parallel, large scale\\
+\bottomrule
+\end{tabularx}
+\end{center}
+\textbf{Advantages of a parallel DB over a relational DB:} efficient SQL execution on multiple processors; partitioned tables with a
+distributed-join optimizer; distributed two-phase commit locking; fault tolerance via stand-by systems.
+Examples: Oracle, DB2, SQL Server (transaction processing); Netezza, Vertica, Teradata (data warehousing).
+(Assignment 3, Q6: parallel DBs speed up analytics by \emph{distributed query execution across nodes}.)
+
+\subsection{Google File System and HDFS}
+GFS manages large files on a very large cluster of commodity servers. Failures must be tolerated because for $N$
+components $p(\text{system failure}) = 1 - (1 - p)^N \to 1$ for large $N$.
+\begin{itemize}[leftmargin=*]
+  \item A single \textbf{Master} (GFS) / \textbf{NameNode} (HDFS) controls the namespace and metadata.
+  \item Files are split into \textbf{chunks} (GFS) / \textbf{blocks} (HDFS) of typically 64~MB, stored on \textbf{chunk servers} /
+        \textbf{data nodes}, replicated three times on different racks and network segments.
+  \item \textbf{Read:} client sends path and offset to the master, gets replica metadata, caches it and reads from a chunk
+        server.
+  \item \textbf{Write/append:} master returns metadata for all replicas; client pushes data to all; the master designates a
+        \emph{primary}, which chooses the offset, applies the append and tells replicas; on any failure the primary retries.
+  \item \textbf{Fault tolerance:} heartbeat messages; metadata updated on failure; a new primary is assigned if the primary fails.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[dark,minimum width=3cm] (m) at (4,2) {Master / NameNode};
+  \node[box,minimum width=2cm] (cl) at (0,2) {Client};
+  \foreach \xx/\nm in {1/{Chunk server 1},4/{Chunk server 2},7/{Chunk server 3}}{
+    \node[mid,minimum width=2.4cm] (cs\xx) at (\xx,0) {\scriptsize \nm\\\scriptsize chunks (64 MB)};
+  }
+  \draw[darr] (cl)--(m) node[midway,above,font=\scriptsize] {metadata};
+  \draw[arr] (cl)--(cs1) node[midway,left,font=\scriptsize] {data};
+  \draw[arr,dashed] (m)--(cs4) node[midway,right,font=\scriptsize] {heartbeat};
+  \draw[arr,dashed] (m)--(cs7);
+  \draw[arr,dashed] (m)--(cs1);
+\end{tikzpicture}
+\caption{GFS/HDFS architecture: control path through the master, data path directly to chunk servers.}
+\end{figure}
+
+\begin{solved}{Chunks and failure probability}
+\Given A 1 GB file, chunk size 64 MB, replication factor 3; component failure probability $p = 0.001$ in a system of $N = 1000$ components.
+\Formula Chunks $= \lceil \text{size}/\text{chunk size} \rceil$; $p_{\text{sys}} = 1 - (1-p)^N$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item $1024/64 = 16$ chunks; replicas $= 16 \times 3 = 48$ chunk copies.
+  \item $p_{\text{sys}} = 1 - 0.999^{1000} = 1 - 0.3677 = 0.632$.
+\end{enumerate}
+\Answer 16 chunks (48 copies stored); with 1000 components some failure is likely ($\approx 63\%$), so fault tolerance is mandatory.
+\end{solved}
+
+\subsection{BigTable}
+A distributed structured storage system built on GFS: a \textbf{sparse, persistent, multi-dimensional sorted map} indexed by
+\emph{row key, column key and timestamp}. Columns are grouped into \emph{column families} (fixed at table creation, with labels
+created dynamically as \texttt{family:label}); each cell keeps multiple versions in decreasing timestamp order. Tables split into
+row ranges called \textbf{tablets}, each managed by a \textbf{tablet server}, stored as \emph{SSTable} files per column family; a
+metadata table (with a root tablet) locates tablets. Supports large parallel reads and inserts; inserts are sorted and need more
+work than a simple append.
+
+\subsection{Dynamo}
+Developed by Amazon for large volumes of concurrent small updates (key--value model, no dependence on GFS/HDFS), suited to
+e-commerce.
+\begin{itemize}[leftmargin=*]
+  \item Objects are $\langle$key, value$\rangle$ pairs; \textbf{MD5} yields a 128-bit hash whose range maps to \emph{virtual nodes
+        on a ring}; each physical node holds several virtual nodes. Objects replicate to $N$ nodes.
+  \item Writes execute at a virtual node and are forwarded to replicas; load balancing handles transient failures and partitions.
+  \item \textbf{Versioning with vector timestamps}: superseded versions are discarded; concurrent writes keep all versions, returned
+        to readers for conflict resolution.
+  \item \textbf{Quorum:} a read touches $R$ replicas, a write touches $W$; if $R + W > N$ the system is quorum consistent.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \draw[slate,very thick] (0,0) circle (2cm);
+  \foreach \ang/\nm in {90/A,30/B,330/C,270/D,210/E,150/F}{
+    \node[dark,circle,inner sep=2pt,font=\small] (v\nm) at (\ang:2cm) {\nm};
+  }
+  \node[font=\small,align=center] at (0,0) {hash ring\\(128-bit MD5)};
+  \node[gold,anchor=west,align=left,font=\small] at (3,0.8) {key $k$ hashes to a point;\\primary = next node clockwise;\\replicas = next $N-1$ nodes};
+\end{tikzpicture}
+\caption{Dynamo consistent-hashing ring with virtual nodes.}
+\end{figure}
+
+\begin{solved}{Quorum consistency}
+\Given $N = 3$ replicas. Configurations: (a) $R=1, W=1$; (b) $R=2, W=2$; (c) $R=1, W=3$.
+\Formula Quorum consistent iff $R + W > N$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item (a) $1 + 1 = 2 \not> 3$: not consistent.
+  \item (b) $2 + 2 = 4 > 3$: consistent.
+  \item (c) $1 + 3 = 4 > 3$: consistent; reads are fast, writes slow.
+\end{enumerate}
+\Answer (b) and (c). Raising $W$ favours reads; raising $R$ favours writes.
+\end{solved}
+
+\subsection{Datastore (App Engine) and SimpleDB}
+All entities reside in one BigTable table (single column family, no column-oriented storage), sharded and sorted lexicographically by
+key. Entities are grouped by ancestry for transactions; \emph{prefix and range queries} are efficient. Index tables support queries:
+automatically created \textbf{single-property} and \textbf{kind} indexes, and configurable \textbf{composite} indexes; the index
+with highest selectivity is chosen.
+
+\section{Introduction to MapReduce}
+MapReduce is the programming model developed at Google for large-scale text processing and search on data in BigTable/GFS; it is
+fault tolerant and runs on tens of thousands of processors. \emph{Hadoop} (Yahoo!) is the open-source implementation.
+
+\subsection{Parallel Efficiency}
+\[ \varepsilon = \frac{T_{1}}{p \cdot T_{p}} \]
+where $T_1$ is the uniprocessor time and $T_p$ the time on $p$ processors. Inefficiencies arise from synchronization,
+message overhead and load imbalance. An implementation is \emph{scalable} if efficiency stays constant when data and processors grow
+proportionally.
+
+\textbf{Illustration (word frequencies).} With $n$ documents, $m$ distinct words, each word occurring $f$ times per document on
+average, read cost $c$ per word:
+\begin{itemize}[leftmargin=*]
+  \item Single processor: $n\,m\,f\,c$.
+  \item \emph{Approach 1} (each processor handles $m/p$ words): every processor reads all words of all documents, $n\,(m/p)\,f$ useful
+        reads but scans everything $\Rightarrow$ efficiency falls with $p$ (not scalable).
+  \item \emph{Approach 2} (each processor handles $n/p$ documents for all $m$ words): reads $(n/p)\,m\,f\,c$, writes partial vector
+        $c\,m$, merges $p\,(m/p)\,c$; every read is useful, efficiency tends to 1 as $n$ grows ($p \ll nf$).
+\end{itemize}
+
+\subsection{The Model}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=7mm]
+  \node[gold,minimum width=2.4cm] (in) at (0,0) {Input splits};
+  \foreach \i/\y in {1/1.2,2/0,3/-1.2}{
+    \node[box,minimum width=1.8cm] (m\i) at (3.4,\y) {Map \i};
+  }
+  \node[mid,minimum width=2.6cm,minimum height=3.4cm] (sh) at (6.6,0) {Local files\\sorted by key\\shuffle};
+  \foreach \i/\y in {1/0.7,2/-0.7}{
+    \node[box,minimum width=1.8cm] (r\i) at (9.6,\y) {Reduce \i};
+  }
+  \node[gold,minimum width=1.8cm] (out) at (12.4,0) {Output (GFS)};
+  \foreach \i in {1,2,3}{ \draw[arr] (in)--(m\i); \draw[arr] (m\i)--(sh); }
+  \foreach \i in {1,2}{ \draw[arr] (sh)--(r\i); \draw[arr] (r\i)--(out); }
+\end{tikzpicture}
+\caption{MapReduce data flow with 3 mappers and 2 reducers.}
+\end{figure}
+
+\textbf{Map phase:} each of $M$ mappers reads about $1/M$ of the input; the map function transforms key-value pairs
+$(k_1,v_1)\to[(k_2,v_2)]$; each mapper writes one file per reducer, sorted by key, to its \emph{local} file system, and the master tracks
+locations. \textbf{Reduce phase:} the master tells reducers where the partial files are; reducers fetch them by remote procedure call,
+group values by key, apply the reduce function $(k_2,[v_2])\to$ output, and write results to GFS.
+\textbf{Fault tolerance:} heartbeats; tasks with no progress are duplicated; a failed \emph{mapper} must be re-executed because its output
+is on local disk; a failed \emph{reducer} needs only its unfinished tasks re-run since completed output is already in GFS.
+
+\begin{lstlisting}
+map(String docId, String text):
+    for each word w in text:
+        EmitIntermediate(w, 1)
+
+reduce(String word, Iterator counts):
+    total = 0
+    for each c in counts:
+        total += c
+    Emit(word, total)
+\end{lstlisting}
+
+\subsection{MapReduce Efficiency}
+For a task on data volume $D$ with per-word cost $c$: uniprocessor time
+$wD = cD + c\,m\,D + c\,r\,\sigma D + c\,\sigma\mu D$ (read, map, reduce, write). With $P$ processors the extra overhead is each mapper writing
+$\sigma D/P$ locally and each reducer reading it remotely, so the overhead is $\dfrac{2c\sigma D}{P}$ in addition to $\dfrac{wD}{P}$.
+\[ \varepsilon_{MR} = \frac{wD}{P\left(\dfrac{wD}{P} + \dfrac{2c\sigma D}{P}\right)} = \frac{1}{1 + \dfrac{2c\sigma}{w}}. \]
+
+\begin{solved}{MapReduce parallel efficiency}
+\Given $w = c(1 + m + r\sigma + \sigma\mu)$ with $m = 1$, $r = 1$, $\sigma = 1$, $\mu = 0.1$ (so $w = 3.1c$).
+\Formula $\varepsilon_{MR} = 1/(1 + 2c\sigma/w)$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item $2c\sigma/w = 2c/(3.1c) = 0.645$.
+  \item $\varepsilon_{MR} = 1/1.645 = 0.608$.
+\end{enumerate}
+\Answer About 61\% efficiency; efficiency is independent of $P$ and $D$, so the implementation is scalable.
+\end{solved}
+
+\textbf{Applications:} indexing a document collection (map emits $(w_i, d_k)$; reduce builds $(w_i, [d_{i1},\dots,d_{im}])$); relational operations
+(joins, group-by) at large scale with fault tolerance; word count.
+
+\begin{solved}{Combiner and shuffle volume (Assignment 3, Q9; Assignment 5, Q4, Q6, Q7)}
+\Given Word count of 2 TB with mapper output 1.5 TB, reducers run out of disk; HDFS block size 128 MB, input file 700 MB.
+\Formula Number of map tasks $= \lceil \text{file size} / \text{block size} \rceil$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item A \textbf{combiner} pre-aggregates mapper output locally (summing counts per word), shrinking 1.5 TB drastically before the shuffle; without it
+        everything reaches the reducers and the merge exhausts disk space. Fix: configure the combiner.
+  \item $\lceil 700/128 \rceil = \lceil 5.47 \rceil = 6$ blocks $\Rightarrow$ 6 map tasks.
+  \item The \textbf{Partitioner} decides which reducer receives a key (hash-based by default).
+  \item The Combiner is optional and may run zero, one or many times, so the algorithm must stay correct without it.
+\end{enumerate}
+\Answer Combiner (B); 6 map tasks (B); Partitioner (B); Combiner (C).
+\end{solved}
+
+\begin{solved}{Blocks, average and grouped salary (tutorial problems)}
+\Given Block size 64 MB; files of 64 KB, 65 MB, 127 MB. Set $A = (10,20,30,40,50)$.
+\Formula Blocks per file $=\lceil \text{size}/64\,\text{MB}\rceil$. Average $=\sum x / n$ computed with pairs $(\text{sum},\text{count})$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item 64 KB $\to$ 1 block; 65 MB $\to \lceil 1.02\rceil = 2$; 127 MB $\to \lceil 1.98\rceil = 2$. Total $=5$ blocks.
+  \item Mapper emits $(\text{``avg''}, (x,1))$ for each integer; combiner/reducer adds component-wise: sum $=150$, count $=5$.
+  \item Reducer outputs $150/5 = 30$.
+\end{enumerate}
+\Answer 5 blocks; average $= 30$. (Note: averaging the \emph{averages} of partial results is incorrect; carry $(\text{sum},\text{count})$.)
+\end{solved}
+
+\begin{lstlisting}
+// Salary statistics grouped by gender
+map(line):                          // "Name, Gender, Salary"
+    (name, g, s) = parse(line)
+    Emit(g, (s, 1))
+reduce(gender, values):
+    total = 0; n = 0
+    for (s, c) in values: total += s; n += c
+    Emit(gender, (total, total / n))
+
+// Word length categorisation
+map(word):
+    L = length(word)
+    if L <= 2: Emit("tiny", 1)
+    else if L <= 5: Emit("small", 1)
+    else if L <= 9: Emit("medium", 1)
+    else: Emit("big", 1)
+reduce(category, counts): Emit(category, sum(counts))
+\end{lstlisting}
+
+\section{OpenStack}
+OpenStack is a cloud operating system controlling large pools of compute, storage and networking resources in a data centre,
+managed through a dashboard. Origin: a collaboration between NASA and Rackspace. It offers IaaS (VMs on demand, provisioning,
+snapshotting, networking).
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}llX}
+\toprule
+Service & Project & Function\\
+\midrule
+Compute & Nova & Manages VM lifecycle on hypervisors (scheduling, spawning)\\
+Networking & Neutron & Virtual networks, routers, DHCP, security groups, floating IPs; routes tenant traffic\\
+Object storage & Swift & Scalable, redundant object (blob) store\\
+Block storage & Cinder & Persistent block volumes independent of VM lifecycle\\
+Identity & Keystone & Authentication, authorization, service catalog, tokens\\
+Image service & Glance & Stores and retrieves VM disk images\\
+Telemetry & Ceilometer & Metering and monitoring for billing\\
+Dashboard & Horizon & Web UI for users and administrators\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Provisioning flow:} (1) the user logs in via Horizon and specifies VM parameters (name, flavor, keys, image); (2) Keystone
+authenticates and returns an auth token reused for later API calls; (3) the Nova API publishes a request to the scheduler
+(rpc cast); the \emph{Nova scheduler} filters and weighs hosts; (4) Nova compute driver talks to the hypervisor; Glance supplies the image,
+Neutron allocates network ports and Cinder attaches volumes. \textbf{Ephemeral storage} persists only until the VM terminates; Cinder
+volumes persist beyond it.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=5mm]
+  \node[dark,minimum width=2.2cm] (h) {Horizon};
+  \node[mid,minimum width=2.2cm,right=of h] (k) {Keystone};
+  \node[mid,minimum width=2.2cm,right=of k] (n) {Nova API};
+  \node[mid,minimum width=2.2cm,right=of n] (s) {Scheduler};
+  \node[box,minimum width=2.2cm,below=1.2cm of n,xshift=-2.4cm] (g) {Glance};
+  \node[box,minimum width=2.2cm,below=1.2cm of n] (ne) {Neutron};
+  \node[box,minimum width=2.2cm,below=1.2cm of n,xshift=2.4cm] (ci) {Cinder};
+  \node[gold,minimum width=2.4cm,below=1.2cm of ne] (hy) {Nova compute + hypervisor};
+  \draw[arr] (h)--(k); \draw[arr] (k)--(n); \draw[arr] (n)--(s);
+  \draw[arr] (s) to[bend left=20] (hy);
+  \draw[arr] (g)--(hy); \draw[arr] (ne)--(hy); \draw[arr] (ci)--(hy);
+\end{tikzpicture}
+\caption{Simplified OpenStack VM provisioning flow.}
+\end{figure}
+
+\begin{solved}{Over-subscription (Assignment 3, Q10)}
+\Given A compute node with 640 physical vCPUs and a CPU allocation ratio of 5:1.
+\Formula Allocatable vCPUs $=$ physical vCPUs $\times$ allocation ratio.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item $640 \times 5 = 3200$.
+\end{enumerate}
+\Answer 3200 virtual CPUs.
+\end{solved}
+
+\section{Week 3 Assignment Review}
+\begin{center}
+\begin{tabularx}{\textwidth}{cXc}
+\toprule
+Q & Concept tested & Answer\\
+\midrule
+1 & Items not in an SLA: encryption algorithm details & B\\
+2 & Multilevel SLA: corporate, customer, service & D\\
+3 & Service-level SLA binds in conflict & C\\
+4 & Availability and MTTR & A\\
+5 & 99.9\% of 720 h $\Rightarrow$ 0.72 h & A\\
+6 & Parallel DB: distributed query execution & B\\
+7 & Sub-second fraud detection: nightly batch is least suitable & C\\
+8 & Petabyte imagery for Spark: object storage & B\\
+9 & Missing combiner exhausts reducer disk & B\\
+10 & $640 \times 5 = 3200$ vCPUs & B\\
+\bottomrule
+\end{tabularx}
+\end{center}

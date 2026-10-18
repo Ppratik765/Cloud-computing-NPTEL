@@ -1,0 +1,436 @@
+% ==================================================================
+%  WEEK 4
+% ==================================================================
+\chapter{Private Cloud with OpenStack, Microsoft Azure, and Google Cloud Platform}
+
+\section{Introduction and Week Overview}
+Week 4 bridges the theoretical foundations of virtualization and service-oriented architectures into concrete, production-grade cloud implementations. The curriculum covers three distinct cloud ecosystems:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Private Cloud Implementation via OpenStack:} An empirical examination of IIT Kharagpur's on-premises cloud infrastructure (\emph{Meghamala}), exploring control plane components, hypervisor virtualization, and virtual machine lifecycle orchestration.
+  \item \textbf{Microsoft Azure Ecosystem:} Enterprise infrastructure components, geographic resilience architectures (Regions and Availability Zones), Azure App Service deployment topologies, deployment slot mechanics, and scalable database decoupling (Azure SQL Database Hyperscale).
+  \item \textbf{Google Cloud Platform (GCP):} Google's global network fabric, Platform-as-a-Service orchestration with Google App Engine (GAE), managed storage services, globally scalable relational consistency via Cloud Spanner, and real-time big data analytical pipelines.
+\end{enumerate}
+
+\section{Private Cloud Implementation: Meghamala at IIT Kharagpur}
+\subsection{Architectural Blueprint and Infrastructure Topology}
+\emph{Meghamala} (meaning ``Garland of Clouds'' in Sanskrit) is the dedicated private cloud computing facility at the Department of Computer Science and Engineering, IIT Kharagpur. Built on the open-source OpenStack platform, Meghamala serves institutional researchers, laboratory computing classes, and faculty development clusters.
+
+The underlying infrastructure consists of high-density commodity server racks partitioned into:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Controller Nodes:} Running the OpenStack API daemons, message queue brokers (RabbitMQ), relational database instances (MariaDB/MySQL), and state coordination engines.
+  \item \textbf{Network Nodes:} Executing OpenStack Neutron agents, virtual software switches (Open vSwitch / Linux Bridge), L3 routing daemons, DHCP agents, and metadata proxies.
+  \item \textbf{Compute Nodes:} Running standard hypervisors (predominantly Linux KVM managed by \texttt{libvirt}) orchestrated by the \texttt{nova-compute} daemon, executing multi-tenant guest operating systems.
+  \item \textbf{Storage Nodes:} Dedicated storage appliances hosting block storage pools (Cinder volumes backed by LVM, Ceph, or iSCSI SAN) and object storage clusters (Swift).
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=5mm, font=\small]
+  % Controller Box
+  \node[dark, minimum width=3.8cm, minimum height=1cm] (ctrl) {OpenStack Controller Node\\(\texttt{keystone, nova-api, glance})};
+  \node[mid, right=1.5cm of ctrl, minimum width=3.4cm, minimum height=1cm] (msg) {Message Broker \& DB\\(\texttt{RabbitMQ, MariaDB})};
+  \node[dark, right=1.5cm of msg, minimum width=3.4cm, minimum height=1cm] (net) {Neutron Network Node\\(L3 Router, DHCP, OVS)};
+
+  % Compute and Storage
+  \node[box, below=1.4cm of ctrl, minimum width=3.8cm, minimum height=1.3cm] (comp1) {Compute Node 1\\(\texttt{nova-compute}, KVM)};
+  \node[box, right=0.5cm of comp1, minimum width=3.8cm, minimum height=1.3cm] (comp2) {Compute Node 2\\(\texttt{nova-compute}, KVM)};
+  \node[gold, right=0.5cm of comp2, minimum width=3.8cm, minimum height=1.3cm] (cinder) {Storage Node\\(\texttt{cinder-volume}, iSCSI/Ceph)};
+
+  % Interconnects
+  \draw[arr, <->] (ctrl) -- (msg);
+  \draw[arr, <->] (msg) -- (net);
+  \draw[arr, <->] (ctrl) -- (comp1);
+  \draw[arr, <->] (msg) |- (comp2);
+  \draw[arr, <->] (ctrl) -| (cinder);
+  \draw[arr, dashed, <->] (comp1) -- (cinder) node[midway, above, font=\scriptsize] {iSCSI Target};
+  \draw[arr, dashed, <->] (comp2) -- (cinder);
+\end{tikzpicture}
+\caption{Meghamala OpenStack Physical and Logical Architecture.}
+\end{figure}
+
+\subsection{Horizon Web Dashboard: Operational Modules}
+The primary administrative interface demonstrated in the lecture is OpenStack \textbf{Horizon}. The dashboard organizes cloud administrative actions into modular panels:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l p{3.2cm} X}
+\toprule
+Horizon Module & Corresponding Service & Demonstrated Operational Capabilities\\
+\midrule
+Project Overview & Horizon / Ceilometer & Graphical quota visualization (vCPUs allocated, RAM utilized, Floating IPs reserved, Security Group quotas).\\
+Instances & Nova & Tabular listing of active, paused, or suspended VMs; display of hypervisor host, power state, task status, fixed IP (e.g., \texttt{10.4.0.x}), and public floating IP (e.g., \texttt{192.164.0.x}).\\
+Flavors & Nova & Hardware profile templates defining virtual machine dimensions (e.g., \texttt{m1.tiny}: 1 vCPU, 512 MB RAM, 1 GB disk; \texttt{m1.large}: 4 vCPU, 8 GB RAM, 80 GB disk).\\
+Images & Glance & Catalog of curated OS disk templates (Ubuntu Server, CentOS, Debian, CirrOS) uploaded in QCOW2 or RAW formats.\\
+Volumes & Cinder & Lifecycle management of persistent block storage volumes; snapshot creation, volume expansion, and volume attachment to active Nova instances.\\
+Networks \& Routers & Neutron & Software-defined virtual tenant networks (VXLAN/GRE overlays), internal subnet allocation, default gateway assignment, external network routing, and floating IP allocation pools.\\
+Security Groups & Neutron & Stateful virtual firewalls operating at the port level; protocol, port range, and ingress/egress CIDR rule definition.\\
+Access \& Security & Keystone / Nova & SSH key-pair generation, API access endpoints, and user credential tokens.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Step-by-Step VM Provisioning and Access Workflow}
+The demonstration shows the complete lifecycle of provisioning a virtual compute instance (named \texttt{cloud-nptel}) and establishing secure remote connectivity:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Authentication and Scoping:} The user accesses Horizon via Web browser. Credentials (username and password) are sent to \textbf{Keystone}, which validates the user against the SQL identity backend and returns an unscoped token, followed by a scoped token associated with the specific tenant/project.
+  \item \textbf{Instance Parameter Specification:}
+    \begin{itemize}
+      \item \emph{Instance Name:} \texttt{cloud-nptel}.
+      \item \emph{Source:} Boot from Glance image (e.g., Ubuntu Linux LTS \texttt{.qcow2}).
+      \item \emph{Flavor Selection:} Selection of computing capacity matching computational requirements.
+      \item \emph{Network Attachment:} Binding the virtual network interface card (vNIC) to the tenant's private subnet (\texttt{10.4.0.0/24}).
+      \item \emph{Security Group Assignment:} Enforcing ingress security rules: Port 22 (SSH) and custom remote desktop ports.
+      \item \emph{Key Pair Association:} Injecting the user's public SSH key into the VM's \texttt{authorized\_keys} file via \texttt{cloud-init} during boot.
+    \end{itemize}
+  \item \textbf{Compute Node Scheduling:} The \texttt{nova-scheduler} applies filtering algorithms (checking available vCPUs, memory, and hypervisor architecture) and weighting algorithms to select the optimal physical compute node.
+  \item \textbf{Image Caching and Hypervisor Execution:} The local \texttt{nova-compute} daemon fetches the base image from Glance, caches it locally, constructs an ephemeral copy-on-write overlay, writes the domain XML definition for \texttt{libvirt}, and boots the KVM guest.
+  \item \textbf{Floating IP Association:} The instance initially receives an internal, non-routable private IP (\texttt{10.4.0.4}). To make the instance accessible from campus desktop workstations, a public floating IP (\texttt{192.164.0.8}) is allocated from the external pool and mapped via 1:1 NAT in the Neutron virtual router.
+  \item \textbf{Remote Client Connectivity:}
+    \begin{itemize}
+      \item \emph{Command Line Access:} Direct terminal connection via secure shell:
+      \begin{lstlisting}[language=bash]
+ssh -i ~/.ssh/meghamala_key.pem ubuntu@192.164.0.8
+      \end{lstlisting}
+      \item \emph{Graphical Desktop Access via X2Go:} X2Go is an open-source remote desktop client based on NX technology, allowing high-performance graphical desktop access over low-bandwidth wide-area connections. The user configures an X2Go session targeting host \texttt{192.164.0.8}, specifying user \texttt{ubuntu}, RSA private key authentication, and session environment (e.g., XFCE or MATE).
+    \end{itemize}
+  \item \textbf{Instance Termination and Resource Reclamation:} When work completes, the user terminates the instance via Horizon. Nova signals \texttt{libvirt} to shut down the KVM process, deletes the ephemeral root disk, reclaims allocated RAM and vCPUs, and releases the private IP back to the Neutron DHCP pool. Associated Cinder volumes remain intact unless explicitly flagged for deletion.
+\end{enumerate}
+
+\begin{defbox}{Floating IP vs Fixed Private IP in OpenStack}
+\textbf{Fixed IP:} An internal, tenant-private IP address automatically assigned by Neutron DHCP upon VM creation (e.g., \texttt{10.4.0.x}). It enables communication between instances within the same virtual network but is unreachable from outside the cloud.\\
+\textbf{Floating IP:} A public, globally routable IP address (e.g., \texttt{192.164.0.x}) drawn from an external network allocation pool. It is dynamically bound to an instance's virtual interface via Network Address Translation (1:1 NAT) on the virtual router, enabling direct inbound and outbound WAN communication.
+\end{defbox}
+
+\section{Microsoft Azure Enterprise Architecture}
+\subsection{Global Infrastructure: Regions and Availability Zones}
+Microsoft Azure organizes physical infrastructure hierarchically to provide enterprise-grade reliability and legal compliance:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Data Center:} A physical building housing server racks, uninterruptible power supplies (UPS), cooling infrastructure, and network switches.
+  \item \textbf{Availability Zone (AZ):} A physically separated location within a single Azure region. Each Availability Zone comprises one or more data centers equipped with independent power, cooling, and networking infrastructure. AZs are connected through high-speed, ultra-low-latency private fiber networks ($< 2\text{ ms}$ round-trip latency).
+  \item \textbf{Region:} A defined geographical perimeter containing multiple Availability Zones (typically three or more). Examples include \emph{Central India}, \emph{East US}, and \emph{West Europe}.
+  \item \textbf{Region Pairs:} Each Azure region is paired with another region within the same geography (at least 300 miles apart) to ensure business continuity during catastrophic disasters (e.g., hurricanes or regional power outages). Planned Azure platform updates are rolled out to paired regions sequentially to prevent concurrent platform downtime.
+\end{itemize}
+
+\begin{thmbox}{Availability Zone Fault Isolation Principle}
+If two Virtual Machines or database instances are deployed across separate Availability Zones within the same Azure Region:
+\begin{equation}
+P(\text{Simultaneous Hardware Failure}) = P(\text{AZ}_1\text{ Failure}) \times P(\text{AZ}_2\text{ Failure}) \approx 0
+\end{equation}
+A catastrophic physical event (e.g., total utility power grid failure or flooding) disabling $\text{AZ}_1$ leaves $\text{AZ}_2$ entirely unaffected because power feeds, generator fuel supplies, chiller plants, and network carriers are physically independent.
+\end{thmbox}
+
+\subsection{Azure Resource Management Hierarchy}
+Azure employs a strict hierarchical management model enforced through \textbf{Azure Resource Manager (ARM)}:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Management Groups:} Containers that help manage access, policy, and compliance across multiple subscriptions.
+  \item \textbf{Subscriptions:} Agreements with Microsoft that associate resource usage with billing accounts and govern resource quotas.
+  \item \textbf{Resource Groups:} Logical containers into which Azure resources (web apps, virtual networks, storage accounts, databases) are deployed, managed, and monitored as a unified lifecycle unit. Deleting a resource group deletes all resources contained within it.
+  \item \textbf{Resources:} Individual instances of cloud services (e.g., a virtual machine, virtual network, or database).
+\end{enumerate}
+
+\subsection{Azure App Service: Architecture and Deployment Topologies}
+Azure App Service is a fully managed Platform-as-a-Service (PaaS) engine designed for hosting web applications, RESTful APIs, and mobile backends.
+
+\subsubsection{App Service Plans}
+An \textbf{App Service Plan} represents the set of compute resources allocated to run web apps. Every web application running in App Service must be associated with an active App Service Plan. Multiple applications can share a single App Service Plan to optimize cost.
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l p{2.2cm} p{2.5cm} X}
+\toprule
+Pricing Tier & Scale Limits & Deployment Slots & Intended Enterprise Use Case\\
+\midrule
+Free / Shared & Shared CPU & None (0) & Prototyping, testing, and student projects.\\
+Basic & Up to 3 dedicated VMs & None (0) & Low-traffic production workloads without automated scaling.\\
+Standard & Up to 10 dedicated VMs & Up to 5 slots & Production workloads requiring auto-scaling, daily backups, and staging slots.\\
+Premium (P1v3--P3v3) & Up to 30 dedicated VMs & Up to 20 slots & High-performance enterprise workloads, intense traffic, VNet integration, and maximum deployment slots.\\
+Isolated & Up to 100 dedicated VMs & Up to 20 slots & Mission-critical workloads requiring dedicated hardware inside a private virtual network (App Service Environment).\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection{Deployment Slots Mechanics and Zero-Downtime Swaps}
+Deployment slots are live web applications with their own distinct hostnames (e.g., \texttt{app-staging.azurewebsites.net} alongside \texttt{app.azurewebsites.net}). When a new build is deployed:
+\begin{enumerate}[leftmargin=*]
+  \item The application code is deployed to the \emph{staging} slot.
+  \item Validation, warm-up requests, and automated regression tests run against staging without impacting live production traffic.
+  \item A \textbf{Slot Swap} is triggered. The Azure routing subsystem swaps the virtual IP addresses and DNS bindings of the two slots. Traffic seamlessly flows to the newly warmed-up code with zero downtime.
+  \item If an unforeseen bug emerges in production, an instantaneous reverse swap rolls back the environment immediately.
+\end{enumerate}
+
+\subsubsection{Security Configuration: HTTPS Only}
+By default, web apps created in Azure accept plain HTTP traffic on port 80. Enabling the \textbf{HTTPS Only} setting activates an automated server-side HTTP 301 Permanent Redirect rule, routing all incoming unencrypted requests to encrypted HTTPS on port 443 with TLS certificates.
+
+\subsection{Azure SQL Database: Decoupled Storage and Hyperscale Tier}
+Traditional relational database management systems bind computing power (CPU and memory) tightly to physical disk arrays. Under heavy scaling, expanding storage requires database migration or extensive downtime.
+
+\textbf{Azure SQL Database Hyperscale} revolutionizes relational storage by introducing a fully decoupled, cloud-native architecture:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Compute Tier:} Stateless compute nodes executing the SQL engine (query optimization, parsing, transaction coordinator). Compute nodes can scale up or down in seconds independently of data size. Read-only replicas can be added dynamically to scale read queries.
+  \item \textbf{Page Servers:} Distributed secondary storage nodes that cache database pages in local solid-state drives (SSD) and serve read operations.
+  \item \textbf{Log Service:} High-throughput, low-latency transaction log processing tier using Paxos consensus algorithms for deterministic durability.
+  \item \textbf{Azure Storage Fabric:} Persistent long-term storage backed by Azure Blob Storage, allowing automatic storage expansion up to \textbf{100 TB} without application downtime or performance degradation.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=6mm, font=\small]
+  \node[dark, minimum width=4cm, minimum height=0.9cm] (comp) {Primary Compute Node\\(SQL Engine, Query Processor)};
+  \node[mid, right=1.2cm of comp, minimum width=3.2cm, minimum height=0.9cm] (replica) {Read Scale-out Replica\\(Stateless Read Engine)};
+
+  \node[box, below=1cm of comp, minimum width=4cm, minimum height=0.9cm] (log) {Log Service\\(Paxos Consensus, Durability)};
+  \node[box, below=1cm of replica, minimum width=3.8cm, minimum height=0.9cm] (page) {Distributed Page Servers\\(Local NVMe Page Caching)};
+
+  \node[gold, below=1cm of log, minimum width=8.5cm, minimum height=0.9cm, xshift=1.7cm] (blob) {Azure Storage Fabric (Long-Term Blob Store $\le$ 100 TB)};
+
+  \draw[arr, <->] (comp) -- (log);
+  \draw[arr, <->] (comp) -- (page);
+  \draw[arr, <->] (replica) -- (page);
+  \draw[arr, ->] (log) -- (blob);
+  \draw[arr, ->] (page) -- (blob);
+\end{tikzpicture}
+\caption{Azure SQL Database Hyperscale Decoupled Compute-Storage Architecture.}
+\end{figure}
+
+\subsection{Hands-On Deployment: Python Web App via Azure CLI}
+The lecture demonstrates deploying a Python Flask application to Azure App Service using the Azure Cloud Shell:
+\begin{lstlisting}[language=bash]
+# Step 1: Clone the Flask starter template
+git clone https://github.com/Azure-Samples/python-docs-hello-world
+cd python-docs-hello-world
+
+# Step 2: Configure deployment credentials for Git/FTP
+az webapp deployment user set --user-name devadmin --password "SecretPassword123!"
+
+# Step 3: Create an Azure Resource Group
+az group create --name CloudNPTEL-RG --location "West Europe"
+
+# Step 4: Provision an App Service Plan (Free SKU)
+az appservice plan create --name NPTEL-ServicePlan \
+   --resource-group CloudNPTEL-RG --sku FREE --is-linux
+
+# Step 5: Provision the Web App container with Python 3.9 runtime
+az webapp create --name nptel-demo-web-2024 \
+   --resource-group CloudNPTEL-RG \
+   --plan NPTEL-ServicePlan --runtime "PYTHON:3.9"
+
+# Step 6: Configure local Git deployment endpoint
+az webapp deployment source config-local-git \
+   --name nptel-demo-web-2024 --resource-group CloudNPTEL-RG
+
+# Step 7: Push source code to the remote Azure Git repository
+git remote add azure https://devadmin@nptel-demo-web-2024.scm.azurewebsites.net/nptel-demo-web-2024.git
+git push azure master
+\end{lstlisting}
+
+\section{Google Cloud Platform (GCP) Core Ecosystem}
+\subsection{Google Global Infrastructure and Software-Defined Networking}
+Google Cloud Platform runs on the identical physical infrastructure that powers Google Search, YouTube, and Gmail. Key differentiators highlighted in the curriculum include:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Global Private Fiber Network:} Traffic between GCP regions travels across Google's private transoceanic fiber backbone rather than the public Internet, dramatically reducing latency, jitter, and packet loss.
+  \item \textbf{Andromeda SDN:} Google's custom software-defined network virtualization stack delivering high packet processing rates and massive bandwidth.
+  \item \textbf{Jupiter Data Center Fabric:} Non-blocking bisection switching fabric delivering petabits-per-second aggregate bandwidth within data center clusters.
+\end{itemize}
+
+\subsection{Taxonomy of GCP Compute Services}
+GCP provides a spectrum of compute abstractions spanning from bare hardware control to fully managed serverless execution:
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l p{2.2cm} p{2.5cm} X}
+\toprule
+Compute Service & Model & Control Level & Core Technical Characteristic\\
+\midrule
+Compute Engine (GCE) & IaaS & Full OS / Kernel & Raw virtual machines; custom CPU/RAM configurations; local SSD scratch disks; live migration support.\\
+Google Kubernetes Engine (GKE) & Managed PaaS / CaaS & Container Cluster & Enterprise managed Kubernetes; automated node repair, rolling upgrades, and horizontal pod autoscaling.\\
+Cloud Run & Serverless CaaS & Container Image & Fully managed serverless container platform; scales down to zero instances; billed per 100 ms of CPU execution.\\
+App Engine (GAE) & PaaS & Application Code & Turnkey application hosting; automatic traffic splitting, built-in load balancing, and automated zero-management scaling.\\
+Cloud Functions & FaaS & Single Function & Event-driven code snippets executed in response to Cloud Storage, Pub/Sub, or HTTP webhook triggers.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Google App Engine (GAE): Standard vs Flexible Environments}
+Google App Engine provides two architectural runtimes:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Standard Environment:} Applications run in secure sandboxed language runtimes (Python, Java, Go, PHP, Node.js). It provides instantaneous scale-up in response to sudden traffic spikes and scales down to \textbf{zero instances} when traffic ceases, minimizing operational costs. However, it restricts background threads, filesystem writes, and custom OS packages.
+  \item \textbf{Flexible Environment:} Applications execute inside Docker containers on managed Compute Engine virtual machines. It allows custom runtimes, background threads, and arbitrary C-extensions, but scaling takes several minutes and cannot scale to zero instances.
+\end{itemize}
+
+\subsubsection{Configuration and Deployment Mechanics}
+An App Engine application is configured via \texttt{app.yaml}:
+\begin{lstlisting}[language=bash]
+# Minimal app.yaml for Python Flask on App Engine Standard
+runtime: python39
+instance_class: F1
+
+handlers:
+  - url: /static
+    static_dir: static
+  - url: /.*
+    script: auto
+\end{lstlisting}
+
+Deployment and traffic orchestration commands:
+\begin{lstlisting}[language=bash]
+# Start local development server watching for file changes
+dev_appserver.py app.yaml
+
+# Deploy application to GCP App Engine
+gcloud app deploy app.yaml --project gcp-nptel-cloud
+
+# View running web application in default browser
+gcloud app browse
+
+# Split traffic between version v1 and version v2 (A/B testing)
+gcloud app services set-traffic default --splits v1=0.8,v2=0.2
+\end{lstlisting}
+
+\subsection{GCP Storage and Database Services}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Cloud Storage (GCS):} Unified object storage offering four storage classes (Standard, Nearline, Coldline, Archive) accessible via HTTP REST APIs. It supports static website hosting by uploading HTML/CSS assets to a globally unique bucket, setting public read permissions (\texttt{allUsers:R}), and configuring default index (\texttt{index.html}) and 404 error pages.
+  \item \textbf{Cloud SQL:} Fully managed relational database service supporting MySQL, PostgreSQL, and Microsoft SQL Server. It handles automated backups, read replicas, and vertical hardware scaling.
+  \item \textbf{Cloud Spanner:} A globally distributed, enterprise relational database service that uniquely combines SQL semantics, horizontal scaling across continents, and \textbf{external consistency} (the strongest consistency guarantee in distributed systems) using synchronized hardware atomic clocks and GPS receivers (\textbf{TrueTime API}).
+  \item \textbf{Firestore / Datastore:} Serverless, horizontally scalable NoSQL document database designed for mobile and web backends, supporting offline synchronization and ACID transactions.
+  \item \textbf{BigQuery:} Serverless, highly scalable, petabyte-scale cloud data warehouse designed for fast SQL queries on massive datasets using Google's columnar storage format (Capacitor) and distributed execution engine (Dremel).
+\end{itemize}
+
+\section{Cross-Cloud Platform Comparative Matrix}
+The following comparative table synthesizes equivalent service abstractions across the three leading public hyperscalers and the private OpenStack framework:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l l l l l}
+\toprule
+Functional Category & OpenStack & Microsoft Azure & Google Cloud (GCP) & Amazon Web Services (AWS)\\
+\midrule
+Compute (VMs) & Nova & Virtual Machines & Compute Engine (GCE) & Elastic Compute Cloud (EC2)\\
+Containers (K8s) & Magnum & Azure Kubernetes (AKS) & Google Kubernetes (GKE) & Elastic Kubernetes (EKS)\\
+Serverless PaaS & Solum & App Service & App Engine (GAE) & Elastic Beanstalk\\
+Serverless FaaS & Qinling & Azure Functions & Cloud Functions & AWS Lambda\\
+Block Storage & Cinder & Azure Managed Disks & Persistent Disk & Elastic Block Store (EBS)\\
+Object Storage & Swift & Azure Blob Storage & Cloud Storage (GCS) & Simple Storage Service (S3)\\
+Virtual Networking & Neutron & Azure Virtual Network & Virtual Private Cloud (VPC) & Virtual Private Cloud (VPC)\\
+Identity \& IAM & Keystone & Azure Active Directory & Cloud IAM & AWS IAM\\
+Relational SQL & Trove & Azure SQL Database & Cloud SQL / Spanner & Amazon RDS / Aurora\\
+Data Warehouse & --- & Azure Synapse Analytics & BigQuery & Amazon Redshift\\
+Message Bus & Zaqar & Azure Service Bus & Cloud Pub/Sub & Amazon SQS / SNS\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Comprehensive Solved Assignment Problems (Week 4)}
+
+\begin{solved}{Azure SQL Database Hyperscale Storage Decoupling (Assignment 4, Q1)}
+\Given An enterprise architect requires an Azure SQL Database tier where storage can scale dynamically up to 100 TB without application downtime or performance degradation during scaling operations.
+\Formula Compute-Storage Decoupling in Hyperscale:
+\begin{equation}
+\text{Storage Capacity} \le 100\text{ TB}, \quad \text{Scale Time} = \mathcal{O}(1) \text{ w.r.t Data Volume}
+\end{equation}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item In standard relational architectures (Basic, Standard, General Purpose), compute and storage nodes are co-located. Resizing storage requires data movement or disk replication, causing downtime.
+  \item \textbf{Hyperscale} introduces a multi-tiered architecture with stateless compute nodes, distributed page servers, and an Azure Blob Storage fabric.
+  \item Storage allocates 40 GB increments automatically as data grows, scaling seamlessly up to 100 TB.
+\end{enumerate}
+\Answer \textbf{Option C: Hyperscale}.
+\end{solved}
+
+\begin{solved}{Availability Zone Power Outage Isolation (Assignment 4, Q2)}
+\Given A company deploys two Virtual Machines across different Availability Zones within the same Azure Region. A total power failure occurs in the data center hosting Zone 1.
+\Formula Fault Domain Independence:
+\begin{equation}
+\text{State}(\text{VM}_2) = \text{Running}, \quad \text{since } \text{Power}(\text{AZ}_2) \cap \text{Power}(\text{AZ}_1) = \emptyset
+\end{equation}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Availability Zones are physically discrete data centers within an Azure Region.
+  \item Each zone has independent physical utility substations, backup diesel generators, cooling towers, and networking uplinks.
+  \item A power outage in Zone 1 disrupts resources inside Zone 1 only. Resources in Zone 2 operate without interruption.
+\end{enumerate}
+\Answer \textbf{Option B: The second VM continues running because Availability Zones are physically isolated from each other}.
+\end{solved}
+
+\begin{solved}{App Service Deployment Slot Limits (Assignment 4, Q3)}
+\Given Identification of the Azure App Service pricing plan that supports the highest number of staging deployment slots for CI/CD pipelines.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Free / Shared:} 0 deployment slots.
+  \item \textbf{Basic:} 0 deployment slots.
+  \item \textbf{Standard:} Supports up to 5 deployment slots.
+  \item \textbf{Premium (P1v3 and higher):} Supports up to 20 deployment slots.
+\end{enumerate}
+\Answer \textbf{Option C: Premium (P1v3 and higher)}.
+\end{solved}
+
+\begin{solved}{Enforcing Encrypted Web Traffic on App Service (Assignment 4, Q4)}
+\Given Users can access an Azure App Service application via unencrypted HTTP (\texttt{http://}). The administrator must enforce end-to-end encryption.
+\Formula HTTP 301 Permanent Redirect:
+\begin{equation}
+\text{Request}(\text{http://...:80}) \xrightarrow{\text{Redirect}} \text{Response}(\text{https://...:443})
+\end{equation}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Enabling \textbf{HTTPS Only} in the App Service configuration menu automatically configures the frontend reverse proxy to redirect all plain HTTP requests to HTTPS, securing all communications.
+\end{enumerate}
+\Answer \textbf{Option C: HTTPS Only}.
+\end{solved}
+
+\begin{solved}{Globally Scalable Relational Database in GCP (Assignment 4, Q5)}
+\Given Selection of a Google Cloud database service that provides relational SQL querying, global horizontal scaling, and strict transactional consistency.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Cloud SQL:} Managed relational DB, but scales primarily vertically (single-region).
+  \item \textbf{Firestore:} NoSQL document store, not relational SQL.
+  \item \textbf{Memorystore:} In-memory Redis/Memcached cache.
+  \item \textbf{Cloud Spanner:} Combines relational structure, SQL support, ACID transactions, and horizontal scaling across global regions with TrueTime synchronization.
+\end{enumerate}
+\Answer \textbf{Option C: Cloud Spanner}.
+\end{solved}
+
+\begin{solved}{OpenStack Persistent Volume Service (Assignment 4, Q6)}
+\Given A virtual machine requires a 100 GB persistent block storage disk that persists after VM termination.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Nova:} Manages instance compute execution.
+  \item \textbf{Swift:} Provides object storage (REST API), not attachable block devices.
+  \item \textbf{Keystone:} Provides identity and access tokens.
+  \item \textbf{Cinder:} Manages block storage volumes. Cinder volumes have independent lifecycles from Nova compute instances.
+\end{enumerate}
+\Answer \textbf{Option C: Cinder}.
+\end{solved}
+
+\begin{solved}{GKE vs Cloud Run Architectural Distinction (Assignment 4, Q7)}
+\Given Distinguishing Google Kubernetes Engine (GKE) from Google Cloud Run.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{GKE} provides managed Kubernetes clusters where users configure nodes, control plane settings, and cluster networking.
+  \item \textbf{Cloud Run} is a fully managed serverless container platform where developers deploy container images without managing Kubernetes clusters, nodes, or control planes.
+\end{enumerate}
+\Answer \textbf{Option C: GKE manages Kubernetes clusters, while Cloud Run executes containers without requiring cluster management}.
+\end{solved}
+
+\begin{solved}{GCP Static Website Hosting Configuration (Assignment 4, Q8)}
+\Given Configuring Google Cloud Storage for static website hosting with \texttt{index.html} and \texttt{404.html}.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The user creates a storage bucket named to match the domain.
+  \item In the bucket configuration, the user sets the \textbf{Main Page (Index)} suffix and \textbf{404 (Not Found)} error document.
+  \item The bucket and objects are shared with public read access (\texttt{allUsers}).
+\end{enumerate}
+\Answer \textbf{Option A: Specify the Main Page and 404 (Not Found) Page in the website configuration dialog}.
+\end{solved}
+
+\begin{solved}{App Service Plan Resource Sharing (Assignment 4, Q9)}
+\Given Determining the impact of hosting multiple Azure Web Apps inside the same App Service Plan.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item An App Service Plan defines the physical VM compute capacity (CPU, RAM, Region).
+  \item All web applications assigned to that plan share the underlying virtual machine instances, reducing hosting costs.
+\end{enumerate}
+\Answer \textbf{Option B: The web apps share the compute resources defined by the single App Service Plan, optimizing overall cost}.
+\end{solved}
+
+\begin{solved}{OpenStack Virtual Networking Service (Assignment 4, Q10)}
+\Given Identification of the OpenStack component responsible for managing tenant virtual networks, routers, subnets, and floating IP allocation.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Neutron} is OpenStack's software-defined networking (SDN) component, managing virtual switches, routers, firewalls, and IP address management.
+\end{enumerate}
+\Answer \textbf{Option B: Neutron}.
+\end{solved}

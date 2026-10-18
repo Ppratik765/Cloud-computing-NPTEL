@@ -1,0 +1,324 @@
+% ==================================================================
+%  WEEK 7
+% ==================================================================
+\chapter{Mobile Cloud Computing, Cloudlets, and Geospatial Cloud}
+
+\section{Introduction and Week Overview}
+Week 7 explores the convergence of cloud computing with mobile handheld devices and geographic information systems. The curriculum addresses computational scarcity at the network edge through three fundamental themes:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Mobile Cloud Computing (MCC):} Architectural models augmenting battery-constrained, CPU-limited mobile devices with remote cloud resources; runtime partitioning and computation offloading.
+  \item \textbf{Mathematical Formulation of Energy-Aware Offloading:} Derivation of the Kumar and Lu energy saving conditions, transmission delays, idle listening power, and numerical break-even analysis.
+  \item \textbf{Cloudlets and Low-Latency Edge Computing:} Three-tier hierarchical architecture (Mobile $\to$ Cloudlet $\to$ Distant Cloud), transient virtual machine synthesis, and real-time augmented reality constraints.
+  \item \textbf{Geospatial Cloud Computing:} Spatial Data Infrastructure (SDI), Open Geospatial Consortium (OGC) web services, massive spatial data storage, and distributed spatial indexing.
+\end{enumerate}
+
+\section{Mobile Cloud Computing (MCC) Foundations}
+\subsection{Motivation and Intrinsic Hardware Constraints}
+Despite dramatic improvements in mobile hardware, smartphones and IoT edge devices remain fundamentally constrained compared to server infrastructure:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Battery Energy Capacity:} Electrochemical battery energy density grows at less than $5\%$ to $8\%$ annually, whereas mobile application computational demands (computer vision, speech synthesis, 3D gaming) grow exponentially.
+  \item \textbf{Thermal Dissipation Limits:} Passive cooling restricts sustained high-frequency CPU/GPU execution to avoid thermal throttling.
+  \item \textbf{Network Variability:} Wireless connections (4G/5G, Wi-Fi) suffer from variable bandwidth, signal fading, packet loss, and handoff delays.
+\end{itemize}
+
+\begin{defbox}{Mobile Cloud Computing (MCC)}
+\textbf{Mobile Cloud Computing (MCC)} integrates cloud computing into mobile environments to overcome hardware limitations. Computation-intensive and data-heavy tasks are dynamically extracted from the mobile device and processed on remote cloud infrastructure, delivering results back across wireless networks.
+\end{defbox}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, font=\small]
+  \node[dark, minimum width=3cm, minimum height=1cm] (mob) {Mobile Device\\(Energy / CPU Bound)};
+  \node[mid, right=2cm of mob, minimum width=3.5cm, minimum height=1cm] (net) {Wireless Network\\(Cellular / Wi-Fi)};
+  \node[gold, right=2cm of net, minimum width=3.5cm, minimum height=1cm] (cloud) {Cloud Data Center\\(Infinite CPU / Storage)};
+
+  \draw[arr, ->] (mob) to[bend left=20] node[above, font=\scriptsize] {Code \& State Offload ($D$ bytes)} (net);
+  \draw[arr, ->] (net) to[bend left=20] (cloud);
+  \draw[arr, ->] (cloud) to[bend left=20] node[below, font=\scriptsize] {Computed Results ($R$ bytes)} (net);
+  \draw[arr, ->] (net) to[bend left=20] (mob);
+\end{tikzpicture}
+\caption{Classical Mobile Cloud Computation Offloading Architecture.}
+\end{figure}
+
+\subsection{Workload Suitability for Offloading}
+Not all mobile computational tasks are candidates for cloud offloading:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Highly Suitable Tasks:} High computational complexity paired with small data exchange (High Compute-to-Data Ratio).
+    \begin{itemize}
+      \item Complex mathematical simulations, video encoding/transcoding, optical character recognition (OCR), deep learning inference, natural language processing.
+    \end{itemize}
+  \item \textbf{Unsuitable Tasks:}
+    \begin{itemize}
+      \item \emph{Hard Real-Time Tasks:} Tasks requiring deterministic sub-millisecond response times (e.g., autonomous vehicle collision avoidance, sensor stabilization). Network latency jitter makes remote cloud offloading hazardous.
+      \item \emph{Data-Heavy Tasks with Minimal Compute:} Tasks where wireless data transmission energy exceeds local computation energy (e.g., streaming uncompressed sensor readings without local processing).
+      \item \emph{Hardware-Coupled Tasks:} Code requiring direct physical hardware access (accelerometer reads, camera frame grabbing, display rendering).
+    \end{itemize}
+\end{itemize}
+
+\section{Mathematical Formulation of Computation Offloading}
+\subsection{System Model and Parameters}
+Following the formal analytical model established by Kumar and Lu (IEEE Computer):
+\begin{itemize}[leftmargin=*]
+  \item $C$: Total computational complexity of the workload (number of CPU instructions).
+  \item $M$: Execution speed of the mobile device processor (instructions per second).
+  \item $F$: Cloud acceleration factor ($F \gg 1$), such that the cloud executes at speed $F \cdot M$ instructions per second.
+  \item $D$: Volume of application data and program state transferred over the wireless uplink (bytes).
+  \item $B$: Usable wireless transmission bandwidth (bytes per second).
+  \item $P_c$: Power consumed by the mobile device CPU during active local computation (Watts).
+  \item $P_{\text{tr}}$: Power consumed by the mobile wireless transceiver during active transmission (Watts).
+  \item $P_i$: Power consumed by the mobile device in the idle state while awaiting cloud responses (Watts).
+\end{itemize}
+
+\subsection{Energy Consumption Derivations}
+\subsubsection{Local Execution Energy ($E_{\text{local}}$)}
+The time required to compute the workload locally on the mobile device is:
+\begin{equation}
+t_{\text{local}} = \frac{C}{M}
+\end{equation}
+The total electrical energy consumed by local processing is:
+\begin{equation}
+E_{\text{local}} = P_c \times t_{\text{local}} = P_c \left( \frac{C}{M} \right)
+\end{equation}
+
+\subsubsection{Cloud Offloading Energy ($E_{\text{cloud}}$)}
+When offloading, the mobile device incurs energy in two sequential stages:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Transmission Stage:} Transmitting $D$ bytes across the network at bandwidth $B$:
+  \begin{equation}
+  t_{\text{tx}} = \frac{D}{B}, \quad E_{\text{tx}} = P_{\text{tr}} \times t_{\text{tx}} = P_{\text{tr}} \left( \frac{D}{B} \right)
+  \end{equation}
+  \item \textbf{Idle Wait Stage:} Awaiting computation completion while the cloud processes the workload at speed $F \cdot M$:
+  \begin{equation}
+  t_{\text{cloud}} = \frac{C}{F \cdot M}, \quad E_{\text{idle}} = P_i \times t_{\text{cloud}} = P_i \left( \frac{C}{F \cdot M} \right)
+  \end{equation}
+\end{enumerate}
+Summing the transmission and idle listening energies (assuming negligible result return payload):
+\begin{equation}
+E_{\text{cloud}} = E_{\text{tx}} + E_{\text{idle}} = P_{\text{tr}} \left( \frac{D}{B} \right) + P_i \left( \frac{C}{F \cdot M} \right)
+\end{equation}
+
+\begin{thmbox}{Energy Conservation Offloading Threshold Theorem}
+Offloading saves energy if and only if $E_{\text{cloud}} < E_{\text{local}}$, yielding net savings $\Delta E > 0$:
+\begin{equation}
+\Delta E = E_{\text{local}} - E_{\text{cloud}} = P_c \left( \frac{C}{M} \right) - \left[ P_{\text{tr}} \left( \frac{D}{B} \right) + P_i \left( \frac{C}{F \cdot M} \right) \right] > 0
+\end{equation}
+Rearranging to isolate the transmission time $t_{\text{tx}} = \frac{D}{B}$:
+\begin{equation}
+P_{\text{tr}} \left( \frac{D}{B} \right) < \frac{C}{M} \left( P_c - \frac{P_i}{F} \right)
+\end{equation}
+\begin{equation}
+\frac{D}{B} < \frac{C}{M} \left( \frac{P_c - P_i / F}{P_{\text{tr}}} \right)
+\end{equation}
+\textbf{Physical Meaning:} Offloading is energy-efficient if the time to transmit the input data ($D/B$) is strictly less than the local compute duration ($C/M$) scaled by the relative power differential ratio $\frac{P_c - P_i/F}{P_{\text{tr}}}$.
+\end{thmbox}
+
+\begin{solved}{Offloading Energy Savings Calculation (Lecture Numerical Example)}
+\Given A mobile device executes a computer vision task with parameters:
+\begin{itemize}
+  \item Workload complexity: $C = 1.2 \times 10^9\text{ instructions}$.
+  \item Mobile compute speed: $M = 6 \times 10^8\text{ inst/s}$ ($600\text{ MIPS}$).
+  \item Cloud speedup multiplier: $F = 10$ ($F \cdot M = 6 \times 10^9\text{ inst/s}$).
+  \item Data to transmit: $D = 3\text{ MB}$.
+  \item Network throughput: $B = 2\text{ MB/s}$.
+  \item Power coefficients: $P_c = 1.8\text{ W}$, $P_{\text{tr}} = 1.4\text{ W}$, $P_i = 0.2\text{ W}$.
+\end{itemize}
+\Formula
+\begin{equation}
+\Delta E = P_c \left(\frac{C}{M}\right) - P_{\text{tr}} \left(\frac{D}{B}\right) - P_i \left(\frac{C}{F \cdot M}\right)
+\end{equation}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Local Execution Evaluation:}
+  \begin{equation}
+  t_{\text{local}} = \frac{1.2 \times 10^9}{6 \times 10^8} = 2.0\text{ seconds}
+  \end{equation}
+  \begin{equation}
+  E_{\text{local}} = 1.8\text{ W} \times 2.0\text{ s} = 3.60\text{ Joules}
+  \end{equation}
+  \item \textbf{Cloud Offloading Evaluation:}
+  \begin{equation}
+  t_{\text{tx}} = \frac{3\text{ MB}}{2\text{ MB/s}} = 1.5\text{ seconds}
+  \end{equation}
+  \begin{equation}
+  E_{\text{tx}} = 1.4\text{ W} \times 1.5\text{ s} = 2.10\text{ Joules}
+  \end{equation}
+  \begin{equation}
+  t_{\text{cloud}} = \frac{2.0\text{ s}}{10} = 0.2\text{ seconds}
+  \end{equation}
+  \begin{equation}
+  E_{\text{idle}} = 0.2\text{ W} \times 0.2\text{ s} = 0.04\text{ Joules}
+  \end{equation}
+  \begin{equation}
+  E_{\text{cloud}} = 2.10 + 0.04 = 2.14\text{ Joules}
+  \end{equation}
+  \item \textbf{Net Energy Differential:}
+  \begin{equation}
+  \Delta E = E_{\text{local}} - E_{\text{cloud}} = 3.60\text{ J} - 2.14\text{ J} = +1.46\text{ Joules}
+  \end{equation}
+\end{enumerate}
+\Answer Offloading is highly beneficial, saving \textbf{1.46 Joules} of battery energy ($40.56\%$ reduction in power consumption).
+\end{solved}
+
+\section{Cloudlets and Mobile Edge Architecture}
+\subsection{The WAN Latency Bottleneck}
+Connecting a mobile device across cellular base stations and multi-hop public Internet routing to distant hyperscale data centers introduces $80\text{ ms}$ to $200\text{ ms}$ of round-trip latency. This latency violates the strict requirements of cognitive mobile applications (real-time language translation, augmented reality overlays, robotic teleoperation) which demand end-to-end response times under $20\text{ ms}$.
+
+\subsection{Three-Tier Cloudlet Architecture}
+Pioneered by Mahadev Satyanarayanan (Carnegie Mellon University), a \textbf{Cloudlet} represents a decentralized computing paradigm:
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.5cm, font=\small]
+  \node[dark, minimum width=3.4cm, minimum height=1cm] (tier1) {Tier 1: Mobile Devices\\(Smartphones, AR Glasses)};
+  \node[mid, right=1.6cm of tier1, minimum width=3.4cm, minimum height=1cm] (tier2) {Tier 2: Cloudlets\\(Edge Micro Data Centers)};
+  \node[gold, right=1.6cm of tier2, minimum width=3.4cm, minimum height=1cm] (tier3) {Tier 3: Distant Cloud\\(AWS, Azure, GCP)};
+
+  \draw[arr, <->] (tier1) -- node[above, font=\scriptsize, align=center] {One-hop Wi-Fi / 5G\\$< 10\text{ ms}$} (tier2);
+  \draw[arr, <->] (tier2) -- node[above, font=\scriptsize, align=center] {Internet WAN\\$\approx 100\text{ ms}$} (tier3);
+\end{tikzpicture}
+\caption{Three-Tier Hierarchy: Mobile Device $\to$ Cloudlet $\to$ Cloud.}
+\end{figure}
+
+\begin{defbox}{Cloudlet Definition and Characteristics}
+A \textbf{Cloudlet} is a trusted, resource-rich computer or cluster of computers that is well-connected to the Internet and available for use by nearby mobile devices via a high-speed, single-hop wireless local area network (LAN).
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Zero Administrative Footprint:} Self-managing appliance functioning like a Wi-Fi access point (``data center in a box'').
+  \item \textbf{Transient State:} Instantiates temporary virtual machine execution contexts for mobile users and flushes state upon user departure.
+  \item \textbf{Dynamic VM Synthesis:} The mobile device transmits a compact, compressed VM overlay (delta) containing application binaries to the cloudlet. The cloudlet rapidly synthesizes the overlay onto a base VM image within seconds.
+\end{itemize}
+\end{defbox}
+
+\section{Geospatial Cloud Computing}
+\subsection{Foundations of Geographic Information Systems (GIS)}
+A Geographic Information System (GIS) captures, stores, analyzes, and visualizes spatially referenced data:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Vector Data:} Discrete geometric features represented as Points (e.g., GPS tracking coordinates), Lines (e.g., road networks, rivers), and Polygons (e.g., administrative boundaries, parcels).
+  \item \textbf{Raster Data:} Continuous gridded pixel arrays representing continuous phenomena (e.g., satellite multispectral imagery, digital elevation models, thermal heat maps).
+\end{itemize}
+
+\subsection{Spatial Data Infrastructure (SDI) and OGC Web Standards}
+The Open Geospatial Consortium (OGC) establishes open web service specifications for interoperable geospatial cloud platforms:
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l p{3.5cm} X}
+\toprule
+OGC Standard & Full Name & Functional Payload and Operation\\
+\midrule
+WMS & Web Map Service & Renders georeferenced spatial layers into dynamic raster map images (JPEG, PNG) for client display.\\
+WFS & Web Feature Service & Queries and returns raw geometric vector features and attribute tables encoded in GML (Geography Markup Language) or GeoJSON.\\
+WCS & Web Coverage Service & Delivers raw multidimensional raster coverage data with original sensor values (satellite imagery, DEM grids) for analytical computation.\\
+WPS & Web Processing Service & Standardizes inputs and outputs for executing spatial analysis algorithms (e.g., polygon intersection, buffer generation, viewshed analysis) in the cloud.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Cloud Scaling for Big Spatial Data}
+Geospatial data generation has exploded due to commercial satellite constellations, Earth observation platforms, and ubiquitous mobile smartphone GPS logs. Storing and querying terabytes of spatial geometries in the cloud requires specialized architectures:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Spatial Partitioning and Indexing:} Traditional B-trees fail on multi-dimensional spatial coordinates. Geospatial clouds implement:
+    \begin{itemize}
+      \item \emph{R-Trees / R*-Trees:} Bounding spatial objects within hierarchical Minimum Bounding Boxes (MBR).
+      \item \emph{Quadtrees:} Recursive 2D quadrant partitioning of spatial bounding domains.
+      \item \emph{GeoHash:} Space-filling Z-order curves that encode 2D latitude-longitude coordinates into 1D alphanumeric strings, allowing spatial proximity range queries inside standard NoSQL Key-Value stores (e.g., Apache HBase, AWS DynamoDB).
+    \end{itemize}
+  \item \textbf{Distributed Spatial MapReduce:} Splitting spatial datasets across Hadoop clusters where Mapper tasks process spatial tiles in parallel, and Reducers execute spatial joins (e.g., finding all GPS points intersecting a polygonal boundary).
+\end{itemize}
+
+\section{Comprehensive Solved Assignment Problems (Week 7)}
+
+\begin{solved}{Unsuitable Workload for Cloud Offloading (Assignment 7, Q1)}
+\Given Identify the application least suitable for computation offloading to a remote cloud in MCC.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Image rendering, ML inference, and video transcoding tolerate seconds of delay and benefit from cloud GPUs.
+  \item \textbf{Emergency collision avoidance} demands deterministic sub-10 ms response. Network latency, packet jitter, and cellular dropouts make remote cloud offloading dangerous.
+\end{enumerate}
+\Answer \textbf{Option C: Emergency collision avoidance requiring millisecond response}.
+\end{solved}
+
+\begin{solved}{Dynamic Resource Scaling Property (Assignment 7, Q2)}
+\Given An application automatically provisions additional resources during demand surges and releases them when load drops.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Automated scaling up/down in proportion to dynamic workload demand is the definition of \textbf{Rapid Elasticity}.
+\end{enumerate}
+\Answer \textbf{Option B: Rapid elasticity}.
+\end{solved}
+
+\begin{solved}{Dynamic Offloading Optimization Objectives (Assignment 7, Q3)}
+\Given Dynamic computation offloading algorithms primarily balance which combination of metrics?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Offloading decisions evaluate execution delay, mobile battery power consumption, and network bandwidth utilization.
+\end{enumerate}
+\Answer \textbf{Option B: Execution time, energy consumption, and resource utilization}.
+\end{solved}
+
+\begin{solved}{Low-Latency Infrastructure for Mobile AR (Assignment 7, Q4)}
+\Given An augmented reality app requires object recognition with end-to-end response time under 20 ms.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Distant clouds introduce $\ge 100\text{ ms}$ WAN latency.
+  \item A nearby \textbf{Cloudlet} reached via single-hop Wi-Fi provides low-latency compute capability within the required 20 ms window.
+\end{enumerate}
+\Answer \textbf{Option B: A nearby cloudlet connected through a high-speed local network}.
+\end{solved}
+
+\begin{solved}{Healthcare Cloud Security Requirement (Assignment 7, Q5)}
+\Given Which security requirement is paramount to prevent unauthorized access to cloud-hosted medical records?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Preventing unauthorized disclosure of confidential medical records is the core objective of \textbf{Data Confidentiality}.
+\end{enumerate}
+\Answer \textbf{Option B: Data confidentiality}.
+\end{solved}
+
+\begin{solved}{Primary Problem Solved by Fog/Edge Computing (Assignment 7, Q6)}
+\Given What fundamental limitation of traditional centralized clouds is resolved by fog computing?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Transmitting data to geographically distant hyperscale facilities incurs significant network transit delay. Fog computing places compute near devices to eliminate this \textbf{high network latency}.
+\end{enumerate}
+\Answer \textbf{Option B: High network latency caused by distant cloud data centers}.
+\end{solved}
+
+\begin{solved}{Fog Nodes Characteristics Statement Analysis (Assignment 7, Q7)}
+\Given Identify the FALSE statement regarding fog nodes.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Fog nodes filter and aggregate sensor data (True).
+  \item Fog nodes are positioned close to IoT devices (True).
+  \item Fog nodes \emph{permanently store all enterprise data} (FALSE). Fog nodes have limited storage capacity and flush transient data; permanent long-term historical storage resides in the centralized cloud.
+\end{enumerate}
+\Answer \textbf{Option C: They permanently store all enterprise data}.
+\end{solved}
+
+\begin{solved}{OGC Service for Vector Geometries (Assignment 7, Q8)}
+\Given Which Open Geospatial Consortium service delivers raw vector geographic features (points, lines, polygons)?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item WMS returns rendered map images.
+  \item \textbf{Web Feature Service (WFS)} delivers raw vector spatial geometry features and attributes.
+\end{enumerate}
+\Answer \textbf{Option A: Web Feature Service (WFS)}.
+\end{solved}
+
+\begin{solved}{Offloading Energy Break-Even Condition (Assignment 7, Q9)}
+\Given State the algebraic condition under which offloading saves mobile battery energy.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item From Kumar and Lu's model, $\Delta E = E_{\text{local}} - E_{\text{cloud}} > 0$.
+  \item This directly requires:
+  \begin{equation}
+  \frac{D}{B} < \frac{C}{M} \left( \frac{P_c - P_i/F}{P_{\text{tr}}} \right)
+  \end{equation}
+\end{enumerate}
+\Answer \textbf{Option A: $\frac{D}{B} < \frac{C}{M} \left( \frac{P_c - P_i/F}{P_{\text{tr}}} \right)$}.
+\end{solved}
+
+\begin{solved}{Spatial Indexing Primitives in Cloud GIS (Assignment 7, Q10)}
+\Given Which spatial indexing mechanism uses recursive 2D space partitioning to index geospatial datasets?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item A \textbf{Quadtree} recursively subdivides a two-dimensional spatial region into four quadrants (nodes) to index coordinates efficiently.
+\end{enumerate}
+\Answer \textbf{Option B: Quadtree}.
+\end{solved}

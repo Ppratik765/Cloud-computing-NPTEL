@@ -1,0 +1,281 @@
+% ==================================================================
+%  WEEK 6
+% ==================================================================
+\chapter{Cloud Security, Privacy, and Trust Management}
+
+\section{Introduction and Week Overview}
+Week 6 establishes the theoretical and operational foundations of security in multi-tenant cloud environments. The curriculum systematically progresses through four integrated modules:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Foundational Security Primitives and the CIA Triad:} Mathematical definitions of Confidentiality, Integrity, and Availability; formal models of security policy versus enforcement mechanisms.
+  \item \textbf{Attack Taxonomy and Attack Lifecycles:} The four classical structural attacks (Interruption, Interception, Modification, Fabrication); Passive vs Active attacks; reconnaissance, scanning, and exploitation phases.
+  \item \textbf{Identity, Authentication, and Authorization:} Deep distinction between Authentication (AuthN) and Authorization (AuthZ); federated protocols (SAML 2.0 and OAuth 2.0); Role-Based Access Control (RBAC).
+  \item \textbf{Virtualization Vulnerabilities and Gartner Cloud Risks:} Cross-VM side-channel attacks, cache timing analysis, hypervisor escape, and Gartner's seven cardinal cloud security risks.
+\end{enumerate}
+
+\section{Foundational Security Primitives: The CIA Triad}
+Security in distributed systems rests upon three core pillars known as the \textbf{CIA Triad}:
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.8cm, font=\small]
+  \node[dark, minimum width=3.8cm, minimum height=1.1cm] (c) {\textbf{Confidentiality}\\(Keeping data \& resources hidden)};
+  \node[mid, right=1.5cm of c, minimum width=3.8cm, minimum height=1.1cm] (i) {\textbf{Integrity}\\(Data integrity \& Origin authentication)};
+  \node[gold, below=1.2cm of $(c)!0.5!(i)$, minimum width=4.2cm, minimum height=1.1cm] (a) {\textbf{Availability}\\(Timely access to resources)};
+
+  \draw[arr, <->] (c) -- (i);
+  \draw[arr, <->] (i) -- (a);
+  \draw[arr, <->] (a) -- (c);
+\end{tikzpicture}
+\caption{The Classical CIA Triad in Cloud Computing.}
+\end{figure}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Confidentiality:} Preventing the unauthorized disclosure of sensitive information. Cryptographic controls (such as AES-256 for data at rest and TLS 1.3 for data in transit) ensure confidentiality.
+  \item \textbf{Integrity:} Guaranteeing that data has not been altered, modified, corrupted, or deleted by unauthorized parties or malfunctioning software. It encompasses:
+    \begin{itemize}
+      \item \emph{Data Integrity:} State verification ensuring data matches its original format (enforced via SHA-256 cryptographic hashes and HMACs).
+      \item \emph{Origin Integrity (Authenticity):} Guaranteeing the genuine origin of the data or service identity.
+    \end{itemize}
+  \item \textbf{Availability:} Ensuring authorized users have uninterrupted, timely access to computing resources, data stores, and network endpoints without unexpected denial of service.
+\end{itemize}
+
+\begin{warnbox}{Integrity Failure Despite Perfect Encryption}
+A common misconception is that encryption automatically guarantees data integrity. Encryption scrambles data to preserve \textbf{Confidentiality}. If an administrator or erroneous application software bug alters database entries (e.g., corrupting financial ledger balances), the data remains confidential (still encrypted) but its \textbf{Integrity} is completely destroyed!
+\end{warnbox}
+
+\section{Structural Attack Taxonomy}
+Prof. Ghosh classifies security violations into four canonical architectural attack patterns based on the source ($S$), destination ($D$), and interceptor ($I$):
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l l p{3.2cm} X}
+\toprule
+Attack Type & Violated Property & Structural Mechanism & Concrete Real-World Example\\
+\midrule
+Interruption & Availability & Attacker destroys or severs the communication path between $S$ and $D$. & Distributed Denial of Service (DDoS), physical fiber cut, RAM starvation.\\
+Interception & Confidentiality & Attacker secretly monitors or taps the link, reading packets without altering them. & Packet sniffing via Wireshark, optical fiber tapping, eavesdropping.\\
+Modification & Integrity & Attacker intercepts legitimate packets from $S$, alters payload bits, and forwards them to $D$. & Man-in-the-Middle (MitM) payload alteration, SQL injection data corruption.\\
+Fabrication & Authenticity & Attacker injects spurious, counterfeit messages into the system claiming to originate from $S$. & DNS spoofing, phishing portals, fake VPN login gateways, ARP poisoning.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.5cm, font=\footnotesize]
+  % Interruption
+  \node[dark] (s1) {S}; \node[dark, right=2.5cm of s1] (d1) {D};
+  \draw[arr] (s1) -- node[midway, fill=white] {$\times$} (d1);
+  \node[below=0.1cm of s1] {(a) Interruption};
+
+  % Interception
+  \node[dark, right=2cm of d1] (s2) {S}; \node[dark, right=2.5cm of s2] (d2) {D};
+  \node[mid, below=0.6cm of $(s2)!0.5!(d2)$] (i2) {I};
+  \draw[arr] (s2) -- (d2); \draw[arr, dashed] ($(s2)!0.5!(d2)$) -- (i2);
+  \node[below=0.8cm of s2] {(b) Interception};
+
+  % Modification
+  \node[dark, below=1.8cm of s1] (s3) {S}; \node[dark, right=2.5cm of s3] (d3) {D};
+  \node[mid, below=0.6cm of $(s3)!0.5!(d3)$] (i3) {I};
+  \draw[arr] (s3) -- (i3); \draw[arr] (i3) -- (d3);
+  \node[below=0.8cm of s3] {(c) Modification};
+
+  % Fabrication
+  \node[dark, right=2cm of d3] (s4) {S}; \node[dark, right=2.5cm of s4] (d4) {D};
+  \node[mid, below=0.6cm of $(s4)!0.5!(d4)$] (i4) {I};
+  \draw[arr] (i4) -- (d4);
+  \node[below=0.8cm of s4] {(d) Fabrication};
+\end{tikzpicture}
+\caption{Four Fundamental Classes of Structural Security Attacks.}
+\end{figure}
+
+\subsection{Passive vs Active Attacks}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Passive Attacks:} The attacker monitors, inspects, or analyzes network transmissions without injecting, modifying, or delaying data packets.
+    \begin{itemize}
+      \item Examples: Eavesdropping, network packet sniffing, traffic volume/timing analysis.
+      \item Operational Implication: Extremely difficult to detect because the system continues functioning normally. Primary defense is proactive \textbf{prevention} via strong end-to-end encryption.
+    \end{itemize}
+  \item \textbf{Active Attacks:} The attacker actively alters the data stream, creates false streams, disrupts server operation, or modifies system states.
+    \begin{itemize}
+      \item Examples: Session hijacking, replay attacks, man-in-the-middle tampering, masquerading, Denial of Service (DoS).
+      \item Operational Implication: Can be detected via integrity checks, sequence numbers, and anomaly monitoring; focus is on \textbf{detection and rapid automated recovery}.
+    \end{itemize}
+\end{itemize}
+
+\subsection{The Multi-Phase Attack Lifecycle}
+A sophisticated adversary typically executes attacks in structured operational phases:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Reconnaissance (Information Gathering):} Collecting target intelligence without actively exploiting systems.
+    \begin{itemize}
+      \item \emph{Passive Reconnaissance:} Scraping public databases, social media, WHOIS records, and DNS records.
+      \item \emph{Active Reconnaissance:} DNS zone transfers, ping sweeps, and network service mapping.
+    \end{itemize}
+  \item \textbf{Scanning and Probing:} Using port scanners (e.g., Nmap) and vulnerability scanners to discover listening network services, operating system versions, and known unpatched CVE vulnerabilities.
+  \item \textbf{Gaining Access (Exploitation):} Executing targeted exploit payloads (such as buffer overflow attacks, SQL injections, or remote code execution) to bypass security boundaries and achieve administrative privileges.
+  \item \textbf{Maintaining Access and Persistence:} Installing stealth rootkits, trojans, or backdoor SSH keys to retain control across server reboots.
+  \item \textbf{Covering Tracks:} Altering or deleting system log files (\texttt{/var/log/auth.log}), resetting file modification timestamps, and disabling intrusion detection alerts.
+\end{enumerate}
+
+\section{Identity Management: Authentication vs Authorization}
+A central security theme emphasized in Week 6 is the crisp formal distinction between Authentication and Authorization:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l p{6.5cm} X}
+\toprule
+Dimension & Authentication (AuthN) & Authorization (AuthZ)\\
+\midrule
+Core Question & ``Who are you?'' (Verification of Identity) & ``What actions are you permitted to execute?''\\
+Mechanism & Verification of digital credentials (passwords, cryptographic tokens, biometric signatures, MFA). & Evaluation of permissions, Access Control Lists (ACLs), or Role-Based policies (RBAC).\\
+Timing & Occurs \textbf{first} at system ingress before session establishment. & Evaluated \textbf{continuously} whenever an authenticated subject attempts an operation.\\
+Protocol Standards & Kerberos, OpenID Connect (OIDC), SAML 2.0 Identity Assertion, FIDO2 / WebAuthn. & OAuth 2.0 (access tokens and scopes), XACML, AWS IAM Policy documents.\\
+Failure Result & HTTP 401 Unauthorized (Unauthenticated identity). & HTTP 403 Forbidden (Identity verified, but lacks sufficient permissions).\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{defbox}{Security Assertion Markup Language (SAML 2.0) vs OAuth 2.0}
+\textbf{SAML 2.0:} An XML-based federated protocol designed primarily for cross-domain Web Single Sign-On (\textbf{Authentication}). An Identity Provider (IdP) signs an XML assertion containing identity attributes and transmits it to a Service Provider (SP) via the user's browser.\\
+\textbf{OAuth 2.0:} A lightweight, JSON-based framework designed for delegated \textbf{Authorization}. It issues short-lived Access Tokens (such as JSON Web Tokens, JWTs) granting a third-party client scoped access to a user's protected resources on a Resource Server without revealing user credentials.
+\end{defbox}
+
+\section{Virtualization Security and Multi-Tenancy Exploits}
+\subsection{Hypervisor Isolation and Virtual Machine Escape}
+In a public cloud, multiple untrusted virtual machines co-exist on the same physical bare-metal host. The hypervisor (Virtual Machine Monitor, VMM) is responsible for enforcing strict isolation:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{VM Escape:} The most catastrophic virtualization exploit, where code running inside a guest operating system breaks out of the virtualized sandbox and interacts directly with the host hypervisor or host OS kernel. Once escaped, the attacker acquires total control over all co-located tenant VMs on that physical server.
+\end{itemize}
+
+\subsection{Cross-VM Side-Channel Attacks (Ristenpart et al.)}
+In their seminal 2009 research paper (\emph{Hey, You, Get Off of My Cloud: Exploring Information Leakage in Third-Party Compute Clouds}), Ristenpart et al. demonstrated that physical resource sharing in public clouds (specifically Amazon EC2) introduces subtle side-channel vulnerabilities:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Co-Residence Verification:} An attacker probes cloud IP ranges to identify the target victim's network address. By exploiting internal network topologies (comparing Dom0 IP hops and round-trip ping times $\le 1\text{ ms}$), the attacker verifies that their own VM resides on the identical physical hardware as the victim.
+  \item \textbf{Shared Hardware Contention:} Even when CPU registers and memory pages are strictly isolated by hardware MMU page tables, physical cores share hardware caches:
+    \begin{itemize}
+      \item L1 / L2 caches (per core) and unified \textbf{L3 Last Level Cache (LLC)}.
+      \item Memory buses, CPU branch target buffers (BTB), and hyperthreading pipelines.
+    \end{itemize}
+  \item \textbf{Cache-Timing Side Channels (Prime + Probe):}
+    \begin{itemize}
+      \item \emph{Prime Phase:} The attacker fills specific cache sets with their own data lines.
+      \item \emph{Idle Window:} The attacker waits while the victim VM executes cryptographic operations (such as modular exponentiation during RSA signing).
+      \item \emph{Probe Phase:} The attacker re-reads their own cached memory addresses, timing the access latency. Memory addresses that were evicted by the victim take longer to reload from main RAM.
+      \item \emph{Key Extraction:} By observing which cache sets experienced evictions, the attacker reconstructs internal CPU access patterns, leaking private cryptographic keys without ever violating memory permissions!
+    \end{itemize}
+\end{enumerate}
+
+\section{Gartner's Seven Cardinal Cloud Security Risks}
+The lecture highlights the influential risk taxonomy published by Gartner for enterprise cloud computing adopters:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Privileged User Access:} Cloud providers maintain system administrators with root access to physical hosts and virtualization hypervisors. Organizations must demand strict administrative auditing, background vetting, and cryptographic envelope encryption.
+  \item \textbf{Regulatory Compliance:} Enterprises remain legally liable for data compliance (HIPAA, PCI-DSS, ISO 27001) even when data is hosted externally. Providers must submit to external third-party compliance audits.
+  \item \textbf{Data Location and Sovereignty:} Cloud consumers often cannot specify the exact physical storage medium or geographic jurisdiction where data is stored. Trans-border data movement may violate national data residency laws (e.g., GDPR in the European Union or local data sovereignty mandates).
+  \item \textbf{Data Segregation / Isolation:} In shared multi-tenant databases and SAN volumes, data from competing corporations resides on adjacent disk sectors. Multi-tenant encryption schemes must guarantee complete logical segregation.
+  \item \textbf{Recovery and Business Continuity:} In the event of catastrophic physical outages or ransomware events at the provider's facility, providers must have verified Recovery Point Objectives (RPO) and Recovery Time Objectives (RTO).
+  \item \textbf{Investigative Support (E-Discovery):} Conducting forensic investigations or digital discovery in a multi-tenant cloud is exceptionally difficult without violating the privacy rights of other co-located tenants.
+  \item \textbf{Long-Term Viability:} What happens to an organization's mission-critical data if the cloud provider goes bankrupt, gets acquired by a hostile competitor, or abruptly terminates service? Data portability and non-proprietary exit strategies are essential.
+\end{enumerate}
+
+\section{Comprehensive Solved Assignment Problems (Week 6)}
+
+\begin{solved}{Database Bug and Security Objective Failure (Assignment 6, Q1)}
+\Given A database stores encrypted customer records. An administrator erroneously alters account balances due to an unhandled application bug. Identify the security objective that failed.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Encryption preserves \textbf{Confidentiality} (unauthorized parties cannot read the records).
+  \item Availability is intact because users can still query the system.
+  \item Erroneous or unauthorized modification of data directly compromises \textbf{Integrity}.
+\end{enumerate}
+\Answer \textbf{Option B: Integrity only}.
+\end{solved}
+
+\begin{solved}{Fake VPN Portal Exploitation (Assignment 6, Q2)}
+\Given An employee visits a fake VPN portal that visually imitates the legitimate corporate login page. Before any credentials are typed, which security property has failed?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item No confidential password has been disclosed yet.
+  \item The fraudulent portal is masquerading as the genuine corporate gateway (a fabrication attack).
+  \item The security property that is broken is \textbf{Authenticity} (the claim of genuine identity).
+\end{enumerate}
+\Answer \textbf{Option D: Authenticity}.
+\end{solved}
+
+\begin{solved}{Classification of Active vs Passive Attacks (Assignment 6, Q3)}
+\Given Identify which attack is NOT considered a passive attack among: Packet sniffing, Traffic analysis, Session hijacking, Network monitoring.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Packet sniffing, traffic analysis, and network monitoring merely inspect transmission without altering packets (Passive).
+  \item \textbf{Session hijacking} actively injects malicious packets, alters sequence numbers, or terminates the user's connection to seize control of the session (Active).
+\end{enumerate}
+\Answer \textbf{Option C: Session hijacking}.
+\end{solved}
+
+\begin{solved}{Inability to Modify Transmitted Payloads (Assignment 6, Q4)}
+\Given Which attack cannot directly modify the contents of transmitted data?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Replay attacks inject recorded packets; MitM attacks alter bits in flight; Masquerading sends forged data.
+  \item \textbf{Eavesdropping} is purely passive listening and cannot modify data contents.
+\end{enumerate}
+\Answer \textbf{Option C: Eavesdropping}.
+\end{solved}
+
+\begin{solved}{Denial of Service (DoS) Characteristics (Assignment 6, Q5)}
+\Given What best describes a Denial-of-Service attack?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item An adversary floods servers or networks with overwhelming request volumes, consuming compute/bandwidth resources so legitimate users cannot access the service.
+\end{enumerate}
+\Answer \textbf{Option B: An attacker floods a server with excessive requests, making the service unavailable to legitimate users}.
+\end{solved}
+
+\begin{solved}{Reconnaissance vs Exploitation Phase (Assignment 6, Q6)}
+\Given Identify the activity least likely to be considered part of the reconnaissance phase.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item DNS enumeration, port scanning, and searching public websites are reconnaissance activities.
+  \item \textbf{Exploiting a buffer overflow} to gain root access is part of the active \emph{Exploitation} phase, not reconnaissance.
+\end{enumerate}
+\Answer \textbf{Option C: Exploiting a buffer overflow vulnerability to gain administrator privileges}.
+\end{solved}
+
+\begin{solved}{Authentication vs Authorization Statements (Assignment 6, Q7)}
+\Given Evaluate:
+\begin{itemize}
+  \item Statement I: Authentication determines whether a user is allowed to access a resource.
+  \item Statement II: Authorization determines what actions an authenticated user is permitted to perform.
+\end{itemize}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Statement I is FALSE: Authentication verifies \emph{identity} (who the user is), not whether they are allowed to access a specific resource.
+  \item Statement II is TRUE: Authorization evaluates permissions to determine permitted actions.
+\end{enumerate}
+\Answer \textbf{Statement I is False, and Statement II is True}.
+\end{solved}
+
+\begin{solved}{Data Location and Sovereignty Concerns (Assignment 6, Q8)}
+\Given A multinational corporation stores EU citizen records in a US-based cloud data center and faces legal scrutiny under GDPR. Which Gartner cloud risk applies?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item European privacy mandates require personal citizen data to reside within compliant jurisdictions.
+  \item Moving data across geographic borders directly triggers \textbf{Data Location and Sovereignty} risk.
+\end{enumerate}
+\Answer \textbf{Option C: Data Location}.
+\end{solved}
+
+\begin{solved}{Multi-Tenant Cache-Timing Exploits (Assignment 6, Q9)}
+\Given How does an attacker extract private cryptographic keys in a cross-VM side-channel attack?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item By establishing co-residence on the same physical CPU socket and monitoring access latencies to shared L3 CPU cache lines (Prime+Probe technique).
+\end{enumerate}
+\Answer \textbf{Option B: By measuring CPU cache access latency on shared physical hardware}.
+\end{solved}
+
+\begin{solved}{Hypervisor Sandbox Escape Threat (Assignment 6, Q10)}
+\Given What is the security impact of a successful VM Escape vulnerability?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item The attacker breaks through guest OS virtualization barriers to execute arbitrary code with host hypervisor privileges, compromising all co-located tenant VMs.
+\end{enumerate}
+\Answer \textbf{Option A: The attacker gains direct access to the host hypervisor, compromising all tenant VMs on the physical host}.
+\end{solved}

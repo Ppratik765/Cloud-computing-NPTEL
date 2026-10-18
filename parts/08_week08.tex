@@ -1,0 +1,290 @@
+% ==================================================================
+%  WEEK 8
+% ==================================================================
+\chapter{Containers, Docker Virtualization, and Sensor-Cloud Infrastructure}
+
+\section{Introduction and Week Overview}
+Week 8 transitions from heavy hypervisor-based hardware virtualization into lightweight operating-system-level virtualization (Containers and Docker), followed by the architecture of Sensor-Cloud computing. The key modules examined include:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Containers vs Virtual Machines:} Kernel-sharing mechanics, isolation primitives, architectural tradeoffs, and performance benchmarking.
+  \item \textbf{Docker Ecosystem and Architecture:} The Docker engine, copy-on-write image layering (UnionFS/OverlayFS), Dockerfile build directives, and container lifecycle CLI commands.
+  \item \textbf{Container Orchestration Primitives:} High-level role of Kubernetes and distributed configuration state management via \texttt{etcd}.
+  \item \textbf{Sensor-Cloud Framework:} Bridging Wireless Sensor Networks (WSNs) with cloud elasticity; virtual sensors, multi-tenant provisioning topologies, and layered middleware architectures.
+\end{enumerate}
+
+\section{Containers vs Virtual Machines: Architectural Divergence}
+\subsection{Structural Comparison}
+Traditional virtualization relies on a hypervisor (Type-1 or Type-2) to emulate physical hardware (CPUs, chipsets, network interface cards, memory controllers, BIOS). Each guest Virtual Machine must run a complete, independent guest operating system including its own kernel, device drivers, and system services.
+
+In contrast, \textbf{Operating System-Level Virtualization (Containerization)} relies on kernel-level isolation features within a single host operating system kernel to partition user space into isolated execution environments known as \textbf{Containers}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\footnotesize]
+  % VM Stack
+  \node[dark, minimum width=5.5cm, minimum height=0.6cm] (hw1) {Physical Bare-Metal Hardware};
+  \node[mid, above=0.2cm of hw1, minimum width=5.5cm, minimum height=0.6cm] (hyp) {Hypervisor (Type-1 / Type-2)};
+  
+  \node[box, above=0.3cm of hyp.north west, anchor=south west, minimum width=2.5cm, minimum height=0.5cm] (gos1) {Guest OS (Kernel)};
+  \node[box, above=0.3cm of hyp.north east, anchor=south east, minimum width=2.5cm, minimum height=0.5cm] (gos2) {Guest OS (Kernel)};
+  
+  \node[steel, above=0.15cm of gos1, minimum width=2.5cm, minimum height=0.5cm] (bin1) {Bins / Libs};
+  \node[steel, above=0.15cm of gos2, minimum width=2.5cm, minimum height=0.5cm] (bin2) {Bins / Libs};
+  
+  \node[gold, above=0.15cm of bin1, minimum width=2.5cm, minimum height=0.5cm] (app1) {App A};
+  \node[gold, above=0.15cm of bin2, minimum width=2.5cm, minimum height=0.5cm] (app2) {App B};
+
+  \node[below=0.1cm of hw1, font=\bfseries] {(a) Virtual Machines (Hardware Virtualization)};
+
+  % Container Stack
+  \node[dark, right=2cm of hw1, minimum width=5.5cm, minimum height=0.6cm] (hw2) {Physical Bare-Metal Hardware};
+  \node[mid, above=0.2cm of hw2, minimum width=5.5cm, minimum height=0.6cm] (hostos) {Host Operating System (Shared Linux Kernel)};
+  \node[dark, above=0.2cm of hostos, minimum width=5.5cm, minimum height=0.6cm] (dockerd) {Docker Engine / Container Runtime};
+
+  \node[steel, above=0.3cm of dockerd.north west, anchor=south west, minimum width=2.5cm, minimum height=0.5cm] (cbin1) {Bins / Libs};
+  \node[steel, above=0.3cm of dockerd.north east, anchor=south east, minimum width=2.5cm, minimum height=0.5cm] (cbin2) {Bins / Libs};
+
+  \node[gold, above=0.15cm of cbin1, minimum width=2.5cm, minimum height=0.5cm] (capp1) {Container App A};
+  \node[gold, above=0.15cm of cbin2, minimum width=2.5cm, minimum height=0.5cm] (capp2) {Container App B};
+
+  \node[below=0.1cm of hw2, font=\bfseries] {(b) Containers (OS-Level Virtualization)};
+\end{tikzpicture}
+\caption{Architectural Comparison: Virtual Machines vs Application Containers.}
+\end{figure}
+
+\subsection{Quantitative Tradeoff Analysis}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X X}
+\toprule
+Metric / Dimension & Virtual Machines (VMs) & Containers (Docker)\\
+\midrule
+Isolation Level & High (Hardware-enforced by MMU, VT-x, and separate kernel ring 0). & Medium-High (Process-level isolation enforced by host kernel namespaces and cgroups).\\
+Kernel Instances & Each VM executes its own discrete OS kernel. & All containers share the single host OS kernel.\\
+Startup Latency & Minutes ($30\text{ s}$ to $180\text{ s}$) due to full virtual BIOS and OS boot. & Milliseconds to seconds ($< 1\text{ s}$) as processes spawn directly.\\
+Disk Footprint & Gigabytes ($2\text{ GB}$ to $40\text{ GB}$) per instance (entire OS image). & Megabytes ($10\text{ MB}$ to $500\text{ MB}$) containing only app dependencies.\\
+CPU/RAM Overhead & Significant ($10\%$ to $25\%$) dedicated to running guest OS daemons. & Minimal ($< 1\%$), near bare-metal execution performance.\\
+Density & Tens of VMs per physical bare-metal host. & Hundreds to thousands of containers per physical host.\\
+Portability & Heavy image formats (VMDK, VHD, QCOW2) tied to hypervisor formats. & Standard OCI image formats portable across any Linux distribution.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{The Docker Ecosystem and Architecture}
+\subsection{Docker Engine Components}
+Docker is an open-source platform that automates the deployment, scaling, and management of applications inside portable container environments. The Docker architecture consists of:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Docker Daemon (\texttt{dockerd}):} The persistent background service running on the host that builds images, manages container states, attaches virtual networks, and coordinates storage volumes.
+  \item \textbf{Docker Client (\texttt{docker}):} The command-line interface (CLI) tool through which users interact with \texttt{dockerd} via REST API endpoints over UNIX domain sockets (\texttt{/var/run/docker.sock}) or TCP.
+  \item \textbf{Docker Images:} Read-only, immutable templates composed of stacked union filesystem layers.
+  \item \textbf{Docker Containers:} Runnable instances of a Docker image. When a container starts, a thin, writable copy-on-write (CoW) layer is mounted on top of the immutable image layers.
+  \item \textbf{Docker Registry (Docker Hub):} Centralized repositories for publishing, distributing, and pulling container images.
+\end{itemize}
+
+\subsection{Copy-on-Write (CoW) and Storage Layering}
+Docker utilizes union filesystems (such as \textbf{OverlayFS} or \textbf{AUFS}) to stack directories and present them as a single cohesive unified filesystem:
+\begin{itemize}[leftmargin=*]
+  \item When multiple containers instantiate the identical base image (\texttt{ubuntu:22.04}), they all share the identical read-only physical disk blocks in memory.
+  \item If a container modifies an existing file, the underlying file is copied up from the read-only layer into the container's top-level writable layer before modification (\emph{Copy-on-Write}). This ensures zero mutation of base images.
+\end{itemize}
+
+\subsection{Dockerfile Syntax and Construction}
+A \textbf{Dockerfile} is a declarative text manifest specifying the sequential instructions required to assemble a Docker image:
+\begin{lstlisting}[language=bash]
+# Base image layer
+FROM python:3.9-slim
+
+# Set execution working directory
+WORKDIR /app
+
+# Copy dependency manifest and install packages
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application source code into image layer
+COPY . .
+
+# Expose internal listening port
+EXPOSE 5000
+
+# Specify default container entry command
+CMD ["python", "app.py"]
+\end{lstlisting}
+
+\subsection{Complete Docker Command Lifecycle}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries\ttfamily}l X}
+\toprule
+Docker Command & Operational Execution Description\\
+\midrule
+docker build -t myapp:1.0 . & Reads the local Dockerfile, executes instructions sequentially, caches intermediate layers, and tags the resulting image.\\
+docker run -d -p 8080:5000 myapp:1.0 & Instantiates a container in detached mode (\texttt{-d}), binding host port 8080 to container port 5000 (\texttt{-p}).\\
+docker ps -a & Lists all containers (both actively running and terminated/exited).\\
+docker stop <container\_id> & Sends SIGTERM followed by SIGKILL to gracefully terminate container processes.\\
+docker rm <container\_id> & Deletes a stopped container instance and purges its writable layer.\\
+docker rmi <image\_id> & Permanently deletes an unreferenced container image from the local storage cache.\\
+docker network ls & Displays all configured virtual bridge, overlay, and host networks.\\
+docker exec -it <id> /bin/bash & Spawns an interactive bash shell session inside an actively running container.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Container Orchestration: Kubernetes and etcd}
+When applications scale to thousands of containers spanning hundreds of bare-metal servers, manual container management becomes impossible. \textbf{Kubernetes} automates container scheduling, automated rollouts, service discovery, load balancing, and self-healing.
+
+\begin{defbox}{Role of \texttt{etcd} in Kubernetes Clusters}
+\textbf{\texttt{etcd}} is a strongly consistent, distributed, and highly available key-value datastore based on the \textbf{Raft consensus algorithm}.\\
+In Kubernetes, \texttt{etcd} serves as the ultimate single source of truth for the entire cluster. It persistently stores:
+\begin{itemize}[leftmargin=*]
+  \item Cluster configuration states, namespaces, and node registrations.
+  \item Pod definitions, ReplicaSets, and Deployments.
+  \item Secrets, ConfigMaps, and cluster metadata.
+\end{itemize}
+The Kubernetes control plane components (API Server, Scheduler, Controller Manager) are stateless; they coordinate state transitions strictly by reading from and writing to \texttt{etcd}.
+\end{defbox}
+
+\section{Sensor-Cloud Infrastructure}
+\subsection{Limitations of Traditional Wireless Sensor Networks (WSNs)}
+Traditional Wireless Sensor Networks (WSNs) consist of small sensor motes deployed to monitor physical environments (temperature, moisture, seismic activity). However, conventional WSNs exhibit severe structural limitations:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Isolated Application Silos:} A sensor network deployed for soil moisture monitoring is typically accessible only to a single proprietary backend application.
+  \item \textbf{Resource Exhaustion:} Sensor nodes possess limited battery life, micro-controllers with few kilobytes of RAM, and low-power radios.
+  \item \textbf{No Multi-Tenancy:} Multiple users with differing analytical queries cannot dynamically share the same physical sensor hardware simultaneously.
+\end{itemize}
+
+\subsection{The Sensor-Cloud Paradigm}
+\begin{defbox}{Sensor-Cloud Definition}
+\textbf{Sensor-Cloud} is an infrastructure that virtualizes physical Wireless Sensor Networks into dynamically manageable, reconfigurable, and multi-tenant \textbf{Virtual Sensors} provisioned on-demand over the cloud.
+\end{defbox}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, font=\small]
+  % Layers
+  \node[dark, minimum width=10cm, minimum height=0.9cm] (app) {Application Layer (End Users, Smart Agriculture, Healthcare, Telematics)};
+  \node[mid, below=0.5cm of app, minimum width=10cm, minimum height=0.9cm] (scsp) {Sensor-Cloud Middleware / Virtualization Layer (SCSP, Virtual Sensor Provisioning)};
+  \node[gold, below=0.5cm of scsp, minimum width=10cm, minimum height=0.9cm] (gw) {Gateway / Proxy Layer (Protocol Normalization, Data Aggregation)};
+  \node[steel, below=0.5cm of gw, minimum width=10cm, minimum height=0.9cm] (wsn) {Physical WSN Layer (Heterogeneous Sensors, Motes, ZigBee, LoRaWAN)};
+
+  \draw[arr, <->] (app) -- (scsp);
+  \draw[arr, <->] (scsp) -- (gw);
+  \draw[arr, <->] (gw) -- (wsn);
+\end{tikzpicture}
+\caption{Layered Architecture of Sensor-Cloud Computing.}
+\end{figure}
+
+\subsection{Stakeholders and Economic Model}
+Sensor-Cloud establishes a three-party multi-tenant marketplace:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Physical Sensor Owners:} Entities that procure and deploy physical sensor hardware in the field. They register their WSNs with the Sensor-Cloud provider to monetize idle sensing capacity.
+  \item \textbf{Sensor-Cloud Service Provider (SCSP):} The cloud entity that maintains the virtualization middleware, registers physical sensors, provisions virtual sensors, negotiates SLAs, and handles metering and billing.
+  \item \textbf{End Users:} Consumers or enterprises who provision virtual sensors on-demand for specific temporal durations and geographic boundaries without purchasing physical hardware.
+\end{enumerate}
+
+\subsection{Virtual Sensor Configurations and Mapping Topologies}
+A \textbf{Virtual Sensor} is a software abstraction representing a sensing unit provisioned in the cloud. It decouples the user application from the underlying physical sensor hardware. The virtualization engine supports three primary configurations:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{One-to-One Mapping ($1:1$):} A single virtual sensor directly represents a single physical sensor mote.
+  \item \textbf{Many-to-One Mapping ($N:1$):} Multiple physical sensor motes are aggregated into a single virtual sensor. For example, averaging temperature readings from 20 distributed agricultural sensor nodes across a field into a single virtual temperature feed.
+  \item \textbf{One-to-Many Mapping ($1:N$):} A single high-capability physical sensor is dynamically partitioned into multiple virtual sensors serving different end users simultaneously with distinct sampling frequencies and delivery thresholds.
+  \item \textbf{Spatio-Temporal Virtual Sensors:} Virtual sensors synthesized dynamically to cover an arbitrary geographical polygon $\mathcal{R}$ over a designated time window $[t_1, t_2]$, collecting and synthesizing telemetry from all physical sensors falling inside $\mathcal{R}$.
+\end{itemize}
+
+\section{Comprehensive Solved Assignment Problems (Week 8)}
+
+\begin{solved}{Docker Image Deletion Command (Assignment 8, Q1)}
+\Given Which command deletes a Docker image that is no longer required?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \texttt{docker rm} removes stopped \emph{containers}.
+  \item \texttt{docker rmi} (\textbf{r}e\textbf{m}ove \textbf{i}mage) purges container \emph{images}.
+\end{enumerate}
+\Answer \textbf{Option B: \texttt{docker rmi}}.
+\end{solved}
+
+\begin{solved}{Listing Docker Virtual Networks (Assignment 8, Q2)}
+\Given Identify the command used to display all available Docker networks on the host.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Docker CLI manages network namespaces via the \texttt{network} command group.
+  \item The command \texttt{docker network ls} lists all bridge, host, and overlay networks.
+\end{enumerate}
+\Answer \textbf{Option A: \texttt{docker network ls}}.
+\end{solved}
+
+\begin{solved}{VM vs Container Kernel Isolation Comparison (Assignment 8, Q3)}
+\Given Which is the most accurate comparison between VMs and containers?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Virtual Machines virtualize physical hardware, executing complete guest operating systems with independent kernels.
+  \item Containers share the underlying host OS kernel, providing process isolation via Linux kernel namespaces and cgroups.
+\end{enumerate}
+\Answer \textbf{Option B: Containers generally share the host kernel, while VMs virtualize hardware and run separate guest OS kernels}.
+\end{solved}
+
+\begin{solved}{Primary Function of etcd in Kubernetes (Assignment 8, Q4)}
+\Given What is the fundamental responsibility of \texttt{etcd} in a Kubernetes cluster?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \texttt{etcd} is a distributed key-value store used to persist cluster configuration data, metadata, and state information across all master control plane components.
+\end{enumerate}
+\Answer \textbf{Option B: Storing Kubernetes cluster state and configuration data}.
+\end{solved}
+
+\begin{solved}{Hypervisor Type Classification (Assignment 8, Q5)}
+\Given Identify an example of a Type 2 (hosted) hypervisor among: VMware ESXi, Xen, Oracle VirtualBox, Microsoft Hyper-V Server.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item VMware ESXi, Xen, and Hyper-V Server are Type-1 bare-metal hypervisors.
+  \item \textbf{Oracle VirtualBox} runs as an application process on top of a standard host operating system (Windows, Linux, macOS), making it a Type 2 hypervisor.
+\end{enumerate}
+\Answer \textbf{Option C: Oracle VirtualBox}.
+\end{solved}
+
+\begin{solved}{Energy Reduction via VM Consolidation (Assignment 8, Q6)}
+\Given In a data center of 100 servers, 40 are heavily loaded while 60 operate at very low utilization. What is the most effective energy saving strategy?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Idle servers consume $50\%$ to $60\%$ of peak power.
+  \item Consolidating VMs from underutilized servers onto fewer hosts via live migration allows the empty physical machines to be powered down into sleep states, maximizing energy savings.
+\end{enumerate}
+\Answer \textbf{Option B: Consolidate VMs onto fewer servers and switch idle servers to a low-power state}.
+\end{solved}
+
+\begin{solved}{Role of Middleware in Sensor-Cloud (Assignment 8, Q7)}
+\Given Why is a middleware layer required between Wireless Sensor Networks (WSNs) and cloud applications?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Physical sensor motes use diverse, proprietary communication protocols and data formats.
+  \item The middleware abstracts heterogeneous physical sensors, enabling cloud-accessible virtual sensors with standardized APIs.
+\end{enumerate}
+\Answer \textbf{Option B: To abstract heterogeneous sensors and provide cloud-accessible sensor resources}.
+\end{solved}
+
+\begin{solved}{Virtual Sensor Provisioning Topologies (Assignment 8, Q8)}
+\Given Can multiple physical sensors be aggregated to form a single virtual sensor?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Yes, Sensor-Cloud supports Many-to-One ($N:1$) mapping, allowing data from multiple geographic sensors to be aggregated into a single virtual sensor feed.
+\end{enumerate}
+\Answer \textbf{Option A: Yes, Many-to-One mapping is supported}.
+\end{solved}
+
+\begin{solved}{Docker Container Isolation Primitives (Assignment 8, Q9)}
+\Given Which Linux kernel primitives provide resource metering and process isolation for Docker containers?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Namespaces} partition system resources (process IDs, network interfaces, mount points).
+  \item \textbf{Control Groups (cgroups)} meter and limit hardware consumption (CPU shares, memory quotas, I/O bandwidth).
+\end{enumerate}
+\Answer \textbf{Option C: Namespaces and cgroups}.
+\end{solved}
+
+\begin{solved}{Economic Benefit of Sensor-Cloud to Sensor Owners (Assignment 8, Q10)}
+\Given How do physical sensor owners benefit economically in the Sensor-Cloud model?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Sensor owners register their physical WSNs with the Sensor-Cloud Service Provider (SCSP) and earn recurring revenue from multi-tenant subscriptions without building custom software applications.
+\end{enumerate}
+\Answer \textbf{Option B: Monetizing deployed physical sensor capacity through multi-tenant usage fees}.
+\end{solved}

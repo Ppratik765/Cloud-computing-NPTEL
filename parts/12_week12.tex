@@ -1,0 +1,682 @@
+% ==================================================================
+%  WEEK 12
+% ==================================================================
+\chapter{Advanced Paradigms and Case Studies: 5G Era, Cyber-Physical Systems, Spatial Cloud, and IoHT}
+
+\section{Introduction and Week Overview}
+Week 12 explores the confluence of cloud, edge, and modern telecommunication systems across complex real-world cyber-physical environments. The curriculum culminates with four interconnected pillars:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Cloud Computing in the 5G Era:} How fifth-generation cellular networks, network softwarization, and multi-access edge computing (MEC) eliminate the communication latency bottleneck.
+  \item \textbf{Cyber-Physical Systems (CPS) and Cloud Integration:} Bridging computational cyber cores with physical dynamics via closed-loop feedback, formalizing the NIST Cyber-Physical Cloud Computing (CPCC) architecture.
+  \item \textbf{Case Study I --- Spatial Cloud Computing and Trajectory Cloud (Traj-Cloud):} Managing spatiotemporal big data, spatial indexing, distributed map-matching, and mobility trace mining over cloud infrastructure.
+  \item \textbf{Case Study II --- Internet of Health Things (IoHT):} A complete four-tier hierarchical Cloud-Fog-Edge-IoT healthcare architecture evaluated empirically via iFogSim, physical embedded hardware prototypes, and Dew computing resilience.
+\end{enumerate}
+
+\section{Cloud Computing in the 5G Era}
+\subsection{Generational Evolution of Mobile Networks}
+Mobile telecommunications have evolved across distinct architectural epochs:
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l l X l}
+\toprule
+Generation & Epoch & Core Capability \& Technology & Latency Benchmark\\
+\midrule
+1G & 1980s & Analog voice transmission (AMPS, TACS, NMT) & $\sim 1000\text{ ms}$\\
+2G & Early 1990s & Digital voice, SMS, circuit-switched data (GSM, CDMA) & $\sim 300\text{--}500\text{ ms}$\\
+3G & Early 2000s & Mobile packet data, early mobile web (UMTS, CDMA2000) & $\sim 100\text{--}150\text{ ms}$\\
+4G LTE & 2010s & All-IP mobile broadband, video streaming, LTE-Advanced & $\sim 30\text{--}50\text{ ms}$\\
+5G & 2020s+ & Multi-Gbps peak rates, ultra-low latency, massive IoT, MEC & $< 1\text{--}5\text{ ms}$\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{The Three Functional Pillars of 5G}
+The International Telecommunication Union (ITU-R) under IMT-2020 standardizes 5G capabilities across three distinct service categories:
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, font=\small]
+  \node[dark, minimum width=4.2cm, minimum height=2.4cm, align=center] (embb) {
+    \textbf{eMBB}\\
+    \scriptsize \textbf{Enhanced Mobile Broadband}\\
+    \scriptsize $\bullet$ Peak data: up to $20\text{ Gbps}$\\
+    \scriptsize $\bullet$ User experienced: $100\text{ Mbps}$\\
+    \scriptsize $\bullet$ AR/VR, 8K video, 3D media
+  };
+  \node[mid, right=1.0cm of embb, minimum width=4.2cm, minimum height=2.4cm, align=center] (urllc) {
+    \textbf{URLLC}\\
+    \scriptsize \textbf{Ultra-Reliable \& Low Latency}\\
+    \scriptsize $\bullet$ Radio latency: $< 1\text{ ms}$\\
+    \scriptsize $\bullet$ Reliability: $99.999\%$ (five-nines)\\
+    \scriptsize $\bullet$ Autonomous cars, surgery, smart grid
+  };
+  \node[gold, right=1.0cm of urllc, minimum width=4.2cm, minimum height=2.4cm, align=center] (mmtc) {
+    \textbf{mMTC}\\
+    \scriptsize \textbf{Massive Machine-Type Comm.}\\
+    \scriptsize $\bullet$ Connection density: $10^6\text{ devs/km}^2$\\
+    \scriptsize $\bullet$ Ultra-low energy ($10\text{+ yr battery}$)\\
+    \scriptsize $\bullet$ Smart meters, precision agriculture
+  };
+\end{tikzpicture}
+\caption{The ITU IMT-2020 5G Service Triangle.}
+\end{figure}
+
+\subsection{5G and Cloud Synergy: Softwarization and Edge Convergence}
+The symbiosis between 5G and Cloud Computing operates in two directions:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Cloudification of 5G (Network Softwarization):} 5G replaces proprietary telecommunication hardware with software running on commodity cloud data center servers via:
+    \begin{itemize}
+      \item \textbf{Software-Defined Networking (SDN):} Decoupling the network control plane (centralized decision-making) from the data forwarding plane.
+      \item \textbf{Network Functions Virtualization (NFV):} Packaging firewalls, routers, EPC (Evolved Packet Core), and Baseband Units (BBUs) as virtualized network functions (VNFs) running on hypervisors or Kubernetes clusters.
+      \item \textbf{Network Slicing:} Creating multiple isolated virtual networks on a single shared physical infrastructure, each customized to meet specific QoS guarantees (e.g., an eMBB slice for video streaming alongside a URLLC slice for robotic surgery).
+    \end{itemize}
+  \item \textbf{Cloud Evolution Driven by 5G (Multi-Access Edge Computing --- MEC):} Standardized by ETSI, MEC deploys cloud compute and storage resources directly at cellular Radio Access Network (RAN) base stations (gNodeB). By executing computation one hop away from User Equipment (UE), round-trip propagation delays drop from $50\text{--}100\text{ ms}$ (remote cloud) to under $5\text{ ms}$ (edge).
+\end{enumerate}
+
+\subsection{Mobile Cloud Computing (MCC) vs. MEC}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X X}
+\toprule
+Dimension & Mobile Cloud Computing (MCC) & Multi-Access Edge Computing (MEC)\\
+\midrule
+Server Location & Centralized hyperscale cloud data centers across the wide-area Internet. & At local cellular base stations (gNodeB), aggregation points, or ISP gateways.\\
+Latency & Moderate to high ($50\text{--}150\text{ ms}$) due to multi-hop WAN routing. & Ultra-low ($< 5\text{ ms}$) via direct one-hop wireless access.\\
+Context Awareness & Low; cloud has no direct insight into real-time radio signal or user cell location. & High; access to real-time radio channel quality, cell congestion, and user velocity.\\
+Bandwidth Pressure & Strains backhaul and core telecommunication networks. & Keeps high-volume traffic local, drastically reducing core network backhaul usage.\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Cyber-Physical Systems (CPS) and Cloud Integration}
+\subsection{Foundations of Cyber-Physical Systems}
+\begin{defbox}{Cyber-Physical System (CPS)}
+Coined in 2006 by Helen Gill at the National Science Foundation (NSF), a \textbf{Cyber-Physical System (CPS)} is an orchestration of computational algorithms and physical components. Embedded computers monitor and control physical processes via feedback loops, where physical processes affect computational logic and vice versa.
+\end{defbox}
+
+CPS is characterized by the \textbf{intersection}, rather than the union, of the cyber world and the physical world:
+\begin{equation}
+\text{CPS} = \text{Cyber} \cap \text{Physical} = \{\text{Computation}\} \times \{\text{Dynamics}\} \times \{\text{Communication}\} \times \{\text{Control}\}
+\end{equation}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.6cm, font=\small]
+  \node[dark, minimum width=6cm, minimum height=1.2cm, align=center] (cyber) {\textbf{Cyber Realm (Computation \& Software)}\\Cloud / Edge Algorithms, Decision Logic, Control Models};
+  \node[gold, below=2.2cm of cyber, minimum width=6cm, minimum height=1.2cm, align=center] (physical) {\textbf{Physical Realm (Environment \& Processes)}\\Smart Grids, Vehicles, Chemical Plants, Human Biology};
+
+  \draw[arr, ->] ([xshift=-1.8cm]physical.north) -- node[left, font=\scriptsize, align=right] {\textbf{Sensors}\\Sample physical state $\mathbf{x}(t)$\\$\to$ Discrete data} ([xshift=-1.8cm]cyber.south);
+  \draw[arr, ->] ([xshift=1.8cm]cyber.south) -- node[right, font=\scriptsize, align=left] {\textbf{Actuators}\\Apply control signals $\mathbf{u}(t)$\\$\to$ Physical force/state change} ([xshift=1.8cm]physical.north);
+\end{tikzpicture}
+\caption{Closed-Loop Feedback Architecture in Cyber-Physical Systems.}
+\end{figure}
+
+\subsection{CPS vs. Traditional Embedded Systems and IoT}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Embedded Systems:} Focus on standalone computation embedded within a host device (e.g., microwave microcontroller), rarely networked or aware of broad physical dynamics.
+  \item \textbf{Internet of Things (IoT):} Focuses on uniquely identifiable objects connected to the Internet primarily for data aggregation, monitoring, and telemetry collection.
+  \item \textbf{Cyber-Physical Systems (CPS):} Mandates tight, continuous, closed-loop bidirectional feedback control with hard temporal deadlines, stability guarantees, and safety-critical constraints.
+\end{itemize}
+
+\subsection{Cyber-Physical Cloud Computing (CPCC)}
+In August 2013, the National Institute of Standards and Technology (NIST) published a landmark report establishing the \textbf{Cyber-Physical Cloud Computing (CPCC)} architectural framework:
+\begin{defbox}{NIST CPCC Definition}
+\textbf{Cyber-Physical Cloud Computing (CPCC)} is a system environment that can rapidly build, modify, and provision cyber-physical systems composed of a set of cloud computing-based sensor, processing, control, and data services.
+\end{defbox}
+
+\subsubsection{Key Benefits of CPCC}
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Resource Pooling and Scalability:} Dynamically aggregates heterogeneous sensor and actuator fleets across geographical boundaries.
+  \item \textbf{Modular Composition:} Engineers can compose complex cyber-physical applications using modular microservices (Sensing-as-a-Service, Actuation-as-a-Service, Control-as-a-Service).
+  \item \textbf{Cross-Domain Interoperability:} Translates disparate industrial and proprietary physical fieldbus protocols (Modbus, CAN bus, OPC-UA) into unified cloud APIs.
+  \item \textbf{Adaptive Scaled Analytics:} Executes heavy predictive simulations (digital twins, finite element analysis) in the cloud while dispatching real-time control directives to the edge.
+\end{enumerate}
+
+\section{Case Study I: Spatial Cloud Computing and Traj-Cloud}
+\subsection{Geospatial Data Characteristics}
+Spatial (or geospatial) data describes objects, phenomena, or events located on or near the Earth's surface. Every spatial datum is formally modeled as a three-dimensional tuple:
+\begin{equation}
+\mathcal{D}_{\text{spatial}} = \langle \mathbf{L}, \mathbf{A}, \mathbf{T} \rangle
+\end{equation}
+where:
+\begin{itemize}[leftmargin=*]
+  \item $\mathbf{L} = (\text{Latitude}, \text{Longitude}, \text{Altitude})$ represents the geographical coordinate geometry.
+  \item $\mathbf{A} = \{a_1, a_2, \dots, a_k\}$ represents non-spatial thematic attributes (e.g., road speed limit, patient ID, air pollution level).
+  \item $\mathbf{T} = [t_{\text{start}}, t_{\text{end}}]$ represents the temporal validity lifespan.
+\end{itemize}
+
+\subsection{Spatial Cloud Computing Principles}
+\begin{defbox}{Spatial Cloud Computing}
+Spatial Cloud Computing is the cloud computing paradigm driven by geospatial sciences and optimized by spatiotemporal principles for enabling geospatial scientific discoveries within a distributed computing environment.
+\end{defbox}
+
+Key spatiotemporal principles leveraged to optimize cloud resources include:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Tobler's First Law of Geography:} ``Everything is related to everything else, but near things are more related than distant things.'' Cloud data partitioning strategies cluster spatially proximate points onto the same physical server nodes to minimize inter-node network shuffles.
+  \item \textbf{Spatial Indexing (Quadtrees and R-Trees):} Standard B-trees fail in multi-dimensional space. Spatial cloud databases utilize R-trees (bounding box hierarchies) or Geohash-based spatial keys to achieve $\mathcal{O}(\log N)$ range and nearest-neighbor query performance.
+\end{itemize}
+
+\subsection{Traj-Cloud: Trajectory Cloud for Mobility Trace Mining}
+Developed by researchers at IIT Kharagpur (S. Ghosh and S. K. Ghosh, IEEE COMSNETS 2019), \textbf{Traj-Cloud} is an end-to-end cloud platform designed to analyze massive GPS mobility trajectories for intelligent transportation systems (ITS) and smart-city applications.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.2cm, font=\small]
+  \node[dark, minimum width=3.8cm, minimum height=2.2cm, align=center] (ts1) {
+    \textbf{TS1: Indexing Service}\\
+    \scriptsize Input: GPS trace $G$, metadata\\
+    \scriptsize Output: Spatiotemporal indices\\
+    \scriptsize \textbf{GCP Stack:}\\
+    \scriptsize Google BigQuery \& Cloud SQL
+  };
+  \node[mid, right=1.0cm of ts1, minimum width=3.8cm, minimum height=2.2cm, align=center] (ts2) {
+    \textbf{TS2: Map-Matching Service}\\
+    \scriptsize Input: GPS trace $G$, Road net $R$\\
+    \scriptsize Output: Road-projected trace\\
+    \scriptsize \textbf{GCP Stack:}\\
+    \scriptsize MapReduce on Compute Engine
+  };
+  \node[gold, right=1.0cm of ts2, minimum width=3.8cm, minimum height=2.2cm, align=center] (ts3) {
+    \textbf{TS3: Query Service}\\
+    \scriptsize Input: Range/Point Query $Q$\\
+    \scriptsize Output: Trajectory polyline\\
+    \scriptsize \textbf{GCP Stack:}\\
+    \scriptsize Compute Engine \& Cloud SQL
+  };
+
+  \draw[arr, ->] (ts1) -- node[above, font=\scriptsize] {Indexed Traces} (ts2);
+  \draw[arr, ->] (ts2) -- node[above, font=\scriptsize] {Matched Paths} (ts3);
+\end{tikzpicture}
+\caption{The Three Core Microservices of Traj-Cloud.}
+\end{figure}
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{TS1 --- Trajectory Data Indexing Service:} Takes raw, noisy GPS coordinates, assigns spatiotemporal bounding boxes, and ingests them into analytical distributed column stores (Google BigQuery) and transactional indexes (Cloud SQL).
+  \item \textbf{TS2 --- Trajectory Map-Matching Service:} Raw GPS signals exhibit sampling drift and urban canyon interference. TS2 projects raw coordinates onto the true topological road network graph $R$ using distributed MapReduce algorithms on Google Compute Engine clusters to resolve ambiguities in near real-time.
+  \item \textbf{TS3 --- Trajectory Query Service:} Executes high-throughput spatio-temporal range queries (``find all vehicles within 500 meters of junction $J$ between 09:00 and 09:15'') and trajectory similarity joins using Compute Engine worker pools.
+\end{enumerate}
+
+\section{Case Study II: Internet of Health Things (IoHT)}
+\subsection{The Healthcare Paradigm Problem}
+Continuous patient health monitoring (e.g., cardiac arrhythmia, epileptic seizures, post-operative vitals) generates massive high-velocity data streams from body-worn sensors. Transmitting continuous raw biometric streams directly to distant cloud data centers introduces fatal latency, consumes prohibitive cellular bandwidth, and suffers from total failure when Internet connectivity drops.
+
+\subsection{The Four-Tier Hierarchical Network Topology}
+To solve this, researchers at IIT Kharagpur designed a four-tier architecture:
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.1cm, font=\small]
+  \node[dark, minimum width=11cm, minimum height=0.9cm] (c0) {\textbf{Level 0: Cloud Datacenter (Remote Hyperscale --- AWS)}\\Global EHR storage, population analytics, confirmatory deep learning};
+  \node[mid, below=0.6cm of c0, minimum width=11cm, minimum height=0.9cm] (f1) {\textbf{Level 1: ISP Gateway (Regional Aggregator)}\\Regional message distribution, high-bandwidth optical backhaul router};
+  \node[box, below=0.6cm of f1, minimum width=11cm, minimum height=0.9cm] (f2) {\textbf{Level 2: Area Gateway (Fog Node --- Local Gateway / Raspberry Pi)}\\Data filtering, feature extraction, local anomaly detection, alert generation};
+  \node[gold, below=0.6cm of f2, minimum width=11cm, minimum height=0.9cm] (e3) {\textbf{Level 3: Edge Devices \& IoT Sensors (Body Sensors / Smart Mobile)}\\ADXL345 accelerometer, pulse/BP meter, NodeMCU ESP8266, smartphone display};
+
+  \draw[arr, <->] (c0) -- node[right, font=\scriptsize] {WAN link: Latency $= 100\text{ ms}$, Up/Down Bw $= 10\text{ Mbps}$} (f1);
+  \draw[arr, <->] (f1) -- node[right, font=\scriptsize] {Metro link: Latency $= 2\text{ ms}$, Bw $= 10\text{ Mbps}$} (f2);
+  \draw[arr, <->] (f2) -- node[right, font=\scriptsize] {Local Wi-Fi link: Latency $= 2\text{ ms}$, Bw $= 10\text{ Mbps}$} (e3);
+\end{tikzpicture}
+\caption{The 4-Tier Hierarchical Network Model for IoHT.}
+\end{figure}
+
+\subsection{Empirical Simulation Parameters (iFogSim Model)}
+Based on the foundational iFogSim experiments presented in Lectures 59--60:
+\begin{center}
+\begin{tabularx}{\textwidth}{l r r r r r r}
+\toprule
+\textbf{Device Tier} & \textbf{MIPS} & \textbf{RAM (MB)} & \textbf{Up Bw (kbps)} & \textbf{Down Bw (kbps)} & \textbf{Level} & \textbf{Cost / MIPS}\\
+\midrule
+Cloud & $44,800$ & $40,000$ & $100$ & $10,000$ & $0$ & $\$0.01$\\
+ISP Gateway & $2,800$ & $4,000$ & $10,000$ & $10,000$ & $1$ & $\$0.00$ (Local)\\
+Area Gateway & $2,800$ & $4,000$ & $10,000$ & $10,000$ & $2$ & $\$0.00$ (Local)\\
+Mobile Edge & $350$ & $1,000$ & $10,000$ & $270$ & $3$ & $\$0.00$ (User)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection{Link Latency Distribution}
+\begin{itemize}[leftmargin=*]
+  \item Body Sensor $\to$ Mobile Edge: $1\text{ ms}$
+  \item Mobile Edge $\to$ Area Gateway (Fog): $2\text{ ms}$
+  \item Area Gateway $\to$ ISP Gateway: $2\text{ ms}$
+  \item ISP Gateway $\to$ Cloud Datacenter: $100\text{ ms}$
+  \item Mobile Edge $\to$ Local Display: $1\text{ ms}$
+\end{itemize}
+
+\subsection{Application Module Placement: Fog Model vs. Cloud Model}
+The healthcare monitoring application consists of five logical modules:
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X X}
+\toprule
+Application Module & Placement in Fog-Based Model & Placement in Cloud-Based Model\\
+\midrule
+Client Module & Mobile Device (Edge, Level 3) & Mobile Device (Edge, Level 3)\\
+Data Filtering Module & Area Gateway (Fog, Level 2) & Cloud Datacenter (Level 0)\\
+Data Processing Module & Area Gateway (Fog, Level 2) & Cloud Datacenter (Level 0)\\
+Event Handler Module & Area Gateway (Fog, Level 2) & Cloud Datacenter (Level 0)\\
+Confirmatory Module & Cloud Datacenter (Level 0) & Cloud Datacenter (Level 0)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Comparative Performance Evaluation Metrics}
+Simulations across expanding configurations (Config 1: 4 users, Config 2: 8 users, Config 3: 16 users, Config 4: 32 users, Config 5: 64 users) revealed definitive findings:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Control Loop Latency:} In the Fog model, because the control loop (Sensor $\to$ Mobile $\to$ Area Gateway $\to$ Event Handler $\to$ Display) executes entirely within Levels 2 and 3, latency remains virtually \textbf{constant and minimal} ($\approx 5\text{--}8\text{ ms}$), independent of user scale. In the Cloud model, every packet travels to Level 0 and back, causing latency exceeding $210\text{ ms}$, with severe queueing degradation as user count climbs.
+  \item \textbf{Network Bandwidth Usage:} In the Fog model, only the few positive anomaly events trigger the Confirmatory Module on the cloud, resulting in negligible WAN traffic. In the Cloud model, continuous raw biometric telemetry is pumped to the cloud, congesting wide-area links.
+  \item \textbf{Cost of Execution:} Fog devices (Area Gateways, Raspberry Pis) are customer-owned capital equipment incur zero per-second cloud billing fees. The Cloud model bills continuously for millions of MIPS, multiplying total operational cost.
+  \item \textbf{Energy Consumption:} Mobile device energy remains identical across both architectures because the mobile edge performs the same sensor acquisition load. However, cloud data center energy drops by orders of magnitude under the Fog model.
+\end{enumerate}
+
+\subsection{Hardware Prototype Implementation}
+The simulated IoHT architecture was physically built and validated using:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Biometric Sensor Node:} Customized Blood Pressure (BP) and Pulse meter outputting ASCII serial data at $9600\text{ baud}$.
+  \item \textbf{Movement Tracking Sensor:} ADXL345 3-axis digital accelerometer sampling acceleration at high frequency.
+  \item \textbf{Edge Acquisition Node:} NodeMCU ESP8266 board (CP2102) with integrated Wi-Fi microcontroller.
+  \item \textbf{Fog Gateway Node:} Raspberry Pi 3 (64-bit ARM quad-core, $1\text{ GB}$ RAM, on-board Wi-Fi and Bluetooth).
+  \item \textbf{Cloud Tier:} Amazon Web Services (AWS) EC2 instances.
+\end{itemize}
+
+\subsubsection{Signal Processing and Machine Learning Pipeline}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.0cm, font=\small]
+  \node[box] (raw) {Raw 3-Axis $(x,y,z)$\\Acceleration};
+  \node[box, right=0.6cm of raw] (mag) {Magnitude\\$A = \sqrt{x^2+y^2+z^2}$};
+  \node[box, right=0.6cm of mag] (smooth) {5-Point Moving\\Average Smoothing};
+  \node[box, right=0.6cm of smooth] (feat) {Feature Extraction\\(Mean, Std, Energy)};
+  \node[dark, right=0.6cm of feat] (knn) {KNN Classifier\\($k=3$, 5-fold CV)};
+
+  \draw[arr, ->] (raw) -- (mag);
+  \draw[arr, ->] (mag) -- (smooth);
+  \draw[arr, ->] (smooth) -- (feat);
+  \draw[arr, ->] (feat) -- (knn);
+\end{tikzpicture}
+\caption{Wearable Activity Classification Pipeline.}
+\end{figure}
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Composite Magnitude Calculation:}
+  \begin{equation}
+  A[t] = \sqrt{x[t]^2 + y[t]^2 + z[t]^2}
+  \end{equation}
+  \item \textbf{5-Point Moving Average Smoothing:} To eliminate transient electronic noise, each sampled signal point is replaced by the mean of itself, its two predecessors, and its two successors:
+  \begin{equation}
+  \bar{A}[t] = \frac{A[t-2] + A[t-1] + A[t] + A[t+1] + A[t+2]}{5}
+  \end{equation}
+  \item \textbf{Feature Extraction:} Over sliding windows, six statistical features are extracted: Maximum Amplitude, Minimum Amplitude, Mean Amplitude, Standard Deviation in Amplitude, Energy in Time Domain ($\sum A[t]^2$), and Energy in Frequency Domain.
+  \item \textbf{Classification via $k$-Nearest Neighbors (KNN):} Features are normalized via min-max scaling ($Y = \frac{x - \min}{\max - \min}$). Optimal parameter $k=3$ was established via 5-fold cross validation.
+\end{enumerate}
+
+\subsubsection{Demonstration Cardiac Risk Alert Logic}
+The edge node calculates calibrated risk indicators:
+\begin{equation}
+f = (\text{KNN Activity Class Value}) + 1
+\end{equation}
+\begin{equation}
+p = \frac{\text{BPM}}{f}, \quad s = \frac{\text{Systolic BP}}{f}, \quad d = \frac{\text{Diastolic BP}}{f}
+\end{equation}
+A severe emergency alarm triggers if:
+\begin{equation}
+(p \ge 170) \land (s \ge 180\text{ mmHg}) \land (d \ge 120\text{ mmHg}) \implies \text{HeartAttackAlarm} = \mathbf{True}
+\end{equation}
+
+\subsection{Dew Resilience Extension in Healthcare}
+To prevent catastrophic patient monitoring blackouts when local fog routers or Internet backhauls fail:
+\begin{itemize}[leftmargin=*]
+  \item The smartphone or wearable edge node contains a \textbf{Dew Health Service Engine}.
+  \item If Cloud or Fog connectivity is severed, the Dew engine immediately transitions to autonomous offline processing: vital signs are evaluated locally against emergency thresholds, acoustic patient alarms sound directly from the mobile handset, and time-stamped delta logs are stored in a local SQLite database (Database-in-Dew).
+  \item The instant connectivity is restored, the Dew daemon reconciles and synchronizes all cached patient logs to the hospital cloud database.
+\end{itemize}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X X X}
+\toprule
+Metric & Pure Cloud & Cloud-Fog-Edge & With Dew Computing\\
+\midrule
+On-Premise Resource Utilization & Low & Sub-optimal & Optimal\\
+Required Network Connectivity & Continuous Internet & Local Area Network & Fully Autonomous (Offline)\\
+System Availability / Uptime & Low (Internet fragile) & High & Maximum (Fault-tolerant)\\
+Bandwidth Demand & High (All data upstream) & Low (Alerts only) & Minimal (Delta sync)\\
+Control Loop Latency & High ($> 200\text{ ms}$) & Ultra-low ($< 10\text{ ms}$) & Immediate ($< 2\text{ ms}$)\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\newpage
+\section{Comprehensive Solved NPTEL-Style Questions}
+
+\begin{solved}{5G Service Pillar Categorization and QoS Matching}
+\Given Categorize the following real-world applications into their primary 5G service pillar (\textbf{eMBB}, \textbf{URLLC}, or \textbf{mMTC}):
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+  \item Autonomous vehicular collision avoidance system requiring $< 1\text{ ms}$ air interface latency.
+  \item Streaming ultra-high-definition $8\text{K}$ $360^\circ$ virtual reality video to concert attendees.
+  \item Smart agricultural soil moisture monitoring deploying 50,000 battery-powered sensors across farmland.
+  \item Remote telesurgery robot operated by a specialist in a metropolitan hospital.
+\end{enumerate}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Autonomous collision avoidance:} Demands sub-millisecond deterministic latency and $99.999\%$ transmission reliability to avert physical collisions $\implies$ \textbf{URLLC}.
+  \item \textbf{$8\text{K}$ $360^\circ$ VR streaming:} Requires sustained multi-hundred Mbps throughput and wide radio channels, prioritizing high bandwidth over sub-millisecond delivery $\implies$ \textbf{eMBB}.
+  \item \textbf{Smart agricultural soil sensors:} Exhibits extreme connection density, very low individual data rates, and multi-year battery lifespans without human maintenance $\implies$ \textbf{mMTC}.
+  \item \textbf{Remote telesurgery robot:} Human tactile feedback and surgical tool precision require deterministic low latency ($< 5\text{ ms}$) and absolute reliability $\implies$ \textbf{URLLC}.
+\end{enumerate}
+\Answer (a) \textbf{URLLC}, (b) \textbf{eMBB}, (c) \textbf{mMTC}, (d) \textbf{URLLC}.
+\end{solved}
+
+\begin{solved}{MEC vs. Cloud Round-Trip Latency and Bandwidth Conservation}
+\Given A connected vehicle captures high-definition camera frames generating a data payload of $S = 2\text{ MB}$ per event. The vehicle can offload image processing either to a local Multi-Access Edge Computing (MEC) server co-located at the base station or to a centralized Cloud data center:
+\begin{itemize}[leftmargin=*]
+  \item Uplink wireless radio bandwidth $R_{\text{radio}} = 100\text{ Mbps}$, one-hop radio latency $T_{\text{radio}} = 2\text{ ms}$.
+  \item Core network backhaul bandwidth to Cloud $R_{\text{cloud}} = 20\text{ Mbps}$, wide-area propagation delay $T_{\text{wan}} = 45\text{ ms}$.
+  \item Processing execution duration on MEC server: $T_{\text{proc, MEC}} = 30\text{ ms}$.
+  \item Processing execution duration on Cloud server: $T_{\text{proc, Cloud}} = 10\text{ ms}$ (faster compute).
+  \item Result response packet is negligible in size ($0\text{ ms}$ downlink transmission time).
+\end{itemize}
+Compute the total turnaround latency for both MEC offloading and Cloud offloading.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Convert payload size to bits:
+  \begin{equation}
+  S = 2\text{ MB} = 2 \times 8 = 16\text{ Megabits (Mb)}
+  \end{equation}
+  \item \textbf{Turnaround Latency for MEC:}
+  \begin{equation}
+  T_{\text{trans, radio}} = \frac{S}{R_{\text{radio}}} = \frac{16\text{ Mb}}{100\text{ Mbps}} = 0.160\text{ s} = 160\text{ ms}
+  \end{equation}
+  \begin{equation}
+  T_{\text{total, MEC}} = T_{\text{radio}} + T_{\text{trans, radio}} + T_{\text{proc, MEC}} + T_{\text{radio}}
+  \end{equation}
+  \begin{equation}
+  T_{\text{total, MEC}} = 2\text{ ms} + 160\text{ ms} + 30\text{ ms} + 2\text{ ms} = 194\text{ ms}
+  \end{equation}
+  \item \textbf{Turnaround Latency for Cloud:}
+  The packet must traverse both the radio uplink and the wide-area network backhaul:
+  \begin{equation}
+  T_{\text{trans, cloud}} = \frac{S}{R_{\text{cloud}}} = \frac{16\text{ Mb}}{20\text{ Mbps}} = 0.800\text{ s} = 800\text{ ms}
+  \end{equation}
+  \begin{equation}
+  T_{\text{total, Cloud}} = T_{\text{radio}} + T_{\text{trans, radio}} + T_{\text{wan}} + T_{\text{trans, cloud}} + T_{\text{proc, Cloud}} + T_{\text{wan}} + T_{\text{radio}}
+  \end{equation}
+  \begin{equation}
+  T_{\text{total, Cloud}} = 2 + 160 + 45 + 800 + 10 + 45 + 2 = 1064\text{ ms}
+  \end{equation}
+  \item Even though the cloud CPU processes three times faster ($10\text{ ms}$ vs $30\text{ ms}$), the bottleneck in backhaul transmission and WAN propagation makes MEC over $5.4\times$ faster ($194\text{ ms}$ vs $1064\text{ ms}$).
+\end{enumerate}
+\Answer \textbf{MEC Latency: 194 ms}; \textbf{Cloud Latency: 1064 ms}.
+\end{solved}
+
+\begin{solved}{Closed-Loop Cyber-Physical System Temporal Stability Bound}
+\Given A cyber-physical smart grid feedback control loop monitors frequency oscillations. The physical generator dynamics remain stable if the total closed-loop communication and computational delay $\tau$ satisfies the Nyquist stability margin:
+\begin{equation}
+\tau \le \tau_{\max} = 25\text{ ms}
+\end{equation}
+The closed loop consists of:
+\begin{itemize}[leftmargin=*]
+  \item Phasor Measurement Unit (PMU) sensor sampling and A/D conversion time: $t_s = 3\text{ ms}$.
+  \item Sensor-to-Controller transmission delay: $t_{tx1}$.
+  \item Controller state estimation and optimal power flow computation time: $t_c = 8\text{ ms}$.
+  \item Controller-to-Actuator transmission delay: $t_{tx2}$.
+  \item Physical actuator response time: $t_a = 4\text{ ms}$.
+\end{itemize}
+Determine the maximum permissible bidirectional network delay $(t_{tx1} + t_{tx2})$ and state whether a centralized cloud with $30\text{ ms}$ WAN latency can maintain closed-loop stability.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Write the closed-loop delay equation:
+  \begin{equation}
+  \tau = t_s + t_{tx1} + t_c + t_{tx2} + t_a \le \tau_{\max}
+  \end{equation}
+  \item Substitute the known internal hardware delays:
+  \begin{equation}
+  3\text{ ms} + 8\text{ ms} + 4\text{ ms} + (t_{tx1} + t_{tx2}) \le 25\text{ ms}
+  \end{equation}
+  \begin{equation}
+  15\text{ ms} + (t_{tx1} + t_{tx2}) \le 25\text{ ms} \implies (t_{tx1} + t_{tx2}) \le 10\text{ ms}
+  \end{equation}
+  \item If control algorithms are placed in a remote cloud where network transit alone takes $30\text{ ms}$:
+  \begin{equation}
+  \tau_{\text{cloud}} = 15\text{ ms} + 30\text{ ms} = 45\text{ ms} > 25\text{ ms}
+  \end{equation}
+  This violates the stability boundary, causing hazardous generator oscillation and grid tripping.
+\end{enumerate}
+\Answer Maximum allowable network delay is \textbf{10 ms}. A centralized cloud ($30\text{ ms}$) \textbf{cannot maintain stability}; local edge/fog control is strictly required.
+\end{solved}
+
+\begin{solved}{NIST Cyber-Physical Cloud Computing (CPCC) Framework}
+\Given According to the NIST 2013 Special Report on Cyber-Physical Cloud Computing, how does CPCC expand traditional cloud service abstractions (IaaS, PaaS, SaaS) to accommodate physical reality?
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Traditional cloud abstractions handle purely virtual abstractions: virtual hardware (IaaS), execution platforms (PaaS), and end-user software (SaaS).
+  \item CPCC introduces physical actuation and sensing abstractions:
+    \begin{itemize}
+      \item \textbf{Sensing-as-a-Service (S2aaS):} Virtualizing real-world sensors (cameras, temperature probes, PMUs) into addressable cloud streams.
+      \item \textbf{Actuation-as-a-Service (AaaS):} Virtualizing physical actuators (valves, robotic arms, switches) with strict concurrency locking and safety protocols.
+      \item \textbf{Control-as-a-Service (CaaS):} Providing real-time closed-loop control algorithms hosted on deterministic edge-cloud nodes.
+    \end{itemize}
+\end{enumerate}
+\Answer \textbf{CPCC abstracts physical hardware by introducing Sensing-as-a-Service, Actuation-as-a-Service, and Control-as-a-Service alongside traditional cloud models}.
+\end{solved}
+
+\begin{solved}{Spatial Data Tuple and Quadtree Indexing Complexity}
+\Given A spatial cloud platform ingests $N = 1,000,000$ vehicle coordinates distributed across a metropolitan bounding box of $32\text{ km} \times 32\text{ km}$. The system constructs a spatial Point-Region (PR) Quadtree where each non-empty quadrant cell is recursively partitioned into 4 children until each leaf contains at most $B = 10$ points.
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+  \item Specify the formal three-part tuple defining each spatial vehicle datum.
+  \item Compute the expected depth $D$ of the resulting Quadtree assuming uniform spatial distribution.
+\end{enumerate}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Formal Tuple:} Each datum is represented as $\mathcal{D} = \langle \mathbf{L}, \mathbf{A}, \mathbf{T} \rangle$, where $\mathbf{L} = (\text{lat}, \text{lon})$ is geographic coordinates, $\mathbf{A} = (\text{vehicle\_id}, \text{speed}, \text{heading})$ are thematic attributes, and $\mathbf{T} = (\text{timestamp})$ is temporal validity.
+  \item \textbf{Quadtree Depth:}
+  In a balanced Quadtree with fan-out $4$, the number of leaf buckets required for $N$ points with capacity $B$ is:
+  \begin{equation}
+  N_{\text{leaves}} \approx \frac{N}{B} = \frac{1,000,000}{10} = 100,000
+  \end{equation}
+  Since each tree level quadruples the number of cells ($4^D$ leaves at depth $D$):
+  \begin{equation}
+  4^D \ge 100,000 \implies D = \lceil \log_4(100,000) \rceil = \left\lceil \frac{\ln(100,000)}{\ln(4)} \right\rceil = \left\lceil \frac{11.5129}{1.3863} \right\rceil = \lceil 8.305 \rceil = 9
+  \end{equation}
+  \item Average point search complexity is $\mathcal{O}(D) = \mathcal{O}(\log_4 N) \approx 9$ node visits, compared to an exhaustive linear scan of $10^6$ records.
+\end{enumerate}
+\Answer (a) $\mathbf{\mathcal{D} = \langle L, A, T \rangle}$; (b) Expected tree depth is \textbf{9 levels}.
+\end{solved}
+
+\begin{solved}{Traj-Cloud Map-Matching Service MapReduce Speedup}
+\Given A fleet of 10,000 smart taxis produces $1.8 \times 10^7$ raw GPS points per hour. An unoptimized single-node serial map-matching algorithm projects GPS coordinates onto a digital road network at a rate of 2,500 points per second. In Traj-Cloud, the TS2 service executes a distributed MapReduce job on a cluster of $M = 16$ Google Compute Engine instances, where parallel processing efficiency is $\eta = 85\%$ due to network shuffling overhead.
+Calculate the single-node execution time, the cluster execution time, and the effective speedup.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Single-Node Execution Time ($T_1$):}
+  \begin{equation}
+  T_1 = \frac{18,000,000\text{ points}}{2,500\text{ points/s}} = 7,200\text{ seconds} = 2.0\text{ hours}
+  \end{equation}
+  Because $T_1 = 2.0\text{ hours} > 1.0\text{ hour}$, a single node cannot keep up with real-time streaming data.
+  \item \textbf{Cluster Processing Rate and Duration ($T_M$):}
+  \begin{equation}
+  R_{\text{cluster}} = M \times R_1 \times \eta = 16 \times 2,500 \times 0.85 = 34,000\text{ points/s}
+  \end{equation}
+  \begin{equation}
+  T_M = \frac{18,000,000}{34,000} \approx 529.41\text{ seconds} \approx 8.82\text{ minutes}
+  \end{equation}
+  \item \textbf{Effective Speedup ($S$):}
+  \begin{equation}
+  S = \frac{T_1}{T_M} = \frac{7200\text{ s}}{529.41\text{ s}} \approx 13.6
+  \end{equation}
+  Theoretical linear speedup would be $16.0$; with $\eta = 0.85$, $S = 16 \times 0.85 = 13.6$.
+\end{enumerate}
+\Answer Single-node duration: \textbf{2.0 hours}; Cluster duration: \textbf{8.82 minutes}; Effective speedup: \textbf{13.6x}.
+\end{solved}
+
+\begin{solved}{IoHT 4-Tier Network Latency Breakdown}
+\Given In the four-tier IoHT architecture (Sensors $\to$ Mobile $\to$ Area Gateway $\to$ ISP Gateway $\to$ Cloud), using the empirical link delays established in Lecture 59:
+\begin{itemize}[leftmargin=*]
+  \item $T_{\text{sensor}\to\text{mobile}} = 1\text{ ms}$
+  \item $T_{\text{mobile}\to\text{areaGW}} = 2\text{ ms}$
+  \item $T_{\text{areaGW}\to\text{ispGW}} = 2\text{ ms}$
+  \item $T_{\text{ispGW}\to\text{cloud}} = 100\text{ ms}$
+  \item $T_{\text{mobile}\to\text{display}} = 1\text{ ms}$
+\end{itemize}
+Compare the total control-loop response time (from sensor trigger to mobile alert display) for:
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+  \item The \textbf{Fog-based Model}, where filtering, processing, and event handling reside on the Area Gateway (assuming internal processing delay $T_{\text{proc, fog}} = 3\text{ ms}$).
+  \item The \textbf{Cloud-based Model}, where data travels to the Cloud Datacenter for processing (assuming internal cloud compute delay $T_{\text{proc, cloud}} = 1\text{ ms}$).
+\end{enumerate}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Fog-Based Control Loop Path:}
+  $\text{Sensor} \to \text{Mobile} \to \text{Area Gateway (Process)} \to \text{Mobile} \to \text{Display}$
+  \begin{equation}
+  T_{\text{fog}} = T_{\text{sensor}\to\text{mobile}} + T_{\text{mobile}\to\text{areaGW}} + T_{\text{proc, fog}} + T_{\text{areaGW}\to\text{mobile}} + T_{\text{mobile}\to\text{display}}
+  \end{equation}
+  \begin{equation}
+  T_{\text{fog}} = 1\text{ ms} + 2\text{ ms} + 3\text{ ms} + 2\text{ ms} + 1\text{ ms} = 9\text{ ms}
+  \end{equation}
+  \item \textbf{Cloud-Based Control Loop Path:}
+  $\text{Sensor} \to \text{Mobile} \to \text{Area Gateway} \to \text{ISP Gateway} \to \text{Cloud (Process)} \to \text{ISP Gateway} \to \text{Area Gateway} \to \text{Mobile} \to \text{Display}$
+  \begin{equation}
+  T_{\text{up}} = 1 + 2 + 2 + 100 = 105\text{ ms}
+  \end{equation}
+  \begin{equation}
+  T_{\text{down}} = 100 + 2 + 2 + 1 = 105\text{ ms}
+  \end{equation}
+  \begin{equation}
+  T_{\text{cloud}} = T_{\text{up}} + T_{\text{proc, cloud}} + T_{\text{down}} = 105\text{ ms} + 1\text{ ms} + 105\text{ ms} = 211\text{ ms}
+  \end{equation}
+  \item The Fog architecture delivers an emergency alert in \textbf{$9\text{ ms}$}, representing a $23.4\times$ latency reduction over the Cloud architecture (\textbf{$211\text{ ms}$}).
+\end{enumerate}
+\Answer (a) Fog Model Latency: \textbf{9 ms}; (b) Cloud Model Latency: \textbf{211 ms}.
+\end{solved}
+
+\begin{solved}{WAN Bandwidth and Cloud Cost Reduction in IoHT}
+\Given A hospital monitors $K = 500$ cardiac patients. Each wearable sensor transmits vital telemetry at a continuous rate of $r = 4\text{ KB/s}$ ($32\text{ kbps}$).
+\begin{itemize}[leftmargin=*]
+  \item In the \textbf{Cloud Model}, all raw telemetry streams are transmitted continuously to AWS Cloud.
+  \item In the \textbf{Fog Model}, Area Gateways filter and process vitals locally; only confirmed critical anomaly events are uploaded to the Cloud. Clinical statistics show critical events occur on average for only $0.5\%$ of monitoring time.
+  \item AWS charges $\$0.08$ per GB of ingress/storage bandwidth and $\$0.01$ per million MIPS computed. (Each patient stream requires $10\text{ MIPS}$ of continuous processing).
+\end{itemize}
+Compute the monthly WAN data transferred (in GB) and compute cost under both models (assume 30 days/month).
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Total seconds in 30 days:
+  \begin{equation}
+  T_{\text{month}} = 30 \times 24 \times 3600 = 2,592,000\text{ seconds}
+  \end{equation}
+  \item \textbf{Cloud Model Data Volume:}
+  \begin{equation}
+  V_{\text{cloud}} = 500 \times 4\text{ KB/s} \times 2,592,000\text{ s} = 5,184,000,000\text{ KB} \approx 5,184\text{ GB} = 5.184\text{ TB}
+  \end{equation}
+  \textbf{Bandwidth Cost:} $5,184\text{ GB} \times \$0.08/\text{GB} = \$414.72$.
+  \textbf{Cloud Compute Load:}
+  \begin{equation}
+  \text{Total MIPS} = 500 \times 10\text{ MIPS} \times 2,592,000\text{ s} = 1.296 \times 10^{10}\text{ MIPS-seconds}
+  \end{equation}
+  \begin{equation}
+  \text{Compute Cost} = \frac{1.296 \times 10^{10}}{10^6} \times \$0.01 = 12,960 \times \$0.01 = \$129.60
+  \end{equation}
+  \begin{equation}
+  \text{Total Cloud Cost} = \$414.72 + \$129.60 = \$544.32/\text{month}
+  \end{equation}
+  \item \textbf{Fog Model Data Volume:}
+  Only $0.5\%$ ($0.005$) of data reaches Cloud:
+  \begin{equation}
+  V_{\text{fog}} = 5,184\text{ GB} \times 0.005 = 25.92\text{ GB}
+  \end{equation}
+  \textbf{Bandwidth Cost:} $25.92\text{ GB} \times \$0.08/\text{GB} = \$2.07$.
+  \textbf{Compute Cost:} $\$129.60 \times 0.005 = \$0.65$.
+  \begin{equation}
+  \text{Total Fog Cost} = \$2.07 + \$0.65 = \$2.72/\text{month}
+  \end{equation}
+  \item \textbf{Savings:} The Fog model saves $5,158\text{ GB}$ ($99.5\%$) of WAN bandwidth and cuts monthly cloud operational cost from $\$544.32$ to $\$2.72$ ($99.5\%$ savings).
+\end{enumerate}
+\Answer Cloud Model: \textbf{5,184 GB} (\textbf{\$544.32}); Fog Model: \textbf{25.92 GB} (\textbf{\$2.72}).
+\end{solved}
+
+\begin{solved}{ADXL345 Accelerometer 5-Point Smoothing Calculation}
+\Given An ADXL345 wearable accelerometer samples raw tripartite acceleration components $(x, y, z)$ in units of $g$ ($9.81\text{ m/s}^2$). Five consecutive samples produce the following 3-axis vectors:
+\begin{align*}
+t_1 &: (0.60, 0.80, 0.00) \\
+t_2 &: (0.00, 1.00, 0.00) \\
+t_3 &: (0.80, 0.00, 0.60) \\
+t_4 &: (0.50, 0.50, \sqrt{0.50}) \\
+t_5 &: (0.00, 0.00, 1.00)
+\end{align*}
+\begin{enumerate}[label=(\alph*),leftmargin=*]
+  \item Compute the composite acceleration magnitude $A[t]$ for each timestamp.
+  \item Apply the 5-point moving average smoothing filter to evaluate the smoothed output $\bar{A}[3]$ at timestamp $t=3$.
+\end{enumerate}
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Formula: $A[t] = \sqrt{x^2 + y^2 + z^2}$.
+  \begin{itemize}
+    \item $A[1] = \sqrt{0.60^2 + 0.80^2 + 0.00^2} = \sqrt{0.36 + 0.64} = \sqrt{1.00} = 1.00\text{ g}$
+    \item $A[2] = \sqrt{0.00^2 + 1.00^2 + 0.00^2} = \sqrt{1.00} = 1.00\text{ g}$
+    \item $A[3] = \sqrt{0.80^2 + 0.00^2 + 0.60^2} = \sqrt{0.64 + 0.36} = \sqrt{1.00} = 1.00\text{ g}$
+    \item $A[4] = \sqrt{0.50^2 + 0.50^2 + (\sqrt{0.50})^2} = \sqrt{0.25 + 0.25 + 0.50} = \sqrt{1.00} = 1.00\text{ g}$
+    \item $A[5] = \sqrt{0.00^2 + 0.00^2 + 1.00^2} = \sqrt{1.00} = 1.00\text{ g}$
+  \end{itemize}
+  \item Evaluate 5-point moving average for $t=3$:
+  \begin{equation}
+  \bar{A}[3] = \frac{A[1] + A[2] + A[3] + A[4] + A[5]}{5} = \frac{1.00 + 1.00 + 1.00 + 1.00 + 1.00}{5} = \frac{5.00}{5} = 1.00\text{ g}
+  \end{equation}
+  \item Notice that while individual directional vector axes oscillated widely due to body movement, the smoothed composite magnitude accurately captures the constant $1.00\text{ g}$ gravitational baseline.
+\end{enumerate}
+\Answer (a) $A[1]=A[2]=A[3]=A[4]=A[5]=1.00\text{ g}$; (b) $\bar{A}[3] = \mathbf{1.00\text{ g}}$.
+\end{solved}
+
+\begin{solved}{Activity Classification via K-Nearest Neighbor (KNN)}
+\Given In the IoHT activity recognition subsystem, an unknown sample $U$ with normalized feature vector $(x_1, x_2) = (0.50, 0.40)$ is classified among four labeled training instances:
+\begin{itemize}[leftmargin=*]
+  \item $P_1 = (0.45, 0.35)$ --- Class: \textbf{Resting} ($f=1$)
+  \item $P_2 = (0.55, 0.45)$ --- Class: \textbf{Resting} ($f=1$)
+  \item $P_3 = (0.60, 0.60)$ --- Class: \textbf{Running} ($f=3$)
+  \item $P_4 = (0.90, 0.80)$ --- Class: \textbf{Running} ($f=3$)
+\end{itemize}
+Using Euclidean distance and $k=3$ nearest neighbors, classify sample $U$ and compute the resulting cardiac scaling factor $f_{\text{scale}} = f + 1$.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item Calculate squared Euclidean distances $d^2(U, P_i) = (x_{U1} - x_{i1})^2 + (x_{U2} - x_{i2})^2$:
+  \begin{equation}
+  d^2(U, P_1) = (0.50 - 0.45)^2 + (0.40 - 0.35)^2 = 0.05^2 + 0.05^2 = 0.0025 + 0.0025 = 0.0050 \implies d \approx 0.0707
+  \end{equation}
+  \begin{equation}
+  d^2(U, P_2) = (0.50 - 0.55)^2 + (0.40 - 0.45)^2 = (-0.05)^2 + (-0.05)^2 = 0.0050 \implies d \approx 0.0707
+  \end{equation}
+  \begin{equation}
+  d^2(U, P_3) = (0.50 - 0.60)^2 + (0.40 - 0.60)^2 = (-0.10)^2 + (-0.20)^2 = 0.0100 + 0.0400 = 0.0500 \implies d \approx 0.2236
+  \end{equation}
+  \begin{equation}
+  d^2(U, P_4) = (0.50 - 0.90)^2 + (0.40 - 0.80)^2 = (-0.40)^2 + (-0.40)^2 = 0.1600 + 0.1600 = 0.3200 \implies d \approx 0.5657
+  \end{equation}
+  \item The $k=3$ closest points are $P_1$ ($d=0.0707$), $P_2$ ($d=0.0707$), and $P_3$ ($d=0.2236$).
+  \item Tally majority votes: $P_1 \to \text{Resting}$, $P_2 \to \text{Resting}$, $P_3 \to \text{Running}$.
+  \item The majority class ($2$ out of $3$ votes) is \textbf{Resting} ($f=1$).
+  \item Cardiac scaling factor:
+  \begin{equation}
+  f_{\text{scale}} = f + 1 = 1 + 1 = 2
+  \end{equation}
+\end{enumerate}
+\Answer Predicted Class: \textbf{Resting} ($f=1$); Scaling Factor: $f_{\text{scale}} = \mathbf{2}$.
+\end{solved}
+
+\begin{solved}{Dew Resilience and Offline Fault Tolerance in IoHT}
+\Given Explain why adding a Dew Computing layer to a Cloud-Fog-Edge healthcare architecture achieves higher availability than a pure Cloud-Fog system during wide-area network partitions.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item In a standard Cloud-Fog architecture, if the local Wi-Fi router fails or the patient walks out of range of the Area Gateway, the wearable sensor is disconnected from processing services.
+  \item With \textbf{Dew Computing}, the user's mobile device hosts a full standalone microservice stack (SiD, DbID) that executes locally on the handset without any network connectivity:
+    \begin{itemize}
+      \item Critical emergency thresholds (pulse, arrhythmia) are evaluated directly in mobile memory.
+      \item Alarms trigger locally on the patient's phone speaker, alerting caregivers nearby immediately.
+      \item Delta vitals are persisted locally in SQLite (DbID) and synchronized to the cloud hospital database automatically once network connectivity is re-established.
+    \end{itemize}
+\end{enumerate}
+\Answer \textbf{Dew Computing guarantees zero-downtime offline autonomous monitoring, local alerting, and automatic delta reconciliation upon network reconnection}.
+\end{solved}
+
+\begin{solved}{Comprehensive Comparison of Cloud, Fog, and Dew Computing}
+\Given Synthesize the key architectural trade-offs between Cloud Computing, Fog Computing, and Dew Computing across the five standard evaluation dimensions shown below.
+\Steps
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Compute Location:} Cloud runs in hyperscale remote CDCs; Fog runs on local intermediate nodes (gateways, edge routers); Dew runs directly on user end devices (smartphones, PCs).
+  \item \textbf{Latency:} Cloud has high WAN latency ($50\text{--}200\text{ ms}$); Fog provides low LAN latency ($5\text{--}15\text{ ms}$); Dew provides immediate sub-millisecond local response ($< 1\text{ ms}$).
+  \item \textbf{Internet Dependency:} Cloud requires continuous Internet; Fog requires local network connectivity; Dew operates completely offline with intermittent cloud synchronization.
+  \item \textbf{Hardware Resource Scale:} Cloud provides virtually unlimited compute/storage; Fog provides moderate multi-core gateway compute; Dew is constrained to local handset/PC hardware.
+  \item \textbf{Primary Failure Mode:} Cloud fails when WAN/ISP link drops; Fog fails when local gateway crashes; Dew provides graceful local degradation with zero network dependency.
+\end{enumerate}
+\Answer \textbf{Dew provides maximum offline resilience and minimum latency, Fog provides local area aggregation and low-latency control, while Cloud provides global multi-petabyte analytics and archival storage}.
+\end{solved}
