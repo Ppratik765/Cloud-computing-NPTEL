@@ -3,17 +3,15 @@
 [![Course](https://img.shields.io/badge/NPTEL-Cloud%20Computing-blue.svg)](https://nptel.ac.in)
 [![Institution](https://img.shields.io/badge/IIT%20Kharagpur-Dept%20of%20CSE-navy.svg)](https://cse.iitkgp.ac.in)
 [![Total Questions](https://img.shields.io/badge/Exam%20Questions-360%20(30%2Fweek)-emerald.svg)](#interactive-quiz-hub)
-[![Textbook](https://img.shields.io/badge/Study%20Guide-136%20Pages%20PDF-red.svg)](comprehensive_notes.pdf)
-[![Vercel Ready](https://img.shields.io/badge/Vercel-Deployment%20Ready-black.svg?logo=vercel)](#deploying-to-vercel)
-[![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![Study Guide](https://img.shields.io/badge/Study%20Guide-136%20Pages%20PDF-red.svg)](comprehensive_notes.pdf)
+[![Platform](https://img.shields.io/badge/Platform-Interactive%20Web%20App-purple.svg)](#interactive-quiz-hub)
 
-A complete, publication-grade academic repository for the **NPTEL Cloud Computing** certification course offered by **Prof. Soumya K. Ghosh**, Department of Computer Science and Engineering, **Indian Institute of Technology (IIT) Kharagpur**.
+A complete, publication-grade academic companion for the **NPTEL Cloud Computing** certification course offered by **Prof. Soumya K. Ghosh**, Department of Computer Science and Engineering, **Indian Institute of Technology (IIT) Kharagpur**.
 
-This repository contains:
-1. **Interactive Quiz Web Application (Vercel-Ready):** 12 standalone interactive HTML quizzes with **360 authentic NPTEL-style questions** (30 questions per week), featuring instant answer validation and comprehensive technical explanations.
+This repository powers an interactive exam preparation platform featuring:
+1. **Interactive Quiz Web Application:** 12 weekly interactive exam modules containing **360 authentic NPTEL-style questions** (30 questions per week), with instant answer validation and comprehensive technical explanations.
 2. **Master Comprehensive Notes (`comprehensive_notes.pdf`):** A **136-page** textbook covering the complete 12-week syllabus, architectural TikZ figures, formal theorems, and **122 solved numerical problems**.
 3. **Official Course Materials:** Original lecture slide sets (`Week-01.pdf` through `Week-12.pdf`) and official assignments (`Assignment 1.pdf` through `Assignment 10.pdf`).
-4. **Full LaTeX Source:** Modular, clean LaTeX files (`comprehensive_notes.tex` and `parts/`) ready to compile locally.
 
 ---
 
@@ -21,11 +19,11 @@ This repository contains:
 
 The interactive web application is designed to simulate the real NPTEL certification exam format while delivering immediate pedagogical feedback.
 
-* **Central Portal:** Open [`index.html`](index.html) to view the course roadmap, progress statistics, and direct links to each weekly quiz.
+* **Central Portal:** Access [`index.html`](index.html) to view the course roadmap, progress statistics, and direct links to each weekly quiz.
 * **Instant Answer Reveal:** Selecting any option immediately indicates whether it is correct (emerald green) or incorrect (crimson), displays the designated correct answer, and expands a step-by-step scientific/mathematical explanation.
-* **Responsive & Mobile-First:** Works offline and on all mobile phones, tablets, and laptops.
-* **Practice Filtering:** Filter by *All Questions*, *Unanswered*, *Incorrect*, or *Flagged for Review*.
-* **State Persistence:** Quiz answers, progress bars, scores, and theme settings (Dark/Light mode) persist locally across browser sessions using `localStorage`.
+* **Responsive & Mobile-First:** Works smoothly on smartphones, tablets, and laptops.
+* **Practice Filtering:** Filter questions dynamically by *All Questions*, *Unanswered*, *Incorrect*, or *Flagged for Review*.
+* **State Persistence:** Quiz answers, progress bars, scores, and theme settings (Dark/Light mode) persist automatically across browser sessions.
 
 ---
 
@@ -50,7 +48,7 @@ The interactive web application is designed to simulate the real NPTEL certifica
 
 ## Master Study Guide (`comprehensive_notes.pdf`)
 
-The generated PDF study guide is a complete, self-contained textbook:
+The complete reference textbook is compiled into a single publication-grade PDF:
 * **Page Count:** 136 publication-grade pages.
 * **Format:** Formatted in standard A4 with clean typography, hyperlinked Table of Contents, and color-coded semantic blocks.
 * **Callout Elements:**
@@ -58,76 +56,13 @@ The generated PDF study guide is a complete, self-contained textbook:
   * `thmbox`: Key theorems and formal lemmas (Popek-Goldberg, Nyquist delay margins).
   * `warnbox`: Common pitfalls and examination trap questions.
   * `solved`: **122 comprehensive numerical & conceptual examples** with step-by-step mathematical substitutions.
-* **Download:** [**Download comprehensive_notes.pdf**](comprehensive_notes.pdf)
-
----
-
-## Deploying to Vercel
-
-You can host this entire interactive platform on [Vercel](https://vercel.com) for free:
-
-### Method 1: Import via Vercel Dashboard (Fastest)
-1. Log in to [Vercel](https://vercel.com).
-2. Click **Add New...** $\to$ **Project**.
-3. Import your GitHub repository: `Ppratik765/Cloud-computing-NPTEL`.
-4. Configure Project:
-   * **Framework Preset:** `Other` (Static Site)
-   * **Root Directory:** `./`
-   * **Build Command:** *(Leave empty)*
-   * **Output Directory:** `.`
-5. Click **Deploy**.
-6. Your quiz hub will be live at `https://cloud-computing-nptel.vercel.app` (or your custom Vercel subdomain).
-
-### Method 2: Deploy via Vercel CLI
-```bash
-npm i -g vercel
-vercel
-```
-
-The included [`vercel.json`](vercel.json) automatically configures clean URLs and proper MIME headers for PDF viewing and downloads.
-
----
-
-## Local Offline Practice
-
-No internet connection or local web server is required to use this platform:
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/Ppratik765/Cloud-computing-NPTEL.git
-   cd Cloud-computing-NPTEL
-   ```
-2. Double-click [`index.html`](index.html) to open the portal in Google Chrome, Microsoft Edge, Mozilla Firefox, or Apple Safari.
-3. Everything (styles, fonts, math symbols, scripts, and PDF files) runs 100% locally.
-
----
-
-## Rebuilding the Quizzes & Notes
-
-If you want to edit question datasets or recompile the LaTeX notes:
-
-### Regenerating HTML Quizzes
-Question datasets reside in Python modules under `quiz_data/week01.py` through `quiz_data/week12.py`.
-To rebuild all 12 quiz HTML files and `index.html`:
-```bash
-python build_all_weekly_quizzes.py
-```
-
-### Compiling LaTeX Notes Locally
-Using `pdflatex` / `xelatex` / `tectonic`:
-```bash
-# Using tectonic
-tectonic comprehensive_notes.tex
-
-# Or using xelatex
-xelatex comprehensive_notes.tex
-xelatex comprehensive_notes.tex
-```
+* **Direct Access:** [**View / Download comprehensive_notes.pdf**](comprehensive_notes.pdf)
 
 ---
 
 ## High-Yield Mathematical Formulas for NPTEL
 
-For rapid revision before the final exam:
+Key equations for quick revision before the final exam:
 
 1. **System Availability:**
    $$A = \frac{\text{MTBF}}{\text{MTBF} + \text{MTTR}}$$
