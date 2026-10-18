@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Week 6: Cloud Security & Threat Modeling — 30 NPTEL Exam Questions</title>
+  <style>
+    /* ==========================================================================
+       MODERN OFFLINE DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-math: "Cambria Math", "Latin Modern Math", "STIX Two Math", "Times New Roman", serif;
+      
+      /* Dark Theme Tokens (Default) */
+      --bg-body: #0b0f19;
+      --bg-surface: #111827;
+      --bg-surface-elevated: #1e293b;
+      --bg-card: #151e2e;
+      --bg-card-hover: #1c283f;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.16);
+      --border-focus: #38bdf8;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --primary: #38bdf8;
+      --primary-rgb: 56, 189, 248;
+      --primary-hover: #0ea5e9;
+      
+      --accent: #6366f1;
+      --accent-rgb: 99, 102, 241;
+      
+      --success: #10b981;
+      --success-rgb: 16, 185, 129;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --success-border: #059669;
+      
+      --danger: #ef4444;
+      --danger-rgb: 239, 68, 68;
+      --danger-bg: rgba(239, 68, 68, 0.14);
+      --danger-border: #dc2626;
+      
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      
+      --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --border-subtle: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --border-focus: #0284c7;
+      
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      
+      --primary: #0284c7;
+      --primary-rgb: 2, 132, 199;
+      --primary-hover: #0369a1;
+      
+      --accent: #4f46e5;
+      --accent-rgb: 79, 70, 229;
+      
+      --success: #059669;
+      --success-rgb: 5, 150, 105;
+      --success-bg: rgba(5, 150, 105, 0.1);
+      --success-border: #10b981;
+      
+      --danger: #dc2626;
+      --danger-rgb: 220, 38, 38;
+      --danger-bg: rgba(220, 38, 38, 0.08);
+      --danger-border: #ef4444;
+      
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.1);
+      
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* Typography & Offline Math */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      background: rgba(var(--primary-rgb), 0.12);
+      color: var(--primary);
+      padding: 0.15em 0.4em;
+      border-radius: var(--radius-sm);
+    }
+
+    .math-inline {
+      font-family: var(--font-math);
+      font-style: italic;
+      padding: 0 0.15em;
+      color: var(--text-main);
+    }
+    .math-txt {
+      font-family: var(--font-sans);
+      font-style: normal;
+      font-size: 0.95em;
+    }
+    .frac {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+      padding: 0 0.2em;
+      font-size: 0.9em;
+      line-height: 1;
+    }
+    .frac .num {
+      border-bottom: 1px solid currentColor;
+      padding-bottom: 1px;
+    }
+    .frac .den {
+      padding-top: 1px;
+    }
+
+    /* Top Sticky Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(8px);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .hub-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 0.65rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+    .hub-link:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+      background: rgba(var(--primary-rgb), 0.08);
+    }
+
+    .week-badge-header {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .q-counter-pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-full);
+      background: rgba(var(--accent-rgb), 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(var(--accent-rgb), 0.3);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-full);
+      background: rgba(var(--success-rgb), 0.12);
+      border: 1px solid rgba(var(--success-rgb), 0.3);
+      color: var(--success);
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .icon-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+    }
+
+    /* Main Layout */
+    .main-container {
+      max-width: 900px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* View Controls Bar */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .view-toggle-group {
+      display: inline-flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 3px;
+    }
+    .toggle-opt-btn {
+      background: transparent;
+      border: none;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .toggle-opt-btn.active {
+      background: var(--primary);
+      color: #0b0f19;
+      font-weight: 700;
+    }
+
+    .nav-drawer-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .nav-drawer-trigger:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-surface-elevated);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 300ms ease;
+    }
+
+    /* Question Card Styling */
+    .question-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 1.75rem;
+      transition: border-color var(--transition);
+    }
+
+    .q-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .q-tags {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-qnum {
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+    .badge-mcq {
+      background: rgba(var(--primary-rgb), 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(var(--primary-rgb), 0.3);
+    }
+    .badge-msq {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .flag-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.3rem 0.5rem;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition);
+    }
+    .flag-btn:hover {
+      color: var(--warning);
+    }
+    .flag-btn.flagged {
+      color: var(--warning);
+    }
+
+    .q-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+    }
+
+    .q-prompt {
+      font-size: 1.02rem;
+      line-height: 1.7;
+      color: var(--text-main);
+      margin-bottom: 1.5rem;
+    }
+
+    .msq-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.9rem;
+      background: var(--warning-bg);
+      border-left: 3px solid var(--warning);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      color: #fbbf24;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Options List */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .option-btn {
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.15rem;
+      min-height: 54px;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      color: var(--text-main);
+      font-size: 0.98rem;
+      line-height: 1.55;
+      width: 100%;
+      transition: all var(--transition);
+      position: relative;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .option-btn:hover:not(.locked) {
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+      transform: translateY(-1px);
+    }
+    .option-btn:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    .opt-letter {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-full);
+      border: 1.5px solid var(--border-medium);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: all var(--transition);
+    }
+    .opt-btn-msq .opt-letter {
+      border-radius: var(--radius-sm);
+    }
+
+    .opt-text {
+      flex: 1;
+    }
+
+    /* Instant Feedback Visual States */
+    .option-btn.state-chosen-correct {
+      border-color: var(--success) !important;
+      background: var(--success-bg) !important;
+    }
+    .option-btn.state-chosen-correct .opt-letter {
+      border-color: var(--success) !important;
+      background: var(--success) !important;
+      color: #0b0f19 !important;
+    }
+
+    .option-btn.state-chosen-incorrect {
+      border-color: var(--danger) !important;
+      background: var(--danger-bg) !important;
+    }
+    .option-btn.state-chosen-incorrect .opt-letter {
+      border-color: var(--danger) !important;
+      background: var(--danger) !important;
+      color: #ffffff !important;
+    }
+
+    .option-btn.state-target-correct {
+      border-color: var(--success) !important;
+      border-style: solid !important;
+      background: rgba(var(--success-rgb), 0.08) !important;
+    }
+    .option-btn.state-target-correct .opt-letter {
+      border-color: var(--success) !important;
+      color: var(--success) !important;
+      font-weight: 800;
+    }
+
+    .option-btn.state-msq-selected {
+      border-color: var(--primary);
+      background: rgba(var(--primary-rgb), 0.1);
+    }
+    .option-btn.state-msq-selected .opt-letter {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #0b0f19;
+    }
+
+    .option-btn.locked {
+      cursor: default;
+    }
+
+    /* MSQ Submit Button */
+    .msq-submit-btn {
+      background: var(--primary);
+      color: #0b0f19;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all var(--transition);
+      margin-bottom: 1.25rem;
+      min-height: 48px;
+    }
+    .msq-submit-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .msq-submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Instant Feedback & Explanation Container */
+    .feedback-panel {
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-top: 1.25rem;
+      animation: fadeInSlide 250ms ease forwards;
+    }
+    @keyframes fadeInSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feedback-panel.status-correct {
+      background: var(--success-bg);
+      border: 1.5px solid var(--success-border);
+    }
+    .feedback-panel.status-incorrect {
+      background: var(--danger-bg);
+      border: 1.5px solid var(--danger-border);
+    }
+
+    .fb-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .fb-status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+    .feedback-panel.status-correct .fb-status-tag {
+      color: var(--success);
+    }
+    .feedback-panel.status-incorrect .fb-status-tag {
+      color: var(--danger);
+    }
+
+    .fb-ans-callout {
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .fb-explanation-body {
+      font-size: 0.94rem;
+      line-height: 1.65;
+      color: var(--text-main);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 0.75rem;
+    }
+    [data-theme="light"] .fb-explanation-body {
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    /* Single Question Card Navigation Footer */
+    .card-nav-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .nav-action-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.75rem 1.25rem;
+      min-height: 48px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all var(--transition);
+      user-select: none;
+    }
+    .nav-action-btn:hover:not(:disabled) {
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+    }
+    .nav-action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .nav-action-btn.btn-next-highlight {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+      font-weight: 700;
+    }
+    .nav-action-btn.btn-next-highlight:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Navigator Modal / Drawer */
+    .nav-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .nav-modal-backdrop.open {
+      display: flex;
+    }
+
+    .nav-modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      max-width: 600px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .modal-head h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 480px) {
+      .matrix-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    .matrix-btn {
+      height: 48px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all var(--transition);
+    }
+    .matrix-btn:hover {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+    .matrix-btn.current {
+      border: 2px solid var(--primary) !important;
+      box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
+    }
+    .matrix-btn.correct {
+      background: var(--success-bg) !important;
+      border-color: var(--success) !important;
+      color: var(--success) !important;
+    }
+    .matrix-btn.incorrect {
+      background: var(--danger-bg) !important;
+      border-color: var(--danger) !important;
+      color: var(--danger) !important;
+    }
+    .matrix-btn.flagged::after {
+      content: "★";
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 0.65rem;
+      color: var(--warning);
+    }
+
+    .matrix-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 1rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Summary Modal */
+    .summary-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
+      z-index: 110;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .summary-modal-backdrop.open {
+      display: flex;
+    }
+
+    .summary-modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      max-width: 520px;
+      width: 100%;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .summary-badge {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-full);
+      margin-bottom: 1rem;
+    }
+    .badge-gold {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border: 1px solid #fbbf24;
+    }
+    .badge-silver {
+      background: rgba(203, 213, 225, 0.2);
+      color: #cbd5e1;
+      border: 1px solid #cbd5e1;
+    }
+    .badge-elite {
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      border: 1px solid #818cf8;
+    }
+    .badge-pass {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border: 1px solid #10b981;
+    }
+    .badge-fail {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+    }
+
+    .summary-score-large {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+      color: var(--text-main);
+    }
+    .summary-denom {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    .stat-box {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 0.5rem;
+    }
+    .stat-box-val {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 0.15rem;
+    }
+    .stat-box-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .summary-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* Bottom Sticky Week Switcher Footer */
+    .page-footer-nav {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    .footer-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 640px) {
+      .header-content {
+        padding: 0.6rem 0.75rem;
+      }
+      .week-badge-header span.week-title-short {
+        display: none;
+      }
+      .question-card {
+        padding: 1.15rem;
+      }
+      .q-title {
+        font-size: 1.05rem;
+      }
+      .q-prompt {
+        font-size: 0.95rem;
+      }
+      .option-btn {
+        padding: 0.85rem 1rem;
+        font-size: 0.92rem;
+      }
+      .nav-action-btn {
+        padding: 0.65rem 0.9rem;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="header-left">
+        <a href="index.html" class="hub-link" title="Return to Course Hub">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Hub
+        </a>
+        <div class="week-badge-header">
+          <span>Week 6</span>
+          <span class="week-title-short" style="font-weight: 500; font-size: 0.85rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">— Week 6: Cloud Security & Threat Modeling</span>
+          <span class="q-counter-pill" id="headerQCtr">Q 1 / 30</span>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <div class="score-pill" id="scoreBadge" title="Live Correct Answers">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="scoreText">0 / 0</span>
+        </div>
+        <button class="icon-btn" id="btnThemeToggle" title="Toggle Dark/Light Mode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Progress & View Controls -->
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="view-toggle-group">
+        <button class="toggle-opt-btn active" id="btnModeCard">Card Mode</button>
+        <button class="toggle-opt-btn" id="btnModeList">List Mode</button>
+      </div>
+
+      <button class="nav-drawer-trigger" id="btnOpenNav">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Question Matrix (1–30)
+      </button>
+    </div>
+
+    <!-- Active Question Card (Used in Card Mode) -->
+    <div id="cardViewContainer">
+      <article class="question-card" id="activeCard">
+        <div class="q-meta-row">
+          <div class="q-tags">
+            <span class="badge badge-qnum" id="cardQNumBadge">Question 1 of 30</span>
+            <span class="badge" id="cardTypeBadge">MCQ</span>
+          </div>
+          <button class="flag-btn" id="cardFlagBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span id="flagBtnText">Flag</span>
+          </button>
+        </div>
+
+        <h2 class="q-title" id="cardTitle"></h2>
+        <div class="q-prompt" id="cardPrompt"></div>
+        <div class="msq-hint" id="cardMsqHint" style="display: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Multiple Choice: Select all matching options, then click Submit Answer.
+        </div>
+
+        <!-- Options Container -->
+        <div class="options-grid" id="cardOptionsContainer"></div>
+
+        <button class="msq-submit-btn" id="cardMsqSubmitBtn" style="display: none;">
+          Submit Answer
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+
+        <!-- Instant Explanation Area -->
+        <div class="feedback-panel" id="cardFeedbackPanel" style="display: none;">
+          <div class="fb-header">
+            <div class="fb-status-tag" id="cardFbStatus"></div>
+            <div class="fb-ans-callout" id="cardFbAnswerCallout"></div>
+          </div>
+          <div class="fb-explanation-body" id="cardFbExplanation"></div>
+        </div>
+
+        <!-- Footer Navigation Controls -->
+        <div class="card-nav-footer">
+          <button class="nav-action-btn" id="btnPrev">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Previous
+          </button>
+          <button class="nav-action-btn" id="btnNext">
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <!-- List View Container (All 30 Questions) -->
+    <div id="listViewContainer" style="display: none;"></div>
+  </main>
+
+  <!-- Question Matrix Modal / Drawer -->
+  <div class="nav-modal-backdrop" id="navModalBackdrop">
+    <div class="nav-modal">
+      <div class="modal-head">
+        <h3>Question Navigator (Week 6)</h3>
+        <button class="icon-btn" id="btnCloseNav">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="matrix-grid" id="matrixGrid"></div>
+
+      <div class="matrix-legend">
+        <div class="legend-item"><div class="legend-dot" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-medium);"></div> Unanswered</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--success);"></div> Correct</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> Incorrect</div>
+        <div class="legend-item"><span>★</span> Flagged</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Score & Certification Summary Modal -->
+  <div class="summary-modal-backdrop" id="summaryModalBackdrop">
+    <div class="summary-modal">
+      <div class="summary-badge" id="sumBadge">Elite + Gold Medal</div>
+      <h2 style="font-size: 1.6rem; margin-bottom: 0.35rem;">Assessment Completed!</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Week 6 &bull; Week 6: Cloud Security & Threat Modeling</p>
+
+      <div class="summary-score-large" id="sumScoreVal">0</div>
+      <div class="summary-denom">out of 30 questions</div>
+
+      <div class="summary-stats-grid">
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumAccuracyVal" style="color: var(--primary);">0%</div>
+          <div class="stat-box-label">Accuracy</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumCorrectVal" style="color: var(--success);">0</div>
+          <div class="stat-box-label">Correct</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumIncorrectVal" style="color: var(--danger);">0</div>
+          <div class="stat-box-label">Incorrect</div>
+        </div>
+      </div>
+
+      <div class="summary-actions">
+        <button class="nav-action-btn btn-next-highlight" id="btnSumReview">Review All Answers</button>
+        <button class="nav-action-btn" id="btnSumRetake">Retake This Week</button>
+        <a href="quiz_week07.html" class="nav-action-btn" style="text-decoration: none; justify-content: center; background: rgba(var(--accent-rgb), 0.15); border-color: rgba(var(--accent-rgb), 0.4); color: #a5b4fc;">
+          Week 7 &rarr;
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Link Footer -->
+  <footer class="page-footer-nav">
+    <div class="footer-inner">
+      <a href="quiz_week05.html" class="hub-link">&larr; Week 5</a>
+      <span style="font-size: 0.85rem; color: var(--text-dim); text-align: center;">NPTEL Cloud Computing &bull; IIT Kharagpur</span>
+      <a href="quiz_week07.html" class="hub-link">Week 7 &rarr;</a>
+    </div>
+  </footer>
+
+  <!-- Quiz Engine Script -->
+  <script>
+    const QUESTIONS = [{"id": 1, "week": "Week 6", "type": "MCQ", "title": "Security Triad Failure: Unintended Balance Modification", "question": "A database stores customer records in encrypted form. However, an administrator accidentally changes several account balances due to a software bug. Which security objective has failed?", "options": ["Confidentiality only", "Integrity only", "Availability only", "Confidentiality and Availability"], "answer": [1], "explanation": "Encryption protects <strong>Confidentiality</strong> (preventing unauthorized reading). However, unauthorized or erroneous modification of data violates <strong>Integrity</strong>. The bug destroyed integrity while data remained confidential.", "question_html": "A database stores customer records in encrypted form. However, an administrator accidentally changes several account balances due to a software bug. Which security objective has failed?", "options_html": ["Confidentiality only", "Integrity only", "Availability only", "Confidentiality and Availability"], "explanation_html": "Encryption protects <strong>Confidentiality</strong> (preventing unauthorized reading). However, unauthorized or erroneous modification of data violates <strong>Integrity</strong>. The bug destroyed integrity while data remained confidential."}, {"id": 2, "week": "Week 6", "type": "MCQ", "title": "Security Property Compromise: Fake VPN Portal", "question": "An employee logs into a fake VPN portal that perfectly imitates the company's official login page. Before any credentials are entered, which security property has already been compromised?", "options": ["Confidentiality", "Integrity", "Availability", "Authenticity"], "answer": [3], "explanation": "The fraudulent portal falsely claims to be the legitimate service provider (a fabrication attack). The property compromised is <strong>Authenticity</strong> (origin integrity), before any confidential password is typed.", "question_html": "An employee logs into a fake VPN portal that perfectly imitates the company's official login page. Before any credentials are entered, which security property has already been compromised?", "options_html": ["Confidentiality", "Integrity", "Availability", "Authenticity"], "explanation_html": "The fraudulent portal falsely claims to be the legitimate service provider (a fabrication attack). The property compromised is <strong>Authenticity</strong> (origin integrity), before any confidential password is typed."}, {"id": 3, "week": "Week 6", "type": "MCQ", "title": "Classification of Active vs Passive Attacks", "question": "Which of the following attacks is NOT considered a passive attack?", "options": ["Packet sniffing", "Traffic analysis", "Session hijacking", "Network monitoring"], "answer": [2], "explanation": "<strong>Session hijacking</strong> actively intercepts and takes over an active communication session by injecting or modifying packets (Active attack). Sniffing, traffic analysis, and network monitoring only observe without altering data (Passive attacks).", "question_html": "Which of the following attacks is NOT considered a passive attack?", "options_html": ["Packet sniffing", "Traffic analysis", "Session hijacking", "Network monitoring"], "explanation_html": "<strong>Session hijacking</strong> actively intercepts and takes over an active communication session by injecting or modifying packets (Active attack). Sniffing, traffic analysis, and network monitoring only observe without altering data (Passive attacks)."}, {"id": 4, "week": "Week 6", "type": "MCQ", "title": "Inability to Modify Transmitted Payload", "question": "Which of the following attacks cannot directly modify the contents of transmitted data?", "options": ["Replay attack", "Man-in-the-Middle attack", "Eavesdropping", "Masquerading"], "answer": [2], "explanation": "<strong>Eavesdropping</strong> is purely passive interception of data in flight and does not modify, inject, or tamper with packet contents.", "question_html": "Which of the following attacks cannot directly modify the contents of transmitted data?", "options_html": ["Replay attack", "Man-in-the-Middle attack", "Eavesdropping", "Masquerading"], "explanation_html": "<strong>Eavesdropping</strong> is purely passive interception of data in flight and does not modify, inject, or tamper with packet contents."}, {"id": 5, "week": "Week 6", "type": "MCQ", "title": "Denial-of-Service (DoS) Attack Characteristics", "question": "Which of the following best describes a Denial-of-Service (DoS) attack?", "options": ["An attacker secretly monitors network traffic without modifying it.", "An attacker floods a server with excessive requests, making the service unavailable to legitimate users.", "An attacker impersonates a legitimate user to gain unauthorized access.", "An attacker modifies data during transmission between two communicating parties."], "answer": [1], "explanation": "A <strong>Denial-of-Service (DoS)</strong> attack attempts to make a system or network resource unavailable by overwhelming it with spurious requests (interruption attack on Availability).", "question_html": "Which of the following best describes a Denial-of-Service (DoS) attack?", "options_html": ["An attacker secretly monitors network traffic without modifying it.", "An attacker floods a server with excessive requests, making the service unavailable to legitimate users.", "An attacker impersonates a legitimate user to gain unauthorized access.", "An attacker modifies data during transmission between two communicating parties."], "explanation_html": "A <strong>Denial-of-Service (DoS)</strong> attack attempts to make a system or network resource unavailable by overwhelming it with spurious requests (interruption attack on Availability)."}, {"id": 6, "week": "Week 6", "type": "MCQ", "title": "Attack Lifecycle: Reconnaissance vs Exploitation", "question": "Which of the following activities is least likely to be considered part of the reconnaissance phase?", "options": ["Performing DNS enumeration to identify subdomains", "Scanning the target to discover open ports and running services", "Exploiting a buffer overflow vulnerability to gain administrator privileges", "Searching public websites and social media for organizational information"], "answer": [2], "explanation": "Reconnaissance gathers intelligence about the target (DNS lookups, port scanning, OSINT). <strong>Exploiting a buffer overflow</strong> executes an attack payload to break security boundaries, which belongs to the active <em>Exploitation</em> phase.", "question_html": "Which of the following activities is least likely to be considered part of the reconnaissance phase?", "options_html": ["Performing DNS enumeration to identify subdomains", "Scanning the target to discover open ports and running services", "Exploiting a buffer overflow vulnerability to gain administrator privileges", "Searching public websites and social media for organizational information"], "explanation_html": "Reconnaissance gathers intelligence about the target (DNS lookups, port scanning, OSINT). <strong>Exploiting a buffer overflow</strong> executes an attack payload to break security boundaries, which belongs to the active <em>Exploitation</em> phase."}, {"id": 7, "week": "Week 6", "type": "MCQ", "title": "Authentication vs Authorization Statements", "question": "Evaluate the following statements:<br>Statement I: Authentication determines whether a user is allowed to access a resource.<br>Statement II: Authorization determines what actions an authenticated user is permitted to perform.<br>Choose the correct option:", "options": ["Both Statement I and Statement II are True.", "Statement I is False, and Statement II is True.", "Statement I is True, and Statement II is False.", "Both Statement I and Statement II are False."], "answer": [1], "explanation": "Statement I is FALSE because Authentication verifies <em>identity</em> ('Who are you?'), not access permissions. Statement II is TRUE because Authorization evaluates permissions ('What are you permitted to do?').", "question_html": "Evaluate the following statements:<br>Statement I: Authentication determines whether a user is allowed to access a resource.<br>Statement II: Authorization determines what actions an authenticated user is permitted to perform.<br>Choose the correct option:", "options_html": ["Both Statement I and Statement II are True.", "Statement I is False, and Statement II is True.", "Statement I is True, and Statement II is False.", "Both Statement I and Statement II are False."], "explanation_html": "Statement I is FALSE because Authentication verifies <em>identity</em> ('Who are you?'), not access permissions. Statement II is TRUE because Authorization evaluates permissions ('What are you permitted to do?')."}, {"id": 8, "week": "Week 6", "type": "MCQ", "title": "Gartner Cloud Risks: Data Location and Residency", "question": "An organization must comply with strict privacy laws (such as GDPR) prohibiting citizen data from leaving national borders. Which Gartner cloud computing risk is directly relevant?", "options": ["Privileged user access", "Long-term viability", "Data location", "Investigative support"], "answer": [2], "explanation": "<strong>Data Location</strong> risk arises because public cloud providers distribute and replicate data across global data centers, potentially violating national data residency and sovereignty regulations.", "question_html": "An organization must comply with strict privacy laws (such as GDPR) prohibiting citizen data from leaving national borders. Which Gartner cloud computing risk is directly relevant?", "options_html": ["Privileged user access", "Long-term viability", "Data location", "Investigative support"], "explanation_html": "<strong>Data Location</strong> risk arises because public cloud providers distribute and replicate data across global data centers, potentially violating national data residency and sovereignty regulations."}, {"id": 9, "week": "Week 6", "type": "MCQ", "title": "Cross-VM Side-Channel Cryptographic Key Extraction", "question": "How do adversaries extract private cryptographic keys in cross-VM side-channel attacks on shared cloud hardware (Ristenpart et al.)?", "options": ["By measuring access latencies to shared physical CPU cache lines (Prime+Probe technique) to deduce memory access patterns of co-located VMs.", "By cracking 2048-bit RSA keys using pencil and paper.", "By sending unencrypted emails to the hypervisor.", "By physically breaking into the cloud provider's data center building."], "answer": [0], "explanation": "In cross-VM cache side-channel attacks (Prime+Probe), an adversary monitors access delays to shared CPU L3 cache lines to observe cache line evictions by a co-located victim VM, reconstructing private cryptographic keys.", "question_html": "How do adversaries extract private cryptographic keys in cross-VM side-channel attacks on shared cloud hardware (Ristenpart et al.)?", "options_html": ["By measuring access latencies to shared physical CPU cache lines (Prime+Probe technique) to deduce memory access patterns of co-located VMs.", "By cracking 2048-bit RSA keys using pencil and paper.", "By sending unencrypted emails to the hypervisor.", "By physically breaking into the cloud provider's data center building."], "explanation_html": "In cross-VM cache side-channel attacks (Prime+Probe), an adversary monitors access delays to shared CPU L3 cache lines to observe cache line evictions by a co-located victim VM, reconstructing private cryptographic keys."}, {"id": 10, "week": "Week 6", "type": "MCQ", "title": "Hypervisor Security: VM Escape Impact", "question": "What is the security consequence of a successful <strong>VM Escape</strong> vulnerability?", "options": ["The VM restarts in safe mode.", "An attacker breaks through guest virtualization barriers to gain control over the host hypervisor, compromising all tenant VMs running on that physical server.", "The client's web browser crashes.", "The VM's disk is converted into a PDF file."], "answer": [1], "explanation": "<strong>VM Escape</strong> is a critical vulnerability where an attacker breaks out of the guest VM sandbox to execute arbitrary code within the host hypervisor, compromising all co-located VMs on the physical host.", "question_html": "What is the security consequence of a successful <strong>VM Escape</strong> vulnerability?", "options_html": ["The VM restarts in safe mode.", "An attacker breaks through guest virtualization barriers to gain control over the host hypervisor, compromising all tenant VMs running on that physical server.", "The client's web browser crashes.", "The VM's disk is converted into a PDF file."], "explanation_html": "<strong>VM Escape</strong> is a critical vulnerability where an attacker breaks out of the guest VM sandbox to execute arbitrary code within the host hypervisor, compromising all co-located VMs on the physical host."}, {"id": 11, "week": "Week 6", "type": "MCQ", "title": "Four Structural Attack Models: Interruption", "question": "In the structural attack model between Source ($S$) and Destination ($D$), which attack destroys or disrupts communication, directly violating <strong>Availability</strong>?", "options": ["Interception", "Interruption", "Modification", "Fabrication"], "answer": [1], "explanation": "<strong>Interruption</strong> severs the communication link or destroys a system resource (e.g., cutting a cable or executing a DDoS attack), preventing access and violating Availability.", "question_html": "In the structural attack model between Source (<span class=\"math-inline\">S</span>) and Destination (<span class=\"math-inline\">D</span>), which attack destroys or disrupts communication, directly violating <strong>Availability</strong>?", "options_html": ["Interception", "Interruption", "Modification", "Fabrication"], "explanation_html": "<strong>Interruption</strong> severs the communication link or destroys a system resource (e.g., cutting a cable or executing a DDoS attack), preventing access and violating Availability."}, {"id": 12, "week": "Week 6", "type": "MCQ", "title": "Four Structural Attack Models: Interception", "question": "An adversary taps a physical communication line between Source ($S$) and Destination ($D$), gaining unauthorized access to message contents without modifying them. This is an attack on:", "options": ["Availability (Interruption)", "Confidentiality (Interception)", "Integrity (Modification)", "Authenticity (Fabrication)"], "answer": [1], "explanation": "<strong>Interception</strong> unauthorizedly observes or captures data (e.g., packet sniffing, wiretapping), violating <strong>Confidentiality</strong>.", "question_html": "An adversary taps a physical communication line between Source (<span class=\"math-inline\">S</span>) and Destination (<span class=\"math-inline\">D</span>), gaining unauthorized access to message contents without modifying them. This is an attack on:", "options_html": ["Availability (Interruption)", "Confidentiality (Interception)", "Integrity (Modification)", "Authenticity (Fabrication)"], "explanation_html": "<strong>Interception</strong> unauthorizedly observes or captures data (e.g., packet sniffing, wiretapping), violating <strong>Confidentiality</strong>."}, {"id": 13, "week": "Week 6", "type": "MCQ", "title": "Four Structural Attack Models: Fabrication", "question": "An unauthorized entity ($I$) inserts counterfeit messages into the network claiming they originated from genuine source ($S$). This is an attack on:", "options": ["Authenticity (Fabrication)", "Confidentiality (Interception)", "Availability (Interruption)", "Bandwidth"], "answer": [0], "explanation": "<strong>Fabrication</strong> generates counterfeit or spoofed packets (e.g., DNS spoofing, forged email), directly compromising <strong>Authenticity</strong>.", "question_html": "An unauthorized entity (<span class=\"math-inline\">I</span>) inserts counterfeit messages into the network claiming they originated from genuine source (<span class=\"math-inline\">S</span>). This is an attack on:", "options_html": ["Authenticity (Fabrication)", "Confidentiality (Interception)", "Availability (Interruption)", "Bandwidth"], "explanation_html": "<strong>Fabrication</strong> generates counterfeit or spoofed packets (e.g., DNS spoofing, forged email), directly compromising <strong>Authenticity</strong>."}, {"id": 14, "week": "Week 6", "type": "MCQ", "title": "Classes of Security Threats: Disclosure vs Deception", "question": "According to the lecture classification of threats, <strong>Snooping (Eavesdropping)</strong> belongs to which class of security threat?", "options": ["Disclosure", "Deception", "Disruption", "Usurpation"], "answer": [0], "explanation": "<strong>Disclosure</strong> involves unauthorized access to information (snooping, wiretapping). Deception involves spoofing/repudiation; Disruption involves modification/interruption; Usurpation involves unauthorized system control.", "question_html": "According to the lecture classification of threats, <strong>Snooping (Eavesdropping)</strong> belongs to which class of security threat?", "options_html": ["Disclosure", "Deception", "Disruption", "Usurpation"], "explanation_html": "<strong>Disclosure</strong> involves unauthorized access to information (snooping, wiretapping). Deception involves spoofing/repudiation; Disruption involves modification/interruption; Usurpation involves unauthorized system control."}, {"id": 15, "week": "Week 6", "type": "MCQ", "title": "Security Mechanism States: Secure, Precise, Broad", "question": "In the formal theory of security mechanisms, a mechanism is termed <strong>Precise</strong> if:", "options": ["The set of reachable states exactly equals the set of secure states.", "The system is completely turned off.", "All reachable states are insecure.", "Security policies are written in XML."], "answer": [0], "explanation": "A mechanism is <strong>Secure</strong> if reachable states $\\subseteq$ secure states. It is <strong>Precise</strong> if reachable states $=$ secure states (allowing all secure actions while preventing all insecure actions).", "question_html": "In the formal theory of security mechanisms, a mechanism is termed <strong>Precise</strong> if:", "options_html": ["The set of reachable states exactly equals the set of secure states.", "The system is completely turned off.", "All reachable states are insecure.", "Security policies are written in XML."], "explanation_html": "A mechanism is <strong>Secure</strong> if reachable states <span class=\"math-inline\">&sube;</span> secure states. It is <strong>Precise</strong> if reachable states <span class=\"math-inline\">=</span> secure states (allowing all secure actions while preventing all insecure actions)."}, {"id": 16, "week": "Week 6", "type": "MCQ", "title": "Identity Federation Protocols: SAML 2.0 vs OAuth 2.0", "question": "What is the primary architectural difference between <strong>SAML 2.0</strong> and <strong>OAuth 2.0</strong>?", "options": ["SAML 2.0 is an XML-based protocol primarily designed for Web Single Sign-On (Authentication); OAuth 2.0 is a token-based framework designed for delegated resource authorization.", "SAML only runs on Android; OAuth runs on iOS.", "SAML is used for encrypting hard drives; OAuth formats flash drives.", "There is no difference; OAuth is the new name for SAML."], "answer": [0], "explanation": "<strong>SAML 2.0</strong> passes signed XML assertions for federated Authentication (SSO). <strong>OAuth 2.0</strong> issues scoped bearer tokens (JWTs) granting third-party apps delegated Authorization to access APIs on behalf of users.", "question_html": "What is the primary architectural difference between <strong>SAML 2.0</strong> and <strong>OAuth 2.0</strong>?", "options_html": ["SAML 2.0 is an XML-based protocol primarily designed for Web Single Sign-On (Authentication); OAuth 2.0 is a token-based framework designed for delegated resource authorization.", "SAML only runs on Android; OAuth runs on iOS.", "SAML is used for encrypting hard drives; OAuth formats flash drives.", "There is no difference; OAuth is the new name for SAML."], "explanation_html": "<strong>SAML 2.0</strong> passes signed XML assertions for federated Authentication (SSO). <strong>OAuth 2.0</strong> issues scoped bearer tokens (JWTs) granting third-party apps delegated Authorization to access APIs on behalf of users."}, {"id": 17, "week": "Week 6", "type": "MCQ", "title": "Access Control Models: RBAC vs ABAC", "question": "How does <strong>Attribute-Based Access Control (ABAC)</strong> differ from <strong>Role-Based Access Control (RBAC)</strong>?", "options": ["ABAC evaluates fine-grained attributes of the user, resource, action, and environment (time, location), while RBAC grants access based strictly on assigned organizational roles.", "ABAC requires passwords; RBAC does not.", "ABAC can only be used on single-core computers.", "RBAC is an encryption algorithm."], "answer": [0], "explanation": "RBAC groups permissions into roles (e.g., 'Doctor', 'Billing'). <strong>ABAC</strong> provides dynamic, context-aware decisions by evaluating multidimensional attributes (e.g., user department, patient ID, time of day, IP subnet).", "question_html": "How does <strong>Attribute-Based Access Control (ABAC)</strong> differ from <strong>Role-Based Access Control (RBAC)</strong>?", "options_html": ["ABAC evaluates fine-grained attributes of the user, resource, action, and environment (time, location), while RBAC grants access based strictly on assigned organizational roles.", "ABAC requires passwords; RBAC does not.", "ABAC can only be used on single-core computers.", "RBAC is an encryption algorithm."], "explanation_html": "RBAC groups permissions into roles (e.g., 'Doctor', 'Billing'). <strong>ABAC</strong> provides dynamic, context-aware decisions by evaluating multidimensional attributes (e.g., user department, patient ID, time of day, IP subnet)."}, {"id": 18, "week": "Week 6", "type": "MCQ", "title": "Co-Residence Detection in Public Cloud (Ristenpart et al.)", "question": "How did researchers in Ristenpart et al. (2009) verify that their probe VM was co-resident with a target victim VM on the same physical host in Amazon EC2?", "options": ["By observing internal IP address assignment patterns, matching Dom0 default gateways, and measuring sub-millisecond network round-trip ping times.", "By asking Amazon customer support over the phone.", "By reading the physical serial number of the computer case.", "By sending an email to the victim."], "answer": [0], "explanation": "Ristenpart et al. showed that EC2 assigned internal IPs predictably. By launching probe VMs in the victim's subnet and observing identical default gateway IP hops along with sub-1 ms round-trip network latency, they confirmed co-residence.", "question_html": "How did researchers in Ristenpart et al. (2009) verify that their probe VM was co-resident with a target victim VM on the same physical host in Amazon EC2?", "options_html": ["By observing internal IP address assignment patterns, matching Dom0 default gateways, and measuring sub-millisecond network round-trip ping times.", "By asking Amazon customer support over the phone.", "By reading the physical serial number of the computer case.", "By sending an email to the victim."], "explanation_html": "Ristenpart et al. showed that EC2 assigned internal IPs predictably. By launching probe VMs in the victim's subnet and observing identical default gateway IP hops along with sub-1 ms round-trip network latency, they confirmed co-residence."}, {"id": 19, "week": "Week 6", "type": "MCQ", "title": "CPU Cache Architecture in Virtualized Multicore Hosts", "question": "Why is the <strong>Last-Level Cache (L3 LLC)</strong> a primary target for cross-VM side-channel attacks on multicore cloud servers?", "options": ["Because L3 cache is shared across all processor cores on a CPU socket, allowing one core to observe cache line evictions caused by code executing on another core.", "Because L3 cache is unencrypted RAM located on the motherboard.", "Because hypervisors disable L3 cache during virtualization.", "Because L3 cache stores user passwords in plain text."], "answer": [0], "explanation": "While L1 and L2 caches are private to individual CPU cores, the unified L3 Last-Level Cache is shared across all cores on the physical socket. An adversary on Core A can measure timing delays to detect lines evicted by the victim executing on Core B.", "question_html": "Why is the <strong>Last-Level Cache (L3 LLC)</strong> a primary target for cross-VM side-channel attacks on multicore cloud servers?", "options_html": ["Because L3 cache is shared across all processor cores on a CPU socket, allowing one core to observe cache line evictions caused by code executing on another core.", "Because L3 cache is unencrypted RAM located on the motherboard.", "Because hypervisors disable L3 cache during virtualization.", "Because L3 cache stores user passwords in plain text."], "explanation_html": "While L1 and L2 caches are private to individual CPU cores, the unified L3 Last-Level Cache is shared across all cores on the physical socket. An adversary on Core A can measure timing delays to detect lines evicted by the victim executing on Core B."}, {"id": 20, "week": "Week 6", "type": "MCQ", "title": "Cache Side-Channel: Flush + Reload Mechanics", "question": "In the <strong>Flush+Reload</strong> cache side-channel technique, how does an attacker detect whether a victim VM executed a specific memory routine?", "options": ["The attacker flushes a shared memory line from the cache using `clflush`, waits, and reloads the line; if access time is fast, the victim reloaded the line into cache.", "The attacker deletes the victim's operating system.", "The attacker reboots the physical motherboard.", "The attacker modifies the victim's source code."], "answer": [0], "explanation": "In <strong>Flush+Reload</strong> (on shared read-only memory pages via deduplication), the attacker flushes a target address using `clflush`. After the victim runs, the attacker reads the address. Fast access ($< 80\\text{ cycles}$) indicates a cache hit caused by victim execution.", "question_html": "In the <strong>Flush+Reload</strong> cache side-channel technique, how does an attacker detect whether a victim VM executed a specific memory routine?", "options_html": ["The attacker flushes a shared memory line from the cache using `clflush`, waits, and reloads the line; if access time is fast, the victim reloaded the line into cache.", "The attacker deletes the victim's operating system.", "The attacker reboots the physical motherboard.", "The attacker modifies the victim's source code."], "explanation_html": "In <strong>Flush+Reload</strong> (on shared read-only memory pages via deduplication), the attacker flushes a target address using `clflush`. After the victim runs, the attacker reads the address. Fast access (<span class=\"math-inline\">< 80<span class=\"math-txt\"> cycles</span></span>) indicates a cache hit caused by victim execution."}, {"id": 21, "week": "Week 6", "type": "MCQ", "title": "Gartner Risk: Privileged User Access", "question": "Why does Gartner highlight <strong>Privileged User Access</strong> as a top cloud computing risk?", "options": ["Because cloud service provider administrators possess root/hypervisor access that bypasses enterprise physical and logical security perimeters.", "Because cloud users forget their passwords too often.", "Because cloud administrators refuse to accept credit card payments.", "Because privileged users are not allowed to use computers."], "answer": [0], "explanation": "Outsourcing data to a public cloud grants CSP systems engineers administrative root access over physical hosts, hypervisors, and storage networks, creating insider threat risks outside the customer's direct control.", "question_html": "Why does Gartner highlight <strong>Privileged User Access</strong> as a top cloud computing risk?", "options_html": ["Because cloud service provider administrators possess root/hypervisor access that bypasses enterprise physical and logical security perimeters.", "Because cloud users forget their passwords too often.", "Because cloud administrators refuse to accept credit card payments.", "Because privileged users are not allowed to use computers."], "explanation_html": "Outsourcing data to a public cloud grants CSP systems engineers administrative root access over physical hosts, hypervisors, and storage networks, creating insider threat risks outside the customer's direct control."}, {"id": 22, "week": "Week 6", "type": "MCQ", "title": "Gartner Risk: Data Segregation in Multi-Tenancy", "question": "What is the concern addressed by Gartner's <strong>Data Segregation</strong> risk in cloud storage?", "options": ["Preventing customer data from being commingled or accidentally leaked to co-tenant competitors sharing the same physical disk arrays and databases.", "Separating numbers from letters in database tables.", "Dividing hard drives into exactly two partitions.", "Preventing users from sending emails."], "answer": [0], "explanation": "In multi-tenant environments, data from competing organizations resides side-by-side on shared physical disks. Robust cryptographic encryption, key separation, and logical sandboxing must prevent co-tenant data bleed.", "question_html": "What is the concern addressed by Gartner's <strong>Data Segregation</strong> risk in cloud storage?", "options_html": ["Preventing customer data from being commingled or accidentally leaked to co-tenant competitors sharing the same physical disk arrays and databases.", "Separating numbers from letters in database tables.", "Dividing hard drives into exactly two partitions.", "Preventing users from sending emails."], "explanation_html": "In multi-tenant environments, data from competing organizations resides side-by-side on shared physical disks. Robust cryptographic encryption, key separation, and logical sandboxing must prevent co-tenant data bleed."}, {"id": 23, "week": "Week 6", "type": "MCQ", "title": "Gartner Risk: Investigative Support and E-Discovery", "question": "Why is <strong>Investigative Support</strong> (forensics and e-discovery) difficult in a public cloud during legal proceedings?", "options": ["Because forensic acquisition of physical server disks in a multi-tenant cloud risks seizing or compromising the private data of innocent co-located tenants.", "Because cloud providers delete all logs every 10 seconds.", "Because law enforcement is not allowed to use computers.", "Because virtual machines do not generate log files."], "answer": [0], "explanation": "In shared multi-tenant environments, physical imaging of disks or hypervisors for forensic legal discovery is nearly impossible without exposing proprietary records of other uninvolved co-tenant organizations.", "question_html": "Why is <strong>Investigative Support</strong> (forensics and e-discovery) difficult in a public cloud during legal proceedings?", "options_html": ["Because forensic acquisition of physical server disks in a multi-tenant cloud risks seizing or compromising the private data of innocent co-located tenants.", "Because cloud providers delete all logs every 10 seconds.", "Because law enforcement is not allowed to use computers.", "Because virtual machines do not generate log files."], "explanation_html": "In shared multi-tenant environments, physical imaging of disks or hypervisors for forensic legal discovery is nearly impossible without exposing proprietary records of other uninvolved co-tenant organizations."}, {"id": 24, "week": "Week 6", "type": "MCQ", "title": "Gartner Risk: Long-Term Viability", "question": "What does Gartner's <strong>Long-Term Viability</strong> risk caution cloud adopters to consider?", "options": ["Whether the cloud provider might go out of business, be acquired by a competitor, or discontinue service, requiring viable data export and transition strategies.", "Whether computers will still exist in 100 years.", "Whether solar flares will disable satellites.", "Whether the customer can purchase the cloud company."], "answer": [0], "explanation": "Long-Term Viability addresses business continuity if the CSP goes bankrupt or abruptly changes product direction: How easily can the customer retrieve their data, and in what usable format?", "question_html": "What does Gartner's <strong>Long-Term Viability</strong> risk caution cloud adopters to consider?", "options_html": ["Whether the cloud provider might go out of business, be acquired by a competitor, or discontinue service, requiring viable data export and transition strategies.", "Whether computers will still exist in 100 years.", "Whether solar flares will disable satellites.", "Whether the customer can purchase the cloud company."], "explanation_html": "Long-Term Viability addresses business continuity if the CSP goes bankrupt or abruptly changes product direction: How easily can the customer retrieve their data, and in what usable format?"}, {"id": 25, "week": "Week 6", "type": "MCQ", "title": "Homomorphic Encryption Concept", "question": "What is the revolutionary capability offered by <strong>Homomorphic Encryption</strong> in cloud computing?", "options": ["It allows cloud servers to perform mathematical computations directly on encrypted ciphertext without decrypting it into plaintext first.", "It encrypts text into human-readable poetry.", "It eliminates the need for computer processors.", "It makes passwords obsolete by using fingerprints only."], "answer": [0], "explanation": "<strong>Homomorphic Encryption</strong> permits arbitrary mathematical operations on ciphertext ($E(a) \\times E(b) = E(a \\times b)$). The cloud computes on encrypted records and returns encrypted results, keeping data secret even from the cloud provider!", "question_html": "What is the revolutionary capability offered by <strong>Homomorphic Encryption</strong> in cloud computing?", "options_html": ["It allows cloud servers to perform mathematical computations directly on encrypted ciphertext without decrypting it into plaintext first.", "It encrypts text into human-readable poetry.", "It eliminates the need for computer processors.", "It makes passwords obsolete by using fingerprints only."], "explanation_html": "<strong>Homomorphic Encryption</strong> permits arbitrary mathematical operations on ciphertext (<span class=\"math-inline\">E(a) &times; E(b) = E(a &times; b)</span>). The cloud computes on encrypted records and returns encrypted results, keeping data secret even from the cloud provider!"}, {"id": 26, "week": "Week 6", "type": "MCQ", "title": "Port Scanning Techniques: SYN Stealth Scan", "question": "In the scanning phase, how does a TCP SYN (Stealth) scan identify open network ports on a target host without establishing a full TCP connection?", "options": ["By sending a SYN packet and checking if the host returns SYN-ACK (indicating open port), then immediately sending RST to tear down the handshake before completion.", "By sending an email to port 80.", "By unplugging the target's network cable.", "By downloading the target's entire hard drive."], "answer": [0], "explanation": "A TCP SYN scan (half-open scan) sends a SYN; an open port responds with SYN-ACK. The scanner responds with RST to reset the connection immediately, avoiding completing the 3-way handshake and avoiding logging by older applications.", "question_html": "In the scanning phase, how does a TCP SYN (Stealth) scan identify open network ports on a target host without establishing a full TCP connection?", "options_html": ["By sending a SYN packet and checking if the host returns SYN-ACK (indicating open port), then immediately sending RST to tear down the handshake before completion.", "By sending an email to port 80.", "By unplugging the target's network cable.", "By downloading the target's entire hard drive."], "explanation_html": "A TCP SYN scan (half-open scan) sends a SYN; an open port responds with SYN-ACK. The scanner responds with RST to reset the connection immediately, avoiding completing the 3-way handshake and avoiding logging by older applications."}, {"id": 27, "week": "Week 6", "type": "MSQ", "title": "Cryptographic States of Data Protection", "question": "Which of the following represent the three fundamental operational states of data where cryptographic controls are applied in cloud environments? <em>(Select ALL that apply)</em>", "options": ["Data at Rest (stored on persistent disks/databases)", "Data in Transit (moving across network wires via TLS)", "Data in Use (active in system RAM and CPU registers during computation)", "Data in Space (broadcast via satellite dishes)"], "answer": [0, 1, 2], "explanation": "Security frameworks evaluate data across three states: <strong>Data at Rest</strong> (AES-256 disk encryption), <strong>Data in Transit</strong> (TLS 1.3 network encryption), and <strong>Data in Use</strong> (Confidential Computing / Enclaves / Homomorphic Encryption).", "question_html": "Which of the following represent the three fundamental operational states of data where cryptographic controls are applied in cloud environments? <em>(Select ALL that apply)</em>", "options_html": ["Data at Rest (stored on persistent disks/databases)", "Data in Transit (moving across network wires via TLS)", "Data in Use (active in system RAM and CPU registers during computation)", "Data in Space (broadcast via satellite dishes)"], "explanation_html": "Security frameworks evaluate data across three states: <strong>Data at Rest</strong> (AES-256 disk encryption), <strong>Data in Transit</strong> (TLS 1.3 network encryption), and <strong>Data in Use</strong> (Confidential Computing / Enclaves / Homomorphic Encryption)."}, {"id": 28, "week": "Week 6", "type": "MCQ", "title": "Defenses Against Cross-VM Cache Side-Channels", "question": "Which system-level mitigation effectively defeats cross-VM cache-timing side-channel attacks on shared hardware?", "options": ["Cache partitioning (Cache Allocation Technology - CAT) and strict CPU core pinning to prevent co-residence on shared cache lines.", "Increasing screen resolution on the guest VM.", "Running all virtual machines on battery backup.", "Changing the font size of terminal applications."], "answer": [0], "explanation": "Mitigations include: (1) Hardware cache partitioning (Intel CAT) dedicating separate cache ways to different VMs, (2) Strict vCPU core pinning, and (3) Disabling memory deduplication (KSM) across untrusted tenants.", "question_html": "Which system-level mitigation effectively defeats cross-VM cache-timing side-channel attacks on shared hardware?", "options_html": ["Cache partitioning (Cache Allocation Technology - CAT) and strict CPU core pinning to prevent co-residence on shared cache lines.", "Increasing screen resolution on the guest VM.", "Running all virtual machines on battery backup.", "Changing the font size of terminal applications."], "explanation_html": "Mitigations include: (1) Hardware cache partitioning (Intel CAT) dedicating separate cache ways to different VMs, (2) Strict vCPU core pinning, and (3) Disabling memory deduplication (KSM) across untrusted tenants."}, {"id": 29, "week": "Week 6", "type": "MCQ", "title": "Man-in-the-Middle (MitM) Attack Classification", "question": "In a <strong>Man-in-the-Middle (MitM)</strong> attack where an attacker intercepts, alters, and re-transmits data packets between client and server, which attack class does this represent?", "options": ["Active Attack (specifically Modification)", "Passive Attack", "Hardware failure", "Physical theft"], "answer": [0], "explanation": "A MitM attack that alters payload contents in flight is an <strong>Active Attack</strong> violating data <strong>Integrity</strong> (Modification).", "question_html": "In a <strong>Man-in-the-Middle (MitM)</strong> attack where an attacker intercepts, alters, and re-transmits data packets between client and server, which attack class does this represent?", "options_html": ["Active Attack (specifically Modification)", "Passive Attack", "Hardware failure", "Physical theft"], "explanation_html": "A MitM attack that alters payload contents in flight is an <strong>Active Attack</strong> violating data <strong>Integrity</strong> (Modification)."}, {"id": 30, "week": "Week 6", "type": "MSQ", "title": "Goals of Information Security", "question": "According to Prof. Ghosh's lecture on Security Principles, what are the three operational goals of an enterprise security system? <em>(Select ALL that apply)</em>", "options": ["Prevention (Preventing attackers from violating security policies)", "Detection (Detecting violations when prevention fails)", "Recovery (Assessing damage, stopping attacks, and restoring secure operations)", "Retaliation (Launching cyber attacks against adversary nations)"], "answer": [0, 1, 2], "explanation": "The three classical operational goals of security are: <strong>Prevention</strong>, <strong>Detection</strong>, and <strong>Recovery</strong>. Retaliation is not a defensive computer security goal.", "question_html": "According to Prof. Ghosh's lecture on Security Principles, what are the three operational goals of an enterprise security system? <em>(Select ALL that apply)</em>", "options_html": ["Prevention (Preventing attackers from violating security policies)", "Detection (Detecting violations when prevention fails)", "Recovery (Assessing damage, stopping attacks, and restoring secure operations)", "Retaliation (Launching cyber attacks against adversary nations)"], "explanation_html": "The three classical operational goals of security are: <strong>Prevention</strong>, <strong>Detection</strong>, and <strong>Recovery</strong>. Retaliation is not a defensive computer security goal."}];
+    const TOTAL_Q = QUESTIONS.length;
+    const WEEK_NUM = 6;
+
+    // User State
+    const state = {
+      currentIdx: 0,
+      userAnswers: {},       // qId -> [selectedIdxs]
+      userResults: {},       // qId -> boolean (true=correct, false=incorrect)
+      flagged: new Set(),
+      viewMode: 'card',       // 'card' or 'list'
+      msqTempSelections: {}  // qId -> Set of selected indices before submit
+    };
+
+    // DOM Elements
+    const cardViewContainer = document.getElementById('cardViewContainer');
+    const listViewContainer = document.getElementById('listViewContainer');
+    const headerQCtr = document.getElementById('headerQCtr');
+    const scoreText = document.getElementById('scoreText');
+    const progressFill = document.getElementById('progressFill');
+    const btnModeCard = document.getElementById('btnModeCard');
+    const btnModeList = document.getElementById('btnModeList');
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+    const btnOpenNav = document.getElementById('btnOpenNav');
+    const btnCloseNav = document.getElementById('btnCloseNav');
+    const navModalBackdrop = document.getElementById('navModalBackdrop');
+    const matrixGrid = document.getElementById('matrixGrid');
+
+    // Card View DOM
+    const cardQNumBadge = document.getElementById('cardQNumBadge');
+    const cardTypeBadge = document.getElementById('cardTypeBadge');
+    const cardFlagBtn = document.getElementById('cardFlagBtn');
+    const flagBtnText = document.getElementById('flagBtnText');
+    const cardTitle = document.getElementById('cardTitle');
+    const cardPrompt = document.getElementById('cardPrompt');
+    const cardMsqHint = document.getElementById('cardMsqHint');
+    const cardOptionsContainer = document.getElementById('cardOptionsContainer');
+    const cardMsqSubmitBtn = document.getElementById('cardMsqSubmitBtn');
+    const cardFeedbackPanel = document.getElementById('cardFeedbackPanel');
+    const cardFbStatus = document.getElementById('cardFbStatus');
+    const cardFbAnswerCallout = document.getElementById('cardFbAnswerCallout');
+    const cardFbExplanation = document.getElementById('cardFbExplanation');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+
+    // Summary Modal DOM
+    const summaryModalBackdrop = document.getElementById('summaryModalBackdrop');
+    const sumBadge = document.getElementById('sumBadge');
+    const sumScoreVal = document.getElementById('sumScoreVal');
+    const sumAccuracyVal = document.getElementById('sumAccuracyVal');
+    const sumCorrectVal = document.getElementById('sumCorrectVal');
+    const sumIncorrectVal = document.getElementById('sumIncorrectVal');
+    const btnSumReview = document.getElementById('btnSumReview');
+    const btnSumRetake = document.getElementById('btnSumRetake');
+
+    // Init Theme
+    (function initTheme() {
+      const savedTheme = localStorage.getItem('nptel_quiz_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+
+    btnThemeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('nptel_quiz_theme', next);
+    });
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    function init() {
+      buildMatrix();
+      renderCurrentCard();
+      updateScoreboard();
+      setupEvents();
+    }
+
+    function buildMatrix() {
+      matrixGrid.innerHTML = '';
+      QUESTIONS.forEach((q, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'matrix-btn';
+        btn.id = 'matBtn_' + q.id;
+        btn.textContent = q.id;
+        btn.addEventListener('click', () => {
+          state.currentIdx = idx;
+          if (state.viewMode === 'card') {
+            renderCurrentCard();
+          } else {
+            const el = document.getElementById('listQCard_' + q.id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          closeNavModal();
+        });
+        matrixGrid.appendChild(btn);
+      });
+      updateMatrixVisuals();
+    }
+
+    function updateMatrixVisuals() {
+      QUESTIONS.forEach((q, idx) => {
+        const btn = document.getElementById('matBtn_' + q.id);
+        if (!btn) return;
+        
+        btn.classList.toggle('current', idx === state.currentIdx);
+        btn.classList.toggle('flagged', state.flagged.has(q.id));
+        
+        if (state.userResults[q.id] === true) {
+          btn.className = 'matrix-btn correct' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        } else if (state.userResults[q.id] === false) {
+          btn.className = 'matrix-btn incorrect' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        } else {
+          btn.className = 'matrix-btn' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        }
+      });
+    }
+
+    function updateScoreboard() {
+      const answeredKeys = Object.keys(state.userResults);
+      const totalAnswered = answeredKeys.length;
+      let correctCount = 0;
+      answeredKeys.forEach(k => {
+        if (state.userResults[k] === true) correctCount++;
+      });
+
+      headerQCtr.textContent = 'Q ' + (state.currentIdx + 1) + ' / ' + TOTAL_Q;
+      scoreText.textContent = correctCount + ' / ' + totalAnswered;
+      
+      const pct = (totalAnswered / TOTAL_Q) * 100;
+      progressFill.style.width = pct + '%';
+      
+      updateMatrixVisuals();
+
+      // Check if all answered
+      if (totalAnswered === TOTAL_Q && !state.summaryShown) {
+        state.summaryShown = true;
+        setTimeout(showSummaryModal, 600);
+      }
+    }
+
+    // =========================================================================
+    // CARD MODE RENDERER
+    // =========================================================================
+    function renderCurrentCard() {
+      const q = QUESTIONS[state.currentIdx];
+      const isMSQ = q.type === 'MSQ';
+      const isAnswered = state.userAnswers[q.id] !== undefined;
+
+      // Meta
+      cardQNumBadge.textContent = 'Question ' + (state.currentIdx + 1) + ' of ' + TOTAL_Q;
+      cardTypeBadge.textContent = q.type;
+      cardTypeBadge.className = 'badge ' + (isMSQ ? 'badge-msq' : 'badge-mcq');
+      
+      // Flag state
+      const isFlagged = state.flagged.has(q.id);
+      cardFlagBtn.classList.toggle('flagged', isFlagged);
+      flagBtnText.textContent = isFlagged ? 'Flagged' : 'Flag';
+
+      // Title & Prompt
+      cardTitle.innerHTML = q.title;
+      cardPrompt.innerHTML = q.question_html;
+      cardMsqHint.style.display = isMSQ ? 'flex' : 'none';
+
+      // Options
+      cardOptionsContainer.innerHTML = '';
+      
+      // Initialize temp selections for MSQ
+      if (isMSQ && !state.msqTempSelections[q.id]) {
+        state.msqTempSelections[q.id] = new Set(state.userAnswers[q.id] || []);
+      }
+
+      q.options_html.forEach((optHtml, optIdx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn' + (isMSQ ? ' opt-btn-msq' : '');
+        btn.id = 'cardOpt_' + optIdx;
+
+        const letter = String.fromCharCode(65 + optIdx);
+        
+        let isSelected = false;
+        if (isAnswered) {
+          isSelected = state.userAnswers[q.id].includes(optIdx);
+        } else if (isMSQ) {
+          isSelected = state.msqTempSelections[q.id].has(optIdx);
+        }
+
+        // Format classes if answered
+        if (isAnswered) {
+          btn.classList.add('locked');
+          const isCorrect = q.answer.includes(optIdx);
+          if (isSelected && isCorrect) {
+            btn.classList.add('state-chosen-correct');
+          } else if (isSelected && !isCorrect) {
+            btn.classList.add('state-chosen-incorrect');
+          } else if (!isSelected && isCorrect) {
+            btn.classList.add('state-target-correct');
+          }
+        } else if (isMSQ && isSelected) {
+          btn.classList.add('state-msq-selected');
+        }
+
+        btn.innerHTML = `
+          <span class="opt-letter">${letter}</span>
+          <span class="opt-text">${optHtml}</span>
+        `;
+
+        btn.addEventListener('click', () => {
+          if (state.userAnswers[q.id] !== undefined) return; // Locked
+
+          if (isMSQ) {
+            // Toggle MSQ
+            if (state.msqTempSelections[q.id].has(optIdx)) {
+              state.msqTempSelections[q.id].delete(optIdx);
+            } else {
+              state.msqTempSelections[q.id].add(optIdx);
+            }
+            renderCurrentCard();
+          } else {
+            // Instant MCQ Answer
+            handleAnswerSubmit(q, [optIdx]);
+          }
+        });
+
+        cardOptionsContainer.appendChild(btn);
+      });
+
+      // MSQ Submit Button
+      if (isMSQ && !isAnswered) {
+        cardMsqSubmitBtn.style.display = 'inline-flex';
+        cardMsqSubmitBtn.disabled = state.msqTempSelections[q.id].size === 0;
+        cardMsqSubmitBtn.onclick = () => {
+          const chosen = Array.from(state.msqTempSelections[q.id]).sort();
+          handleAnswerSubmit(q, chosen);
+        };
+      } else {
+        cardMsqSubmitBtn.style.display = 'none';
+      }
+
+      // Feedback & Explanation
+      if (isAnswered) {
+        renderFeedbackPanel(cardFeedbackPanel, cardFbStatus, cardFbAnswerCallout, cardFbExplanation, q);
+        cardFeedbackPanel.style.display = 'block';
+      } else {
+        cardFeedbackPanel.style.display = 'none';
+      }
+
+      // Prev / Next button states
+      btnPrev.disabled = state.currentIdx === 0;
+      if (state.currentIdx === TOTAL_Q - 1) {
+        btnNext.innerHTML = `View Summary <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`;
+        btnNext.classList.add('btn-next-highlight');
+      } else {
+        btnNext.innerHTML = `Next Question <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+        if (isAnswered) {
+          btnNext.classList.add('btn-next-highlight');
+        } else {
+          btnNext.classList.remove('btn-next-highlight');
+        }
+      }
+
+      updateScoreboard();
+    }
+
+    // =========================================================================
+    // ANSWER PROCESSING & INSTANT FEEDBACK
+    // =========================================================================
+    function handleAnswerSubmit(q, selectedIndices) {
+      state.userAnswers[q.id] = selectedIndices;
+      
+      // Evaluate correctness
+      const correctIndices = [...q.answer].sort();
+      const userSorted = [...selectedIndices].sort();
+      
+      const isAllCorrect = (correctIndices.length === userSorted.length) &&
+        correctIndices.every((val, i) => val === userSorted[i]);
+      
+      state.userResults[q.id] = isAllCorrect;
+
+      if (state.viewMode === 'card') {
+        renderCurrentCard();
+      } else {
+        renderListCard(q);
+      }
+
+      updateScoreboard();
+    }
+
+    function renderFeedbackPanel(panelEl, statusEl, ansCalloutEl, expEl, q) {
+      const isCorrect = state.userResults[q.id];
+      const correctLetters = q.answer.map(idx => String.fromCharCode(65 + idx)).join(', ');
+
+      if (isCorrect) {
+        panelEl.className = 'feedback-panel status-correct';
+        statusEl.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          Correct! (+1 Mark)
+        `;
+      } else {
+        panelEl.className = 'feedback-panel status-incorrect';
+        statusEl.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Incorrect (0 Marks)
+        `;
+      }
+
+      ansCalloutEl.innerHTML = '<strong>Correct Answer:</strong> Option ' + correctLetters;
+      expEl.innerHTML = `<strong>Explanation:</strong> ` + q.explanation_html;
+    }
+
+    // =========================================================================
+    // LIST VIEW RENDERER (ALL 30 QUESTIONS)
+    // =========================================================================
+    function renderListView() {
+      listViewContainer.innerHTML = '';
+      QUESTIONS.forEach((q, idx) => {
+        const card = createListQuestionElement(q, idx);
+        listViewContainer.appendChild(card);
+      });
+    }
+
+    function createListQuestionElement(q, idx) {
+      const card = document.createElement('article');
+      card.className = 'question-card';
+      card.id = 'listQCard_' + q.id;
+
+      const isMSQ = q.type === 'MSQ';
+      const isAnswered = state.userAnswers[q.id] !== undefined;
+
+      // Meta
+      const metaRow = document.createElement('div');
+      metaRow.className = 'q-meta-row';
+      metaRow.innerHTML = `
+        <div class="q-tags">
+          <span class="badge badge-qnum">Question ${idx + 1} of ${TOTAL_Q}</span>
+          <span class="badge ${isMSQ ? 'badge-msq' : 'badge-mcq'}">${q.type}</span>
+        </div>
+        <button class="flag-btn ${state.flagged.has(q.id) ? 'flagged' : ''}" id="listFlag_${q.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>${state.flagged.has(q.id) ? 'Flagged' : 'Flag'}</span>
+        </button>
+      `;
+
+      metaRow.querySelector('#listFlag_' + q.id).addEventListener('click', () => {
+        if (state.flagged.has(q.id)) state.flagged.delete(q.id);
+        else state.flagged.add(q.id);
+        renderListCard(q);
+        updateMatrixVisuals();
+      });
+
+      card.appendChild(metaRow);
+
+      // Title & Prompt
+      const titleEl = document.createElement('h2');
+      titleEl.className = 'q-title';
+      titleEl.innerHTML = q.title;
+      card.appendChild(titleEl);
+
+      const promptEl = document.createElement('div');
+      promptEl.className = 'q-prompt';
+      promptEl.innerHTML = q.question_html;
+      card.appendChild(promptEl);
+
+      if (isMSQ) {
+        const msqHint = document.createElement('div');
+        msqHint.className = 'msq-hint';
+        msqHint.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Select all matching options, then click Submit Answer.`;
+        card.appendChild(msqHint);
+      }
+
+      // Options
+      const optsGrid = document.createElement('div');
+      optsGrid.className = 'options-grid';
+
+      if (isMSQ && !state.msqTempSelections[q.id]) {
+        state.msqTempSelections[q.id] = new Set(state.userAnswers[q.id] || []);
+      }
+
+      q.options_html.forEach((optHtml, optIdx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn' + (isMSQ ? ' opt-btn-msq' : '');
+        const letter = String.fromCharCode(65 + optIdx);
+        
+        let isSelected = false;
+        if (isAnswered) {
+          isSelected = state.userAnswers[q.id].includes(optIdx);
+        } else if (isMSQ) {
+          isSelected = state.msqTempSelections[q.id].has(optIdx);
+        }
+
+        if (isAnswered) {
+          btn.classList.add('locked');
+          const isCorrect = q.answer.includes(optIdx);
+          if (isSelected && isCorrect) btn.classList.add('state-chosen-correct');
+          else if (isSelected && !isCorrect) btn.classList.add('state-chosen-incorrect');
+          else if (!isSelected && isCorrect) btn.classList.add('state-target-correct');
+        } else if (isMSQ && isSelected) {
+          btn.classList.add('state-msq-selected');
+        }
+
+        btn.innerHTML = `<span class="opt-letter">${letter}</span><span class="opt-text">${optHtml}</span>`;
+
+        btn.addEventListener('click', () => {
+          if (state.userAnswers[q.id] !== undefined) return;
+          if (isMSQ) {
+            if (state.msqTempSelections[q.id].has(optIdx)) {
+              state.msqTempSelections[q.id].delete(optIdx);
+            } else {
+              state.msqTempSelections[q.id].add(optIdx);
+            }
+            renderListCard(q);
+          } else {
+            handleAnswerSubmit(q, [optIdx]);
+          }
+        });
+
+        optsGrid.appendChild(btn);
+      });
+      card.appendChild(optsGrid);
+
+      // Submit Button for MSQ
+      if (isMSQ && !isAnswered) {
+        const subBtn = document.createElement('button');
+        subBtn.className = 'msq-submit-btn';
+        subBtn.innerHTML = `Submit Answer <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+        subBtn.disabled = state.msqTempSelections[q.id].size === 0;
+        subBtn.onclick = () => {
+          const chosen = Array.from(state.msqTempSelections[q.id]).sort();
+          handleAnswerSubmit(q, chosen);
+        };
+        card.appendChild(subBtn);
+      }
+
+      // Feedback Panel
+      if (isAnswered) {
+        const fbPanel = document.createElement('div');
+        const fbStatus = document.createElement('div');
+        const fbAnsCallout = document.createElement('div');
+        const fbExp = document.createElement('div');
+        renderFeedbackPanel(fbPanel, fbStatus, fbAnsCallout, fbExp, q);
+        card.appendChild(fbPanel);
+      }
+
+      return card;
+    }
+
+    function renderListCard(q) {
+      const existing = document.getElementById('listQCard_' + q.id);
+      if (!existing) return;
+      const idx = QUESTIONS.findIndex(item => item.id === q.id);
+      const updated = createListQuestionElement(q, idx);
+      existing.replaceWith(updated);
+    }
+
+    // =========================================================================
+    // EVENT HANDLERS
+    // =========================================================================
+    function setupEvents() {
+      // Mode toggle
+      btnModeCard.addEventListener('click', () => {
+        state.viewMode = 'card';
+        btnModeCard.classList.add('active');
+        btnModeList.classList.remove('active');
+        cardViewContainer.style.display = 'block';
+        listViewContainer.style.display = 'none';
+        renderCurrentCard();
+      });
+
+      btnModeList.addEventListener('click', () => {
+        state.viewMode = 'list';
+        btnModeList.classList.add('active');
+        btnModeCard.classList.remove('active');
+        cardViewContainer.style.display = 'none';
+        listViewContainer.style.display = 'block';
+        renderListView();
+      });
+
+      // Card Navigation Prev / Next
+      btnPrev.addEventListener('click', () => {
+        if (state.currentIdx > 0) {
+          state.currentIdx--;
+          renderCurrentCard();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      btnNext.addEventListener('click', () => {
+        if (state.currentIdx < TOTAL_Q - 1) {
+          state.currentIdx++;
+          renderCurrentCard();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          showSummaryModal();
+        }
+      });
+
+      // Card Flag Button
+      cardFlagBtn.addEventListener('click', () => {
+        const q = QUESTIONS[state.currentIdx];
+        if (state.flagged.has(q.id)) {
+          state.flagged.delete(q.id);
+        } else {
+          state.flagged.add(q.id);
+        }
+        renderCurrentCard();
+      });
+
+      // Navigator Modal Open/Close
+      btnOpenNav.addEventListener('click', openNavModal);
+      btnCloseNav.addEventListener('click', closeNavModal);
+      navModalBackdrop.addEventListener('click', (e) => {
+        if (e.target === navModalBackdrop) closeNavModal();
+      });
+
+      // Summary Modal Actions
+      btnSumReview.addEventListener('click', () => {
+        summaryModalBackdrop.classList.remove('open');
+      });
+
+      btnSumRetake.addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset all answers and retake Week ' + WEEK_NUM + '?')) {
+          state.userAnswers = {};
+          state.userResults = {};
+          state.msqTempSelections = {};
+          state.currentIdx = 0;
+          state.summaryShown = false;
+          summaryModalBackdrop.classList.remove('open');
+          renderCurrentCard();
+          if (state.viewMode === 'list') renderListView();
+          updateScoreboard();
+        }
+      });
+
+      // Keyboard navigation (Card mode)
+      document.addEventListener('keydown', (e) => {
+        if (navModalBackdrop.classList.contains('open') || summaryModalBackdrop.classList.contains('open')) return;
+        
+        if (e.key === 'ArrowLeft') {
+          btnPrev.click();
+        } else if (e.key === 'ArrowRight') {
+          btnNext.click();
+        } else if (['1', '2', '3', '4'].includes(e.key) && state.viewMode === 'card') {
+          const optIdx = parseInt(e.key) - 1;
+          const optBtn = document.getElementById('cardOpt_' + optIdx);
+          if (optBtn) optBtn.click();
+        }
+      });
+    }
+
+    function openNavModal() {
+      updateMatrixVisuals();
+      navModalBackdrop.classList.add('open');
+    }
+
+    function closeNavModal() {
+      navModalBackdrop.classList.remove('open');
+    }
+
+    function showSummaryModal() {
+      const answeredKeys = Object.keys(state.userResults);
+      let correct = 0;
+      answeredKeys.forEach(k => {
+        if (state.userResults[k] === true) correct++;
+      });
+      const incorrect = answeredKeys.length - correct;
+      const pct = (correct / TOTAL_Q) * 100;
+
+      sumScoreVal.textContent = correct;
+      sumAccuracyVal.textContent = pct.toFixed(1) + '%';
+      sumCorrectVal.textContent = correct;
+      sumIncorrectVal.textContent = incorrect;
+
+      if (pct >= 90) {
+        sumBadge.className = 'summary-badge badge-gold';
+        sumBadge.textContent = 'Elite + Gold Medal (Top 1%)';
+      } else if (pct >= 75) {
+        sumBadge.className = 'summary-badge badge-silver';
+        sumBadge.textContent = 'Elite + Silver Medal';
+      } else if (pct >= 60) {
+        sumBadge.className = 'summary-badge badge-elite';
+        sumBadge.textContent = 'Elite Certificate';
+      } else if (pct >= 40) {
+        sumBadge.className = 'summary-badge badge-pass';
+        sumBadge.textContent = 'Successfully Completed';
+      } else {
+        sumBadge.className = 'summary-badge badge-fail';
+        sumBadge.textContent = 'Needs Practice (< 40%)';
+      }
+
+      summaryModalBackdrop.classList.add('open');
+    }
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

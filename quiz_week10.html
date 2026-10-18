@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Week 10: VM Migration & Container Primitives — 30 NPTEL Exam Questions</title>
+  <style>
+    /* ==========================================================================
+       MODERN OFFLINE DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-math: "Cambria Math", "Latin Modern Math", "STIX Two Math", "Times New Roman", serif;
+      
+      /* Dark Theme Tokens (Default) */
+      --bg-body: #0b0f19;
+      --bg-surface: #111827;
+      --bg-surface-elevated: #1e293b;
+      --bg-card: #151e2e;
+      --bg-card-hover: #1c283f;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.16);
+      --border-focus: #38bdf8;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --primary: #38bdf8;
+      --primary-rgb: 56, 189, 248;
+      --primary-hover: #0ea5e9;
+      
+      --accent: #6366f1;
+      --accent-rgb: 99, 102, 241;
+      
+      --success: #10b981;
+      --success-rgb: 16, 185, 129;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --success-border: #059669;
+      
+      --danger: #ef4444;
+      --danger-rgb: 239, 68, 68;
+      --danger-bg: rgba(239, 68, 68, 0.14);
+      --danger-border: #dc2626;
+      
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      
+      --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --border-subtle: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --border-focus: #0284c7;
+      
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      
+      --primary: #0284c7;
+      --primary-rgb: 2, 132, 199;
+      --primary-hover: #0369a1;
+      
+      --accent: #4f46e5;
+      --accent-rgb: 79, 70, 229;
+      
+      --success: #059669;
+      --success-rgb: 5, 150, 105;
+      --success-bg: rgba(5, 150, 105, 0.1);
+      --success-border: #10b981;
+      
+      --danger: #dc2626;
+      --danger-rgb: 220, 38, 38;
+      --danger-bg: rgba(220, 38, 38, 0.08);
+      --danger-border: #ef4444;
+      
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.1);
+      
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* Typography & Offline Math */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      background: rgba(var(--primary-rgb), 0.12);
+      color: var(--primary);
+      padding: 0.15em 0.4em;
+      border-radius: var(--radius-sm);
+    }
+
+    .math-inline {
+      font-family: var(--font-math);
+      font-style: italic;
+      padding: 0 0.15em;
+      color: var(--text-main);
+    }
+    .math-txt {
+      font-family: var(--font-sans);
+      font-style: normal;
+      font-size: 0.95em;
+    }
+    .frac {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+      padding: 0 0.2em;
+      font-size: 0.9em;
+      line-height: 1;
+    }
+    .frac .num {
+      border-bottom: 1px solid currentColor;
+      padding-bottom: 1px;
+    }
+    .frac .den {
+      padding-top: 1px;
+    }
+
+    /* Top Sticky Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(8px);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .hub-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 0.65rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+    .hub-link:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+      background: rgba(var(--primary-rgb), 0.08);
+    }
+
+    .week-badge-header {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .q-counter-pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-full);
+      background: rgba(var(--accent-rgb), 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(var(--accent-rgb), 0.3);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-full);
+      background: rgba(var(--success-rgb), 0.12);
+      border: 1px solid rgba(var(--success-rgb), 0.3);
+      color: var(--success);
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .icon-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+    }
+
+    /* Main Layout */
+    .main-container {
+      max-width: 900px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* View Controls Bar */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .view-toggle-group {
+      display: inline-flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 3px;
+    }
+    .toggle-opt-btn {
+      background: transparent;
+      border: none;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .toggle-opt-btn.active {
+      background: var(--primary);
+      color: #0b0f19;
+      font-weight: 700;
+    }
+
+    .nav-drawer-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .nav-drawer-trigger:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-surface-elevated);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 300ms ease;
+    }
+
+    /* Question Card Styling */
+    .question-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 1.75rem;
+      transition: border-color var(--transition);
+    }
+
+    .q-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .q-tags {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-qnum {
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+    .badge-mcq {
+      background: rgba(var(--primary-rgb), 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(var(--primary-rgb), 0.3);
+    }
+    .badge-msq {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .flag-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.3rem 0.5rem;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition);
+    }
+    .flag-btn:hover {
+      color: var(--warning);
+    }
+    .flag-btn.flagged {
+      color: var(--warning);
+    }
+
+    .q-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+    }
+
+    .q-prompt {
+      font-size: 1.02rem;
+      line-height: 1.7;
+      color: var(--text-main);
+      margin-bottom: 1.5rem;
+    }
+
+    .msq-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.9rem;
+      background: var(--warning-bg);
+      border-left: 3px solid var(--warning);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      color: #fbbf24;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Options List */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .option-btn {
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.15rem;
+      min-height: 54px;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      color: var(--text-main);
+      font-size: 0.98rem;
+      line-height: 1.55;
+      width: 100%;
+      transition: all var(--transition);
+      position: relative;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .option-btn:hover:not(.locked) {
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+      transform: translateY(-1px);
+    }
+    .option-btn:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    .opt-letter {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-full);
+      border: 1.5px solid var(--border-medium);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: all var(--transition);
+    }
+    .opt-btn-msq .opt-letter {
+      border-radius: var(--radius-sm);
+    }
+
+    .opt-text {
+      flex: 1;
+    }
+
+    /* Instant Feedback Visual States */
+    .option-btn.state-chosen-correct {
+      border-color: var(--success) !important;
+      background: var(--success-bg) !important;
+    }
+    .option-btn.state-chosen-correct .opt-letter {
+      border-color: var(--success) !important;
+      background: var(--success) !important;
+      color: #0b0f19 !important;
+    }
+
+    .option-btn.state-chosen-incorrect {
+      border-color: var(--danger) !important;
+      background: var(--danger-bg) !important;
+    }
+    .option-btn.state-chosen-incorrect .opt-letter {
+      border-color: var(--danger) !important;
+      background: var(--danger) !important;
+      color: #ffffff !important;
+    }
+
+    .option-btn.state-target-correct {
+      border-color: var(--success) !important;
+      border-style: solid !important;
+      background: rgba(var(--success-rgb), 0.08) !important;
+    }
+    .option-btn.state-target-correct .opt-letter {
+      border-color: var(--success) !important;
+      color: var(--success) !important;
+      font-weight: 800;
+    }
+
+    .option-btn.state-msq-selected {
+      border-color: var(--primary);
+      background: rgba(var(--primary-rgb), 0.1);
+    }
+    .option-btn.state-msq-selected .opt-letter {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #0b0f19;
+    }
+
+    .option-btn.locked {
+      cursor: default;
+    }
+
+    /* MSQ Submit Button */
+    .msq-submit-btn {
+      background: var(--primary);
+      color: #0b0f19;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all var(--transition);
+      margin-bottom: 1.25rem;
+      min-height: 48px;
+    }
+    .msq-submit-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .msq-submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Instant Feedback & Explanation Container */
+    .feedback-panel {
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-top: 1.25rem;
+      animation: fadeInSlide 250ms ease forwards;
+    }
+    @keyframes fadeInSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feedback-panel.status-correct {
+      background: var(--success-bg);
+      border: 1.5px solid var(--success-border);
+    }
+    .feedback-panel.status-incorrect {
+      background: var(--danger-bg);
+      border: 1.5px solid var(--danger-border);
+    }
+
+    .fb-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .fb-status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+    .feedback-panel.status-correct .fb-status-tag {
+      color: var(--success);
+    }
+    .feedback-panel.status-incorrect .fb-status-tag {
+      color: var(--danger);
+    }
+
+    .fb-ans-callout {
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .fb-explanation-body {
+      font-size: 0.94rem;
+      line-height: 1.65;
+      color: var(--text-main);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 0.75rem;
+    }
+    [data-theme="light"] .fb-explanation-body {
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    /* Single Question Card Navigation Footer */
+    .card-nav-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .nav-action-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.75rem 1.25rem;
+      min-height: 48px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all var(--transition);
+      user-select: none;
+    }
+    .nav-action-btn:hover:not(:disabled) {
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+    }
+    .nav-action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .nav-action-btn.btn-next-highlight {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+      font-weight: 700;
+    }
+    .nav-action-btn.btn-next-highlight:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Navigator Modal / Drawer */
+    .nav-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .nav-modal-backdrop.open {
+      display: flex;
+    }
+
+    .nav-modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      max-width: 600px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .modal-head h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 480px) {
+      .matrix-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    .matrix-btn {
+      height: 48px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all var(--transition);
+    }
+    .matrix-btn:hover {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+    .matrix-btn.current {
+      border: 2px solid var(--primary) !important;
+      box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
+    }
+    .matrix-btn.correct {
+      background: var(--success-bg) !important;
+      border-color: var(--success) !important;
+      color: var(--success) !important;
+    }
+    .matrix-btn.incorrect {
+      background: var(--danger-bg) !important;
+      border-color: var(--danger) !important;
+      color: var(--danger) !important;
+    }
+    .matrix-btn.flagged::after {
+      content: "★";
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 0.65rem;
+      color: var(--warning);
+    }
+
+    .matrix-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 1rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Summary Modal */
+    .summary-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
+      z-index: 110;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .summary-modal-backdrop.open {
+      display: flex;
+    }
+
+    .summary-modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      max-width: 520px;
+      width: 100%;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .summary-badge {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-full);
+      margin-bottom: 1rem;
+    }
+    .badge-gold {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border: 1px solid #fbbf24;
+    }
+    .badge-silver {
+      background: rgba(203, 213, 225, 0.2);
+      color: #cbd5e1;
+      border: 1px solid #cbd5e1;
+    }
+    .badge-elite {
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      border: 1px solid #818cf8;
+    }
+    .badge-pass {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border: 1px solid #10b981;
+    }
+    .badge-fail {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+    }
+
+    .summary-score-large {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+      color: var(--text-main);
+    }
+    .summary-denom {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    .stat-box {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 0.5rem;
+    }
+    .stat-box-val {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 0.15rem;
+    }
+    .stat-box-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .summary-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* Bottom Sticky Week Switcher Footer */
+    .page-footer-nav {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    .footer-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 640px) {
+      .header-content {
+        padding: 0.6rem 0.75rem;
+      }
+      .week-badge-header span.week-title-short {
+        display: none;
+      }
+      .question-card {
+        padding: 1.15rem;
+      }
+      .q-title {
+        font-size: 1.05rem;
+      }
+      .q-prompt {
+        font-size: 0.95rem;
+      }
+      .option-btn {
+        padding: 0.85rem 1rem;
+        font-size: 0.92rem;
+      }
+      .nav-action-btn {
+        padding: 0.65rem 0.9rem;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="header-left">
+        <a href="index.html" class="hub-link" title="Return to Course Hub">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Hub
+        </a>
+        <div class="week-badge-header">
+          <span>Week 10</span>
+          <span class="week-title-short" style="font-weight: 500; font-size: 0.85rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">— Week 10: VM Migration & Container Primitives</span>
+          <span class="q-counter-pill" id="headerQCtr">Q 1 / 30</span>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <div class="score-pill" id="scoreBadge" title="Live Correct Answers">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="scoreText">0 / 0</span>
+        </div>
+        <button class="icon-btn" id="btnThemeToggle" title="Toggle Dark/Light Mode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Progress & View Controls -->
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="view-toggle-group">
+        <button class="toggle-opt-btn active" id="btnModeCard">Card Mode</button>
+        <button class="toggle-opt-btn" id="btnModeList">List Mode</button>
+      </div>
+
+      <button class="nav-drawer-trigger" id="btnOpenNav">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Question Matrix (1–30)
+      </button>
+    </div>
+
+    <!-- Active Question Card (Used in Card Mode) -->
+    <div id="cardViewContainer">
+      <article class="question-card" id="activeCard">
+        <div class="q-meta-row">
+          <div class="q-tags">
+            <span class="badge badge-qnum" id="cardQNumBadge">Question 1 of 30</span>
+            <span class="badge" id="cardTypeBadge">MCQ</span>
+          </div>
+          <button class="flag-btn" id="cardFlagBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span id="flagBtnText">Flag</span>
+          </button>
+        </div>
+
+        <h2 class="q-title" id="cardTitle"></h2>
+        <div class="q-prompt" id="cardPrompt"></div>
+        <div class="msq-hint" id="cardMsqHint" style="display: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Multiple Choice: Select all matching options, then click Submit Answer.
+        </div>
+
+        <!-- Options Container -->
+        <div class="options-grid" id="cardOptionsContainer"></div>
+
+        <button class="msq-submit-btn" id="cardMsqSubmitBtn" style="display: none;">
+          Submit Answer
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+
+        <!-- Instant Explanation Area -->
+        <div class="feedback-panel" id="cardFeedbackPanel" style="display: none;">
+          <div class="fb-header">
+            <div class="fb-status-tag" id="cardFbStatus"></div>
+            <div class="fb-ans-callout" id="cardFbAnswerCallout"></div>
+          </div>
+          <div class="fb-explanation-body" id="cardFbExplanation"></div>
+        </div>
+
+        <!-- Footer Navigation Controls -->
+        <div class="card-nav-footer">
+          <button class="nav-action-btn" id="btnPrev">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Previous
+          </button>
+          <button class="nav-action-btn" id="btnNext">
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <!-- List View Container (All 30 Questions) -->
+    <div id="listViewContainer" style="display: none;"></div>
+  </main>
+
+  <!-- Question Matrix Modal / Drawer -->
+  <div class="nav-modal-backdrop" id="navModalBackdrop">
+    <div class="nav-modal">
+      <div class="modal-head">
+        <h3>Question Navigator (Week 10)</h3>
+        <button class="icon-btn" id="btnCloseNav">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="matrix-grid" id="matrixGrid"></div>
+
+      <div class="matrix-legend">
+        <div class="legend-item"><div class="legend-dot" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-medium);"></div> Unanswered</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--success);"></div> Correct</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> Incorrect</div>
+        <div class="legend-item"><span>★</span> Flagged</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Score & Certification Summary Modal -->
+  <div class="summary-modal-backdrop" id="summaryModalBackdrop">
+    <div class="summary-modal">
+      <div class="summary-badge" id="sumBadge">Elite + Gold Medal</div>
+      <h2 style="font-size: 1.6rem; margin-bottom: 0.35rem;">Assessment Completed!</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Week 10 &bull; Week 10: VM Migration & Container Primitives</p>
+
+      <div class="summary-score-large" id="sumScoreVal">0</div>
+      <div class="summary-denom">out of 30 questions</div>
+
+      <div class="summary-stats-grid">
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumAccuracyVal" style="color: var(--primary);">0%</div>
+          <div class="stat-box-label">Accuracy</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumCorrectVal" style="color: var(--success);">0</div>
+          <div class="stat-box-label">Correct</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumIncorrectVal" style="color: var(--danger);">0</div>
+          <div class="stat-box-label">Incorrect</div>
+        </div>
+      </div>
+
+      <div class="summary-actions">
+        <button class="nav-action-btn btn-next-highlight" id="btnSumReview">Review All Answers</button>
+        <button class="nav-action-btn" id="btnSumRetake">Retake This Week</button>
+        <a href="quiz_week11.html" class="nav-action-btn" style="text-decoration: none; justify-content: center; background: rgba(var(--accent-rgb), 0.15); border-color: rgba(var(--accent-rgb), 0.4); color: #a5b4fc;">
+          Week 11 &rarr;
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Link Footer -->
+  <footer class="page-footer-nav">
+    <div class="footer-inner">
+      <a href="quiz_week09.html" class="hub-link">&larr; Week 9</a>
+      <span style="font-size: 0.85rem; color: var(--text-dim); text-align: center;">NPTEL Cloud Computing &bull; IIT Kharagpur</span>
+      <a href="quiz_week11.html" class="hub-link">Week 11 &rarr;</a>
+    </div>
+  </footer>
+
+  <!-- Quiz Engine Script -->
+  <script>
+    const QUESTIONS = [{"id": 1, "week": "Week 10", "type": "MCQ", "title": "Condition Increasing Live Migration Duration", "question": "During live migration of a VM, which condition is <strong>most likely</strong> to increase the total migration time?", "options": ["Low rate of memory-page modification by the VM", "High rate of memory-page modification during migration", "Increasing the number of CPU cores on the destination host", "Disabling disk I/O operations"], "answer": [1], "explanation": "In pre-copy live migration, the hypervisor iteratively transfers pages modified ('dirtied') by the VM during preceding rounds. If the guest OS exhibits a high rate of memory dirtying ($D \\ge R$), each iteration generates substantial new dirty pages, delaying convergence and prolonging total migration duration.", "question_html": "During live migration of a VM, which condition is <strong>most likely</strong> to increase the total migration time?", "options_html": ["Low rate of memory-page modification by the VM", "High rate of memory-page modification during migration", "Increasing the number of CPU cores on the destination host", "Disabling disk I/O operations"], "explanation_html": "In pre-copy live migration, the hypervisor iteratively transfers pages modified ('dirtied') by the VM during preceding rounds. If the guest OS exhibits a high rate of memory dirtying (<span class=\"math-inline\">D &ge; R</span>), each iteration generates substantial new dirty pages, delaying convergence and prolonging total migration duration."}, {"id": 2, "week": "Week 10", "type": "MCQ", "title": "Post-Copy Live Migration Mechanics", "question": "Which live VM migration technique starts the VM on the destination host <strong>first</strong> and then fetches memory pages from the source host on demand as they are accessed?", "options": ["Pre-copy live migration", "Cold migration", "Post-copy migration", "Snapshot restoration"], "answer": [2], "explanation": "<strong>Post-copy migration</strong> briefly suspends the VM at the source, copies the minimum CPU execution state to the destination host, immediately resumes VM execution at the destination, and pulls memory pages across the network on-demand when page faults occur.", "question_html": "Which live VM migration technique starts the VM on the destination host <strong>first</strong> and then fetches memory pages from the source host on demand as they are accessed?", "options_html": ["Pre-copy live migration", "Cold migration", "Post-copy migration", "Snapshot restoration"], "explanation_html": "<strong>Post-copy migration</strong> briefly suspends the VM at the source, copies the minimum CPU execution state to the destination host, immediately resumes VM execution at the destination, and pulls memory pages across the network on-demand when page faults occur."}, {"id": 3, "week": "Week 10", "type": "MCQ", "title": "Minimizing Live Migration Data and Energy", "question": "Which technique is <strong>most likely</strong> to reduce the total data transferred and energy consumed during pre-copy live migration?", "options": ["Increasing the VM's memory allocation size", "Compressing memory pages before network transmission", "Disabling network switches during migration", "Running memory-intensive benchmark stress tests"], "answer": [1], "explanation": "Memory page compression (delta compression and run-length encoding) reduces the gross volume of bytes sent across the network link, thereby shortening transmission time, lowering network utilization, and cutting overall transceiver energy consumption.", "question_html": "Which technique is <strong>most likely</strong> to reduce the total data transferred and energy consumed during pre-copy live migration?", "options_html": ["Increasing the VM's memory allocation size", "Compressing memory pages before network transmission", "Disabling network switches during migration", "Running memory-intensive benchmark stress tests"], "explanation_html": "Memory page compression (delta compression and run-length encoding) reduces the gross volume of bytes sent across the network link, thereby shortening transmission time, lowering network utilization, and cutting overall transceiver energy consumption."}, {"id": 4, "week": "Week 10", "type": "MCQ", "title": "Resource Management to Prevent Fog Overload", "question": "What resource management strategy is <strong>most important</strong> to prevent overload when many edge devices send telemetry to nearby fog nodes simultaneously?", "options": ["Restricting all communication exclusively to satellite links", "Permanently powering off half of all fog nodes", "Dynamic load balancing and workload offloading among neighboring fog nodes", "Doubling the display refresh rate on edge devices"], "answer": [2], "explanation": "Dynamic load balancing, cooperative task shedding, and peer-to-peer workload offloading among adjacent fog nodes distribute incoming traffic bursts evenly, preventing individual fog servers from suffering buffer overflows and resource exhaustion.", "question_html": "What resource management strategy is <strong>most important</strong> to prevent overload when many edge devices send telemetry to nearby fog nodes simultaneously?", "options_html": ["Restricting all communication exclusively to satellite links", "Permanently powering off half of all fog nodes", "Dynamic load balancing and workload offloading among neighboring fog nodes", "Doubling the display refresh rate on edge devices"], "explanation_html": "Dynamic load balancing, cooperative task shedding, and peer-to-peer workload offloading among adjacent fog nodes distribute incoming traffic bursts evenly, preventing individual fog servers from suffering buffer overflows and resource exhaustion."}, {"id": 5, "week": "Week 10", "type": "MCQ", "title": "Kubernetes Pod Placement Component", "question": "A Kubernetes cluster has several worker nodes. A newly created Pod is waiting to be assigned to an appropriate node based on CPU and memory availability. Which component performs this scheduling task?", "options": ["kube-scheduler", "kubelet", "etcd", "kube-proxy"], "answer": [0], "explanation": "The <strong>kube-scheduler</strong> monitors newly created Pods with no assigned node and selects the optimal worker node based on resource requirements, affinity/anti-affinity rules, taints/tolerations, and data locality.", "question_html": "A Kubernetes cluster has several worker nodes. A newly created Pod is waiting to be assigned to an appropriate node based on CPU and memory availability. Which component performs this scheduling task?", "options_html": ["kube-scheduler", "kubelet", "etcd", "kube-proxy"], "explanation_html": "The <strong>kube-scheduler</strong> monitors newly created Pods with no assigned node and selects the optimal worker node based on resource requirements, affinity/anti-affinity rules, taints/tolerations, and data locality."}, {"id": 6, "week": "Week 10", "type": "MCQ", "title": "Docker Build Workflow Artifact", "question": "Consider the standard container lifecycle: <code>Dockerfile &rarr; docker build &rarr; [ ? ] &rarr; docker run</code>. What is produced by <code>docker build</code> that is subsequently executed by <code>docker run</code>?", "options": ["Virtual Machine disk image (.vmdk)", "Docker Image", "Linux kernel source code", "Bare-metal hypervisor"], "answer": [1], "explanation": "The <code>docker build</code> command reads a Dockerfile and packages the instructions into an immutable, layered <strong>Docker Image</strong>. Running <code>docker run</code> instantiates an active container from this image.", "question_html": "Consider the standard container lifecycle: <code>Dockerfile &rarr; docker build &rarr; [ ? ] &rarr; docker run</code>. What is produced by <code>docker build</code> that is subsequently executed by <code>docker run</code>?", "options_html": ["Virtual Machine disk image (.vmdk)", "Docker Image", "Linux kernel source code", "Bare-metal hypervisor"], "explanation_html": "The <code>docker build</code> command reads a Dockerfile and packages the instructions into an immutable, layered <strong>Docker Image</strong>. Running <code>docker run</code> instantiates an active container from this image."}, {"id": 7, "week": "Week 10", "type": "MCQ", "title": "Division of Roles: Linux Namespaces vs cgroups", "question": "Which statement <strong>correctly describes</strong> the division of responsibilities between Linux Namespaces and Control Groups (cgroups)?", "options": ["cgroups isolate process visibility, while namespaces meter CPU usage.", "Namespaces provide isolation of processes and system resources (what processes see), while cgroups regulate and meter resource usage (what processes consume).", "Both namespaces and cgroups perform identical memory encryption functions.", "Namespaces are used exclusively for physical servers, while cgroups are used only for virtual disks."], "answer": [1], "explanation": "<strong>Namespaces</strong> partition system views (process trees, network interfaces, mount points), ensuring a container cannot see outside resources. <strong>cgroups</strong> meter, throttle, and enforce hardware resource limits (CPU shares, memory ceilings, I/O rates).", "question_html": "Which statement <strong>correctly describes</strong> the division of responsibilities between Linux Namespaces and Control Groups (cgroups)?", "options_html": ["cgroups isolate process visibility, while namespaces meter CPU usage.", "Namespaces provide isolation of processes and system resources (what processes see), while cgroups regulate and meter resource usage (what processes consume).", "Both namespaces and cgroups perform identical memory encryption functions.", "Namespaces are used exclusively for physical servers, while cgroups are used only for virtual disks."], "explanation_html": "<strong>Namespaces</strong> partition system views (process trees, network interfaces, mount points), ensuring a container cannot see outside resources. <strong>cgroups</strong> meter, throttle, and enforce hardware resource limits (CPU shares, memory ceilings, I/O rates)."}, {"id": 8, "week": "Week 10", "type": "MCQ", "title": "Cold Migration Duration Computation", "question": "A VM with memory size $V_m = 32\\text{ GB}$ is migrated using cold (offline) migration over a dedicated network link with usable sustained throughput $R = 16\\text{ MB/s}$. Approximately how long will the transfer take?", "options": ["About 2 minutes", "About 34 minutes", "About 4 hours", "About 30 seconds"], "answer": [1], "explanation": "$V_m = 32 \\times 1024\\text{ MB} = 32,768\\text{ MB}$.<br>$T = \\frac{32,768\\text{ MB}}{16\\text{ MB/s}} = 2048\\text{ seconds} = \\frac{2048}{60} \\approx 34.13\\text{ minutes}$.", "question_html": "A VM with memory size <span class=\"math-inline\">V<sub>m</sub> = 32<span class=\"math-txt\"> GB</span></span> is migrated using cold (offline) migration over a dedicated network link with usable sustained throughput <span class=\"math-inline\">R = 16<span class=\"math-txt\"> MB/s</span></span>. Approximately how long will the transfer take?", "options_html": ["About 2 minutes", "About 34 minutes", "About 4 hours", "About 30 seconds"], "explanation_html": "<span class=\"math-inline\">V<sub>m</sub> = 32 &times; 1024<span class=\"math-txt\"> MB</span> = 32,768<span class=\"math-txt\"> MB</span></span>.<br><span class=\"math-inline\">T = \\frac{32,768<span class=\"math-txt\"> MB</span>}{16<span class=\"math-txt\"> MB/s</span>} = 2048<span class=\"math-txt\"> seconds</span> = <span class=\"frac\"><span class=\"num\">2048</span><span class=\"den\">60</span></span> &approx; 34.13<span class=\"math-txt\"> minutes</span></span>."}, {"id": 9, "week": "Week 10", "type": "MCQ", "title": "Docker Named Volume Persistence Behavior", "question": "A database container storing critical transaction data inside a <strong>Docker named volume</strong> is accidentally deleted with <code>docker rm -f</code>. What happens to the database records?", "options": ["All database records are permanently erased from the physical hard drive.", "The data persists safely within the named volume on the host filesystem and can be remounted by a new container.", "The data is uploaded to a public GitHub repository.", "The host machine immediately reboots."], "answer": [1], "explanation": "Docker named volumes are decoupled from container lifecycles. Removing a container has zero impact on attached named volumes (located at <code>/var/lib/docker/volumes/</code>), preserving all persistent data intact.", "question_html": "A database container storing critical transaction data inside a <strong>Docker named volume</strong> is accidentally deleted with <code>docker rm -f</code>. What happens to the database records?", "options_html": ["All database records are permanently erased from the physical hard drive.", "The data persists safely within the named volume on the host filesystem and can be remounted by a new container.", "The data is uploaded to a public GitHub repository.", "The host machine immediately reboots."], "explanation_html": "Docker named volumes are decoupled from container lifecycles. Removing a container has zero impact on attached named volumes (located at <code>/var/lib/docker/volumes/</code>), preserving all persistent data intact."}, {"id": 10, "week": "Week 10", "type": "MCQ", "title": "Fundamental Architectural Difference: Containers vs VMs", "question": "Which of the following represents the <strong>fundamental architectural distinction</strong> between application containers and virtual machines?", "options": ["Containers share the host operating system kernel and isolate user space, whereas VMs virtualize hardware and execute independent guest OS kernels.", "VMs execute without an operating system, whereas containers require five guest kernels.", "Containers cannot run on Linux operating systems.", "VMs always consume fewer system resources than containers."], "answer": [0], "explanation": "Containers utilize OS-level virtualization to execute applications in isolated user spaces sharing the single host OS kernel. VMs use hypervisors to virtualize physical hardware, requiring a complete guest OS kernel for every instance.", "question_html": "Which of the following represents the <strong>fundamental architectural distinction</strong> between application containers and virtual machines?", "options_html": ["Containers share the host operating system kernel and isolate user space, whereas VMs virtualize hardware and execute independent guest OS kernels.", "VMs execute without an operating system, whereas containers require five guest kernels.", "Containers cannot run on Linux operating systems.", "VMs always consume fewer system resources than containers."], "explanation_html": "Containers utilize OS-level virtualization to execute applications in isolated user spaces sharing the single host OS kernel. VMs use hypervisors to virtualize physical hardware, requiring a complete guest OS kernel for every instance."}, {"id": 11, "week": "Week 10", "type": "MCQ", "title": "Pre-Copy Iterative Convergence Mathematical Condition", "question": "In pre-copy live migration, let $D$ be the rate at which the running VM modifies (dirties) memory pages, and let $R$ be the network transmission throughput. Under what condition will the iterative rounds <strong>converge</strong> toward a small remaining dirty set?", "options": ["$D < R$", "$D > R$", "$D = 2R$", "$D \\times R = 0$"], "answer": [0], "explanation": "Convergence requires that the rate of dirty page generation $D$ is strictly strictly less than the transmission throughput $R$ ($D < R$). If $D \\ge R$, each iteration generates more dirty pages than the link can transfer in that time window, preventing convergence.", "question_html": "In pre-copy live migration, let <span class=\"math-inline\">D</span> be the rate at which the running VM modifies (dirties) memory pages, and let <span class=\"math-inline\">R</span> be the network transmission throughput. Under what condition will the iterative rounds <strong>converge</strong> toward a small remaining dirty set?", "options_html": ["<span class=\"math-inline\">D < R</span>", "<span class=\"math-inline\">D > R</span>", "<span class=\"math-inline\">D = 2R</span>", "<span class=\"math-inline\">D &times; R = 0</span>"], "explanation_html": "Convergence requires that the rate of dirty page generation <span class=\"math-inline\">D</span> is strictly strictly less than the transmission throughput <span class=\"math-inline\">R</span> (<span class=\"math-inline\">D < R</span>). If <span class=\"math-inline\">D &ge; R</span>, each iteration generates more dirty pages than the link can transfer in that time window, preventing convergence."}, {"id": 12, "week": "Week 10", "type": "MCQ", "title": "Pre-Copy Stop-and-Copy Downtime Formula", "question": "In pre-copy live migration, when the remaining dirty memory volume reaches a small threshold $V_{dirty}^{final}$ and the VM is briefly suspended, what is the formula for application <strong>service downtime</strong> $T_{down}$?", "options": ["$T_{down} = \\frac{V_m}{R}$", "$T_{down} = \\frac{V_{dirty}^{final}}{R} + T_{cpu}$", "$T_{down} = \\frac{R}{V_{dirty}^{final}} \\times T_{cpu}$", "$T_{down} = T_{total} - T_{cpu}$"], "answer": [1], "explanation": "Service downtime is the period during which the VM is halted: the time to transfer the final batch of dirty pages ($V_{dirty}^{final} / R$) plus the time to transfer CPU register contexts and resume on the destination ($T_{cpu}$), typically 50–500 ms.", "question_html": "In pre-copy live migration, when the remaining dirty memory volume reaches a small threshold <span class=\"math-inline\">V<sub>dirty</sub><sup>final</sup></span> and the VM is briefly suspended, what is the formula for application <strong>service downtime</strong> <span class=\"math-inline\">T<sub>down</sub></span>?", "options_html": ["<span class=\"math-inline\">T<sub>down</sub> = <span class=\"frac\"><span class=\"num\">V<sub>m</sub></span><span class=\"den\">R</span></span></span>", "<span class=\"math-inline\">T<sub>down</sub> = \\frac{V<sub>dirty</sub><sup>final</sup>}{R} + T<sub>cpu</sub></span>", "<span class=\"math-inline\">T<sub>down</sub> = <span class=\"frac\"><span class=\"num\">R</span><span class=\"den\">V<sub>dirty</span></span><sup>final</sup></sub> &times; T<sub>cpu</sub></span>", "<span class=\"math-inline\">T<sub>down</sub> = T<sub>total</sub> - T<sub>cpu</sub></span>"], "explanation_html": "Service downtime is the period during which the VM is halted: the time to transfer the final batch of dirty pages (<span class=\"math-inline\">V<sub>dirty</sub><sup>final</sup> / R</span>) plus the time to transfer CPU register contexts and resume on the destination (<span class=\"math-inline\">T<sub>cpu</sub></span>), typically 50–500 ms."}, {"id": 13, "week": "Week 10", "type": "MCQ", "title": "Post-Copy Live Migration Major Risk", "question": "What is the primary operational <strong>vulnerability or hazard</strong> associated with pure post-copy live migration compared to pre-copy migration?", "options": ["It consumes ten times more network bandwidth than pre-copy.", "If the network connection fails or the source host crashes while the VM is executing on the destination, the VM suffers unrecoverable failure because parts of its memory still reside solely at the source.", "It cannot run on 64-bit processors.", "It requires all hard drives to be physically unplugged."], "answer": [1], "explanation": "In post-copy, the active VM runs on the destination while memory remains split between source and destination. A network partition or source host failure before all pages are pulled results in fatal memory loss and catastrophic VM crash. Pre-copy retains a complete working image at the source until transfer completes.", "question_html": "What is the primary operational <strong>vulnerability or hazard</strong> associated with pure post-copy live migration compared to pre-copy migration?", "options_html": ["It consumes ten times more network bandwidth than pre-copy.", "If the network connection fails or the source host crashes while the VM is executing on the destination, the VM suffers unrecoverable failure because parts of its memory still reside solely at the source.", "It cannot run on 64-bit processors.", "It requires all hard drives to be physically unplugged."], "explanation_html": "In post-copy, the active VM runs on the destination while memory remains split between source and destination. A network partition or source host failure before all pages are pulled results in fatal memory loss and catastrophic VM crash. Pre-copy retains a complete working image at the source until transfer completes."}, {"id": 14, "week": "Week 10", "type": "MCQ", "title": "Network Redirection via Gratuitous ARP (GARP)", "question": "When a VM successfully completes live migration to a new physical host on a different switch port while retaining its original IP address, how does the hypervisor update the physical network switches without disrupting TCP connections?", "options": ["It emits a <strong>Gratuitous ARP (GARP)</strong> broadcast packet, prompting switches to update their CAM (MAC address) forwarding tables.", "It instructs all client devices on the Internet to reboot their operating systems.", "It assigns a new public IP address and invalidates all existing DNS records.", "It re-cables the physical Ethernet connections automatically."], "answer": [0], "explanation": "A <strong>Gratuitous ARP (GARP)</strong> broadcast announces the VM's MAC address on the target switch port. Network switches instantly update their Layer-2 Content Addressable Memory (CAM) tables, seamlessly redirecting subsequent packets to the new physical port without dropping active TCP connections.", "question_html": "When a VM successfully completes live migration to a new physical host on a different switch port while retaining its original IP address, how does the hypervisor update the physical network switches without disrupting TCP connections?", "options_html": ["It emits a <strong>Gratuitous ARP (GARP)</strong> broadcast packet, prompting switches to update their CAM (MAC address) forwarding tables.", "It instructs all client devices on the Internet to reboot their operating systems.", "It assigns a new public IP address and invalidates all existing DNS records.", "It re-cables the physical Ethernet connections automatically."], "explanation_html": "A <strong>Gratuitous ARP (GARP)</strong> broadcast announces the VM's MAC address on the target switch port. Network switches instantly update their Layer-2 Content Addressable Memory (CAM) tables, seamlessly redirecting subsequent packets to the new physical port without dropping active TCP connections."}, {"id": 15, "week": "Week 10", "type": "MCQ", "title": "Shared Storage Prerequisite in Live Migration", "question": "Why do production cloud data centers almost universally utilize <strong>Shared Network Storage (SAN, NAS, or Ceph)</strong> for virtual machines undergoing live migration?", "options": ["Because hypervisors cannot read local hard drives.", "It eliminates the need to migrate large persistent disk images across the network; only memory pages and CPU register state need to be transferred.", "Shared storage makes memory migration completely unnecessary.", "It decreases RAM access speeds."], "answer": [1], "explanation": "If disks resided only locally on the host, migrating a 500 GB virtual disk over the network would take hours. With shared SAN/NAS/Ceph, both source and target hypervisors access the exact same disk storage blocks; only dynamic RAM state and CPU registers must be transferred.", "question_html": "Why do production cloud data centers almost universally utilize <strong>Shared Network Storage (SAN, NAS, or Ceph)</strong> for virtual machines undergoing live migration?", "options_html": ["Because hypervisors cannot read local hard drives.", "It eliminates the need to migrate large persistent disk images across the network; only memory pages and CPU register state need to be transferred.", "Shared storage makes memory migration completely unnecessary.", "It decreases RAM access speeds."], "explanation_html": "If disks resided only locally on the host, migrating a 500 GB virtual disk over the network would take hours. With shared SAN/NAS/Ceph, both source and target hypervisors access the exact same disk storage blocks; only dynamic RAM state and CPU registers must be transferred."}, {"id": 16, "week": "Week 10", "type": "MCQ", "title": "Linux PID Namespace Isolation Mechanics", "question": "Inside an isolated Docker container, a web server process appears with Process ID <code>1</code>. What Process ID does that exact same process have when viewed from the host operating system kernel?", "options": ["It also has PID 1 on the host OS.", "It has a standard non-zero PID assigned by the host kernel (e.g., PID 18452), because Linux PID namespaces provide virtualized process ID trees.", "It has a negative PID (-1).", "It does not exist in the host kernel process table at all."], "answer": [1], "explanation": "Under the <strong>PID namespace</strong>, process IDs are nested. The entrypoint process is mapped to virtual PID 1 inside the container's isolated namespace, but from the host kernel's root namespace, it is simply a standard Linux process with its own unique host PID.", "question_html": "Inside an isolated Docker container, a web server process appears with Process ID <code>1</code>. What Process ID does that exact same process have when viewed from the host operating system kernel?", "options_html": ["It also has PID 1 on the host OS.", "It has a standard non-zero PID assigned by the host kernel (e.g., PID 18452), because Linux PID namespaces provide virtualized process ID trees.", "It has a negative PID (-1).", "It does not exist in the host kernel process table at all."], "explanation_html": "Under the <strong>PID namespace</strong>, process IDs are nested. The entrypoint process is mapped to virtual PID 1 inside the container's isolated namespace, but from the host kernel's root namespace, it is simply a standard Linux process with its own unique host PID."}, {"id": 17, "week": "Week 10", "type": "MCQ", "title": "Linux Network Namespace (NET) Primitives", "question": "How does the Linux kernel interconnect an isolated container's Network (NET) namespace with the host's default network stack?", "options": ["Using a physical Ethernet patch cable", "Using a Virtual Ethernet pair (<code>veth</code> pair), where one interface sits inside the container namespace (<code>eth0</code>) and the peer sits on the host bridge (<code>veth...</code>)", "By disabling TCP/IP and running exclusively over Bluetooth", "Through hardcoded memory pointer sharing"], "answer": [1], "explanation": "Docker constructs a <strong>veth pair</strong>—a virtual bidirectional tunnel acting like a virtual wire. One end is placed in the container's NET namespace (renamed <code>eth0</code>) and the other is connected to the host's virtual bridge (<code>docker0</code>).", "question_html": "How does the Linux kernel interconnect an isolated container's Network (NET) namespace with the host's default network stack?", "options_html": ["Using a physical Ethernet patch cable", "Using a Virtual Ethernet pair (<code>veth</code> pair), where one interface sits inside the container namespace (<code>eth0</code>) and the peer sits on the host bridge (<code>veth...</code>)", "By disabling TCP/IP and running exclusively over Bluetooth", "Through hardcoded memory pointer sharing"], "explanation_html": "Docker constructs a <strong>veth pair</strong>—a virtual bidirectional tunnel acting like a virtual wire. One end is placed in the container's NET namespace (renamed <code>eth0</code>) and the other is connected to the host's virtual bridge (<code>docker0</code>)."}, {"id": 18, "week": "Week 10", "type": "MCQ", "title": "Linux cgroups Out-Of-Memory (OOM) Killer", "question": "When a container's processes exceed the hard memory limit configured via <code>--memory=512m</code> (cgroups <code>memory.limit_in_bytes</code>), what action is triggered by the Linux kernel?", "options": ["The host physical server shuts down immediately.", "The Linux Out-Of-Memory (OOM) killer terminates processes within that container cgroup to enforce the memory ceiling.", "The kernel automatically orders additional physical RAM from an online store.", "The kernel compresses the hard drive."], "answer": [1], "explanation": "When an allocation request in a cgroup exceeds <code>memory.limit_in_bytes</code> and memory cannot be reclaimed by swapping or page cache eviction, the kernel <strong>OOM killer</strong> invokes <code>oom_kill_process()</code>, selecting and terminating a process in that cgroup.", "question_html": "When a container's processes exceed the hard memory limit configured via <code>--memory=512m</code> (cgroups <code>memory.limit_in_bytes</code>), what action is triggered by the Linux kernel?", "options_html": ["The host physical server shuts down immediately.", "The Linux Out-Of-Memory (OOM) killer terminates processes within that container cgroup to enforce the memory ceiling.", "The kernel automatically orders additional physical RAM from an online store.", "The kernel compresses the hard drive."], "explanation_html": "When an allocation request in a cgroup exceeds <code>memory.limit_in_bytes</code> and memory cannot be reclaimed by swapping or page cache eviction, the kernel <strong>OOM killer</strong> invokes <code>oom_kill_process()</code>, selecting and terminating a process in that cgroup."}, {"id": 19, "week": "Week 10", "type": "MCQ", "title": "Docker Multi-Stage Build Optimization", "question": "What is the primary benefit of utilizing <strong>Docker Multi-Stage Builds</strong> in production CI/CD pipelines?", "options": ["Running multiple operating systems simultaneously on a single CPU core", "Separating build-time dependencies (compilers, SDKs, dev headers) from runtime artifacts, producing minimal, highly secure production images containing only the compiled binary", "Encrypting the Dockerfile source code", "Speeding up internet download speeds by 500%"], "answer": [1], "explanation": "Multi-stage builds allow developers to define multiple <code>FROM</code> stages in a single Dockerfile. Heavy compilers and build tools (Go SDK, Maven, GCC) exist only in intermediate build stages; only final compiled binaries are copied into the lean production image (e.g., Alpine or scratch), drastically reducing image size and attack surface.", "question_html": "What is the primary benefit of utilizing <strong>Docker Multi-Stage Builds</strong> in production CI/CD pipelines?", "options_html": ["Running multiple operating systems simultaneously on a single CPU core", "Separating build-time dependencies (compilers, SDKs, dev headers) from runtime artifacts, producing minimal, highly secure production images containing only the compiled binary", "Encrypting the Dockerfile source code", "Speeding up internet download speeds by 500%"], "explanation_html": "Multi-stage builds allow developers to define multiple <code>FROM</code> stages in a single Dockerfile. Heavy compilers and build tools (Go SDK, Maven, GCC) exist only in intermediate build stages; only final compiled binaries are copied into the lean production image (e.g., Alpine or scratch), drastically reducing image size and attack surface."}, {"id": 20, "week": "Week 10", "type": "MCQ", "title": "Kubernetes Taints and Tolerations", "question": "In Kubernetes, how do <strong>Taints and Tolerations</strong> function together to govern Pod placement?", "options": ["Taints allow worker nodes to download Docker images faster.", "A Node is applied with a <strong>Taint</strong> to repel certain Pods, while a Pod must specify a matching <strong>Toleration</strong> to be scheduled onto that tainted node.", "Taints encrypt pod network traffic using TLS certificates.", "Tolerations automatically scale the number of replica pods."], "answer": [1], "explanation": "<strong>Taints</strong> allow a node to repel a set of pods (e.g., dedicated GPU nodes or master control plane nodes marked with <code>NoSchedule</code>). <strong>Tolerations</strong> applied to Pods allow (but do not require) the pods to schedule onto nodes with matching taints.", "question_html": "In Kubernetes, how do <strong>Taints and Tolerations</strong> function together to govern Pod placement?", "options_html": ["Taints allow worker nodes to download Docker images faster.", "A Node is applied with a <strong>Taint</strong> to repel certain Pods, while a Pod must specify a matching <strong>Toleration</strong> to be scheduled onto that tainted node.", "Taints encrypt pod network traffic using TLS certificates.", "Tolerations automatically scale the number of replica pods."], "explanation_html": "<strong>Taints</strong> allow a node to repel a set of pods (e.g., dedicated GPU nodes or master control plane nodes marked with <code>NoSchedule</code>). <strong>Tolerations</strong> applied to Pods allow (but do not require) the pods to schedule onto nodes with matching taints."}, {"id": 21, "week": "Week 10", "type": "MCQ", "title": "Post-Copy Network Fault Paging", "question": "In post-copy migration, when the active VM running on the target tries to read a memory page that has not yet been transferred from the source, what mechanism handles this event?", "options": ["Hardware blue-screen crash", "A <strong>network page fault</strong> is trapped by the hypervisor (e.g., via userfaultfd in Linux), which halts the faulting thread and requests that specific page over the network with top priority", "The VM silently reads all zeroes and continues", "The CPU instruction is permanently skipped"], "answer": [1], "explanation": "Using kernel facilities like Linux <code>userfaultfd</code>, the hypervisor intercepts the page fault, pauses the requesting vCPU thread, fetches the missing memory page across the network from the source, installs it into destination RAM, and resumes the faulting vCPU.", "question_html": "In post-copy migration, when the active VM running on the target tries to read a memory page that has not yet been transferred from the source, what mechanism handles this event?", "options_html": ["Hardware blue-screen crash", "A <strong>network page fault</strong> is trapped by the hypervisor (e.g., via userfaultfd in Linux), which halts the faulting thread and requests that specific page over the network with top priority", "The VM silently reads all zeroes and continues", "The CPU instruction is permanently skipped"], "explanation_html": "Using kernel facilities like Linux <code>userfaultfd</code>, the hypervisor intercepts the page fault, pauses the requesting vCPU thread, fetches the missing memory page across the network from the source, installs it into destination RAM, and resumes the faulting vCPU."}, {"id": 22, "week": "Week 10", "type": "MCQ", "title": "VM State Tuple Components", "question": "In formal cloud virtualization literature, the full state of an executing virtual machine is represented by the tuple $\\mathcal{S}_{\\text{VM}} = \\langle \\mathcal{C}, \\mathcal{M}, \\mathcal{D}, \\mathcal{N}, \\mathcal{I} \\rangle$. Which component corresponds to $\\mathcal{M}$?", "options": ["Persistent Hard Disk Storage", "Volatile Main Memory (RAM) address space", "Network IP and Socket state", "CPU Program Counter and registers"], "answer": [1], "explanation": "$\\mathcal{M}$ represents Main Memory (RAM pages), $\\mathcal{C}$ is CPU register context, $\\mathcal{D}$ is persistent disk storage, $\\mathcal{N}$ is network state (IP/sockets), and $\\mathcal{I}$ is virtual I/O device states.", "question_html": "In formal cloud virtualization literature, the full state of an executing virtual machine is represented by the tuple <span class=\"math-inline\">S<sub><span class=\"math-txt\">VM</span></sub> = &lang; C, M, D, N, I &rang;</span>. Which component corresponds to <span class=\"math-inline\">M</span>?", "options_html": ["Persistent Hard Disk Storage", "Volatile Main Memory (RAM) address space", "Network IP and Socket state", "CPU Program Counter and registers"], "explanation_html": "<span class=\"math-inline\">M</span> represents Main Memory (RAM pages), <span class=\"math-inline\">C</span> is CPU register context, <span class=\"math-inline\">D</span> is persistent disk storage, <span class=\"math-inline\">N</span> is network state (IP/sockets), and <span class=\"math-inline\">I</span> is virtual I/O device states."}, {"id": 23, "week": "Week 10", "type": "MCQ", "title": "Cold vs Warm vs Live Migration", "question": "How does <strong>Warm (Suspend/Resume) Migration</strong> differ from Cold and Live migration?", "options": ["In warm migration, the VM is never paused at any point.", "In warm migration, the VM is temporarily suspended, its complete memory state is copied to the destination, and then resumed; service is suspended during transfer, but active memory and execution states are preserved.", "Warm migration only works when server temperatures exceed 50 degrees Celsius.", "Warm migration converts VMs into physical servers."], "answer": [1], "explanation": "In <strong>Cold migration</strong>, the VM is powered off and booted clean. In <strong>Warm migration</strong>, the VM is suspended (frozen), its full RAM image is transferred, and resumed on the target (saving running programs, but experiencing downtime equal to memory transfer time). In <strong>Live migration</strong>, the VM continues serving requests while memory is copied concurrently.", "question_html": "How does <strong>Warm (Suspend/Resume) Migration</strong> differ from Cold and Live migration?", "options_html": ["In warm migration, the VM is never paused at any point.", "In warm migration, the VM is temporarily suspended, its complete memory state is copied to the destination, and then resumed; service is suspended during transfer, but active memory and execution states are preserved.", "Warm migration only works when server temperatures exceed 50 degrees Celsius.", "Warm migration converts VMs into physical servers."], "explanation_html": "In <strong>Cold migration</strong>, the VM is powered off and booted clean. In <strong>Warm migration</strong>, the VM is suspended (frozen), its full RAM image is transferred, and resumed on the target (saving running programs, but experiencing downtime equal to memory transfer time). In <strong>Live migration</strong>, the VM continues serving requests while memory is copied concurrently."}, {"id": 24, "week": "Week 10", "type": "MCQ", "title": "Linux Mount (MNT) Namespace and pivot_root", "question": "During container startup, which Linux system call detaches the container's filesystem view from the host root directory and makes a new directory the root filesystem of the container?", "options": ["<code>pivot_root</code>", "<code>kill</code>", "<code>chmod 777</code>", "<code>reboot</code>"], "answer": [0], "explanation": "Container runtimes use <code>pivot_root</code> within a new Mount namespace to move the host root filesystem to an old directory and make the container's rootfs the new root directory (<code>/</code>), securely confining the container to its isolated filesystem.", "question_html": "During container startup, which Linux system call detaches the container's filesystem view from the host root directory and makes a new directory the root filesystem of the container?", "options_html": ["<code>pivot_root</code>", "<code>kill</code>", "<code>chmod 777</code>", "<code>reboot</code>"], "explanation_html": "Container runtimes use <code>pivot_root</code> within a new Mount namespace to move the host root filesystem to an old directory and make the container's rootfs the new root directory (<code>/</code>), securely confining the container to its isolated filesystem."}, {"id": 25, "week": "Week 10", "type": "MCQ", "title": "Kubernetes Pod Anti-Affinity for High Availability", "question": "Why would an administrator configure <strong>Pod Anti-Affinity</strong> across Kubernetes worker nodes for a mission-critical web tier?", "options": ["To force all replicas to execute on a single physical host", "To guarantee that replica Pods are scheduled onto distinct physical nodes or availability zones, ensuring the service survives node failures", "To shut down web traffic during weekends", "To prevent the pods from communicating over the network"], "answer": [1], "explanation": "<strong>Pod Anti-Affinity</strong> prevents redundant replica Pods of the same service from being placed on the same physical host or fault domain, preventing a single hardware failure from taking down the entire service.", "question_html": "Why would an administrator configure <strong>Pod Anti-Affinity</strong> across Kubernetes worker nodes for a mission-critical web tier?", "options_html": ["To force all replicas to execute on a single physical host", "To guarantee that replica Pods are scheduled onto distinct physical nodes or availability zones, ensuring the service survives node failures", "To shut down web traffic during weekends", "To prevent the pods from communicating over the network"], "explanation_html": "<strong>Pod Anti-Affinity</strong> prevents redundant replica Pods of the same service from being placed on the same physical host or fault domain, preventing a single hardware failure from taking down the entire service."}, {"id": 26, "week": "Week 10", "type": "MCQ", "title": "Memory Dirtying Throttling in Live Migration", "question": "If a write-intensive database VM's memory dirty rate exceeds network throughput ($D > R$), what technique can hypervisors employ to force pre-copy convergence?", "options": ["CPU throttling: dynamically slowing down or pausing guest vCPUs to suppress the memory dirtying rate below network bandwidth", "Disconnecting the power cord from the database server", "Deleting random memory pages permanently", "Switching the database to read-only forever"], "answer": [0], "explanation": "When $D > R$, hypervisors (such as KVM/QEMU and VMware vSphere) employ <strong>CPU throttling</strong> (auto-converge): they artificially insert micro-sleep delays into the guest vCPUs to depress write operations, forcing $D < R$ until pre-copy finishes.", "question_html": "If a write-intensive database VM's memory dirty rate exceeds network throughput (<span class=\"math-inline\">D > R</span>), what technique can hypervisors employ to force pre-copy convergence?", "options_html": ["CPU throttling: dynamically slowing down or pausing guest vCPUs to suppress the memory dirtying rate below network bandwidth", "Disconnecting the power cord from the database server", "Deleting random memory pages permanently", "Switching the database to read-only forever"], "explanation_html": "When <span class=\"math-inline\">D > R</span>, hypervisors (such as KVM/QEMU and VMware vSphere) employ <strong>CPU throttling</strong> (auto-converge): they artificially insert micro-sleep delays into the guest vCPUs to depress write operations, forcing <span class=\"math-inline\">D < R</span> until pre-copy finishes."}, {"id": 27, "week": "Week 10", "type": "MCQ", "title": "Docker Bind Mount vs Named Volume", "question": "What is the key practical difference between a <strong>Docker Named Volume</strong> and a <strong>Bind Mount</strong>?", "options": ["Named volumes can only store text files, while bind mounts store binaries.", "Named volumes are completely managed by Docker in a dedicated directory on the host (<code>/var/lib/docker/volumes/</code>), whereas bind mounts map an arbitrary host directory path directly into the container.", "Bind mounts require specialized hypervisor drivers.", "Named volumes are automatically deleted when the container stops."], "answer": [1], "explanation": "<strong>Named Volumes</strong> are managed by Docker within storage areas insulated from host OS direct tampering, supporting volume drivers, backups, and cross-container sharing. <strong>Bind Mounts</strong> rely on host directory paths (e.g., <code>-v /home/user/app:/app</code>) and host file permissions.", "question_html": "What is the key practical difference between a <strong>Docker Named Volume</strong> and a <strong>Bind Mount</strong>?", "options_html": ["Named volumes can only store text files, while bind mounts store binaries.", "Named volumes are completely managed by Docker in a dedicated directory on the host (<code>/var/lib/docker/volumes/</code>), whereas bind mounts map an arbitrary host directory path directly into the container.", "Bind mounts require specialized hypervisor drivers.", "Named volumes are automatically deleted when the container stops."], "explanation_html": "<strong>Named Volumes</strong> are managed by Docker within storage areas insulated from host OS direct tampering, supporting volume drivers, backups, and cross-container sharing. <strong>Bind Mounts</strong> rely on host directory paths (e.g., <code>-v /home/user/app:/app</code>) and host file permissions."}, {"id": 28, "week": "Week 10", "type": "MCQ", "title": "Post-Copy Background Pre-Copy Phase", "question": "In advanced hybrid/post-copy migration implementations, how are non-accessed memory pages transferred after VM execution resumes on the destination?", "options": ["They are never transferred.", "A background thread concurrently 'pushes' remaining pages from source to destination while on-demand network page faults handle active accesses with top priority.", "They are printed out on paper.", "They are transferred over analog telephone modems."], "answer": [1], "explanation": "Pure demand paging would make post-copy slow. Modern post-copy engines run an asynchronous background thread that pushes unaccessed memory pages in parallel, while network page faults interrupt and take immediate priority whenever the active VM references a missing page.", "question_html": "In advanced hybrid/post-copy migration implementations, how are non-accessed memory pages transferred after VM execution resumes on the destination?", "options_html": ["They are never transferred.", "A background thread concurrently 'pushes' remaining pages from source to destination while on-demand network page faults handle active accesses with top priority.", "They are printed out on paper.", "They are transferred over analog telephone modems."], "explanation_html": "Pure demand paging would make post-copy slow. Modern post-copy engines run an asynchronous background thread that pushes unaccessed memory pages in parallel, while network page faults interrupt and take immediate priority whenever the active VM references a missing page."}, {"id": 29, "week": "Week 10", "type": "MSQ", "title": "Virtual Machine Migration State Elements", "question": "Which of the following elements constitute the state tuple $\\mathcal{S}_{\\text{VM}}$ that must be coordinated or transferred during VM migration? <em>(Select all that apply)</em>", "options": ["CPU execution context (registers, Program Counter)", "Volatile main memory (RAM pages)", "Virtual network configuration and socket states", "Physical motherboard copper traces"], "answer": [0, 1, 2], "explanation": "The virtual machine migration state tuple comprises CPU state, volatile memory (RAM), storage state, and virtual network state. Physical motherboard components are host hardware and are not part of the VM state tuple.", "question_html": "Which of the following elements constitute the state tuple <span class=\"math-inline\">S<sub><span class=\"math-txt\">VM</span></sub></span> that must be coordinated or transferred during VM migration? <em>(Select all that apply)</em>", "options_html": ["CPU execution context (registers, Program Counter)", "Volatile main memory (RAM pages)", "Virtual network configuration and socket states", "Physical motherboard copper traces"], "explanation_html": "The virtual machine migration state tuple comprises CPU state, volatile memory (RAM), storage state, and virtual network state. Physical motherboard components are host hardware and are not part of the VM state tuple."}, {"id": 30, "week": "Week 10", "type": "MSQ", "title": "Linux Namespaces Employed by Container Engines", "question": "Which of the following are valid <strong>Linux Namespaces</strong> used by modern container engines (Docker, Podman, containerd) to isolate processes? <em>(Select all that apply)</em>", "options": ["PID (Process ID) Namespace", "NET (Network) Namespace", "MNT (Mount) Namespace", "IPC (Inter-Process Communication) Namespace"], "answer": [0, 1, 2, 3], "explanation": "All four (PID, NET, MNT, IPC) along with UTS, USER, and CGROUP are standard Linux namespaces leveraged by container runtimes to provide isolation.", "question_html": "Which of the following are valid <strong>Linux Namespaces</strong> used by modern container engines (Docker, Podman, containerd) to isolate processes? <em>(Select all that apply)</em>", "options_html": ["PID (Process ID) Namespace", "NET (Network) Namespace", "MNT (Mount) Namespace", "IPC (Inter-Process Communication) Namespace"], "explanation_html": "All four (PID, NET, MNT, IPC) along with UTS, USER, and CGROUP are standard Linux namespaces leveraged by container runtimes to provide isolation."}];
+    const TOTAL_Q = QUESTIONS.length;
+    const WEEK_NUM = 10;
+
+    // User State
+    const state = {
+      currentIdx: 0,
+      userAnswers: {},       // qId -> [selectedIdxs]
+      userResults: {},       // qId -> boolean (true=correct, false=incorrect)
+      flagged: new Set(),
+      viewMode: 'card',       // 'card' or 'list'
+      msqTempSelections: {}  // qId -> Set of selected indices before submit
+    };
+
+    // DOM Elements
+    const cardViewContainer = document.getElementById('cardViewContainer');
+    const listViewContainer = document.getElementById('listViewContainer');
+    const headerQCtr = document.getElementById('headerQCtr');
+    const scoreText = document.getElementById('scoreText');
+    const progressFill = document.getElementById('progressFill');
+    const btnModeCard = document.getElementById('btnModeCard');
+    const btnModeList = document.getElementById('btnModeList');
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+    const btnOpenNav = document.getElementById('btnOpenNav');
+    const btnCloseNav = document.getElementById('btnCloseNav');
+    const navModalBackdrop = document.getElementById('navModalBackdrop');
+    const matrixGrid = document.getElementById('matrixGrid');
+
+    // Card View DOM
+    const cardQNumBadge = document.getElementById('cardQNumBadge');
+    const cardTypeBadge = document.getElementById('cardTypeBadge');
+    const cardFlagBtn = document.getElementById('cardFlagBtn');
+    const flagBtnText = document.getElementById('flagBtnText');
+    const cardTitle = document.getElementById('cardTitle');
+    const cardPrompt = document.getElementById('cardPrompt');
+    const cardMsqHint = document.getElementById('cardMsqHint');
+    const cardOptionsContainer = document.getElementById('cardOptionsContainer');
+    const cardMsqSubmitBtn = document.getElementById('cardMsqSubmitBtn');
+    const cardFeedbackPanel = document.getElementById('cardFeedbackPanel');
+    const cardFbStatus = document.getElementById('cardFbStatus');
+    const cardFbAnswerCallout = document.getElementById('cardFbAnswerCallout');
+    const cardFbExplanation = document.getElementById('cardFbExplanation');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+
+    // Summary Modal DOM
+    const summaryModalBackdrop = document.getElementById('summaryModalBackdrop');
+    const sumBadge = document.getElementById('sumBadge');
+    const sumScoreVal = document.getElementById('sumScoreVal');
+    const sumAccuracyVal = document.getElementById('sumAccuracyVal');
+    const sumCorrectVal = document.getElementById('sumCorrectVal');
+    const sumIncorrectVal = document.getElementById('sumIncorrectVal');
+    const btnSumReview = document.getElementById('btnSumReview');
+    const btnSumRetake = document.getElementById('btnSumRetake');
+
+    // Init Theme
+    (function initTheme() {
+      const savedTheme = localStorage.getItem('nptel_quiz_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+
+    btnThemeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('nptel_quiz_theme', next);
+    });
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    function init() {
+      buildMatrix();
+      renderCurrentCard();
+      updateScoreboard();
+      setupEvents();
+    }
+
+    function buildMatrix() {
+      matrixGrid.innerHTML = '';
+      QUESTIONS.forEach((q, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'matrix-btn';
+        btn.id = 'matBtn_' + q.id;
+        btn.textContent = q.id;
+        btn.addEventListener('click', () => {
+          state.currentIdx = idx;
+          if (state.viewMode === 'card') {
+            renderCurrentCard();
+          } else {
+            const el = document.getElementById('listQCard_' + q.id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          closeNavModal();
+        });
+        matrixGrid.appendChild(btn);
+      });
+      updateMatrixVisuals();
+    }
+
+    function updateMatrixVisuals() {
+      QUESTIONS.forEach((q, idx) => {
+        const btn = document.getElementById('matBtn_' + q.id);
+        if (!btn) return;
+        
+        btn.classList.toggle('current', idx === state.currentIdx);
+        btn.classList.toggle('flagged', state.flagged.has(q.id));
+        
+        if (state.userResults[q.id] === true) {
+          btn.className = 'matrix-btn correct' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        } else if (state.userResults[q.id] === false) {
+          btn.className = 'matrix-btn incorrect' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        } else {
+          btn.className = 'matrix-btn' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        }
+      });
+    }
+
+    function updateScoreboard() {
+      const answeredKeys = Object.keys(state.userResults);
+      const totalAnswered = answeredKeys.length;
+      let correctCount = 0;
+      answeredKeys.forEach(k => {
+        if (state.userResults[k] === true) correctCount++;
+      });
+
+      headerQCtr.textContent = 'Q ' + (state.currentIdx + 1) + ' / ' + TOTAL_Q;
+      scoreText.textContent = correctCount + ' / ' + totalAnswered;
+      
+      const pct = (totalAnswered / TOTAL_Q) * 100;
+      progressFill.style.width = pct + '%';
+      
+      updateMatrixVisuals();
+
+      // Check if all answered
+      if (totalAnswered === TOTAL_Q && !state.summaryShown) {
+        state.summaryShown = true;
+        setTimeout(showSummaryModal, 600);
+      }
+    }
+
+    // =========================================================================
+    // CARD MODE RENDERER
+    // =========================================================================
+    function renderCurrentCard() {
+      const q = QUESTIONS[state.currentIdx];
+      const isMSQ = q.type === 'MSQ';
+      const isAnswered = state.userAnswers[q.id] !== undefined;
+
+      // Meta
+      cardQNumBadge.textContent = 'Question ' + (state.currentIdx + 1) + ' of ' + TOTAL_Q;
+      cardTypeBadge.textContent = q.type;
+      cardTypeBadge.className = 'badge ' + (isMSQ ? 'badge-msq' : 'badge-mcq');
+      
+      // Flag state
+      const isFlagged = state.flagged.has(q.id);
+      cardFlagBtn.classList.toggle('flagged', isFlagged);
+      flagBtnText.textContent = isFlagged ? 'Flagged' : 'Flag';
+
+      // Title & Prompt
+      cardTitle.innerHTML = q.title;
+      cardPrompt.innerHTML = q.question_html;
+      cardMsqHint.style.display = isMSQ ? 'flex' : 'none';
+
+      // Options
+      cardOptionsContainer.innerHTML = '';
+      
+      // Initialize temp selections for MSQ
+      if (isMSQ && !state.msqTempSelections[q.id]) {
+        state.msqTempSelections[q.id] = new Set(state.userAnswers[q.id] || []);
+      }
+
+      q.options_html.forEach((optHtml, optIdx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn' + (isMSQ ? ' opt-btn-msq' : '');
+        btn.id = 'cardOpt_' + optIdx;
+
+        const letter = String.fromCharCode(65 + optIdx);
+        
+        let isSelected = false;
+        if (isAnswered) {
+          isSelected = state.userAnswers[q.id].includes(optIdx);
+        } else if (isMSQ) {
+          isSelected = state.msqTempSelections[q.id].has(optIdx);
+        }
+
+        // Format classes if answered
+        if (isAnswered) {
+          btn.classList.add('locked');
+          const isCorrect = q.answer.includes(optIdx);
+          if (isSelected && isCorrect) {
+            btn.classList.add('state-chosen-correct');
+          } else if (isSelected && !isCorrect) {
+            btn.classList.add('state-chosen-incorrect');
+          } else if (!isSelected && isCorrect) {
+            btn.classList.add('state-target-correct');
+          }
+        } else if (isMSQ && isSelected) {
+          btn.classList.add('state-msq-selected');
+        }
+
+        btn.innerHTML = `
+          <span class="opt-letter">${letter}</span>
+          <span class="opt-text">${optHtml}</span>
+        `;
+
+        btn.addEventListener('click', () => {
+          if (state.userAnswers[q.id] !== undefined) return; // Locked
+
+          if (isMSQ) {
+            // Toggle MSQ
+            if (state.msqTempSelections[q.id].has(optIdx)) {
+              state.msqTempSelections[q.id].delete(optIdx);
+            } else {
+              state.msqTempSelections[q.id].add(optIdx);
+            }
+            renderCurrentCard();
+          } else {
+            // Instant MCQ Answer
+            handleAnswerSubmit(q, [optIdx]);
+          }
+        });
+
+        cardOptionsContainer.appendChild(btn);
+      });
+
+      // MSQ Submit Button
+      if (isMSQ && !isAnswered) {
+        cardMsqSubmitBtn.style.display = 'inline-flex';
+        cardMsqSubmitBtn.disabled = state.msqTempSelections[q.id].size === 0;
+        cardMsqSubmitBtn.onclick = () => {
+          const chosen = Array.from(state.msqTempSelections[q.id]).sort();
+          handleAnswerSubmit(q, chosen);
+        };
+      } else {
+        cardMsqSubmitBtn.style.display = 'none';
+      }
+
+      // Feedback & Explanation
+      if (isAnswered) {
+        renderFeedbackPanel(cardFeedbackPanel, cardFbStatus, cardFbAnswerCallout, cardFbExplanation, q);
+        cardFeedbackPanel.style.display = 'block';
+      } else {
+        cardFeedbackPanel.style.display = 'none';
+      }
+
+      // Prev / Next button states
+      btnPrev.disabled = state.currentIdx === 0;
+      if (state.currentIdx === TOTAL_Q - 1) {
+        btnNext.innerHTML = `View Summary <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`;
+        btnNext.classList.add('btn-next-highlight');
+      } else {
+        btnNext.innerHTML = `Next Question <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+        if (isAnswered) {
+          btnNext.classList.add('btn-next-highlight');
+        } else {
+          btnNext.classList.remove('btn-next-highlight');
+        }
+      }
+
+      updateScoreboard();
+    }
+
+    // =========================================================================
+    // ANSWER PROCESSING & INSTANT FEEDBACK
+    // =========================================================================
+    function handleAnswerSubmit(q, selectedIndices) {
+      state.userAnswers[q.id] = selectedIndices;
+      
+      // Evaluate correctness
+      const correctIndices = [...q.answer].sort();
+      const userSorted = [...selectedIndices].sort();
+      
+      const isAllCorrect = (correctIndices.length === userSorted.length) &&
+        correctIndices.every((val, i) => val === userSorted[i]);
+      
+      state.userResults[q.id] = isAllCorrect;
+
+      if (state.viewMode === 'card') {
+        renderCurrentCard();
+      } else {
+        renderListCard(q);
+      }
+
+      updateScoreboard();
+    }
+
+    function renderFeedbackPanel(panelEl, statusEl, ansCalloutEl, expEl, q) {
+      const isCorrect = state.userResults[q.id];
+      const correctLetters = q.answer.map(idx => String.fromCharCode(65 + idx)).join(', ');
+
+      if (isCorrect) {
+        panelEl.className = 'feedback-panel status-correct';
+        statusEl.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          Correct! (+1 Mark)
+        `;
+      } else {
+        panelEl.className = 'feedback-panel status-incorrect';
+        statusEl.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Incorrect (0 Marks)
+        `;
+      }
+
+      ansCalloutEl.innerHTML = '<strong>Correct Answer:</strong> Option ' + correctLetters;
+      expEl.innerHTML = `<strong>Explanation:</strong> ` + q.explanation_html;
+    }
+
+    // =========================================================================
+    // LIST VIEW RENDERER (ALL 30 QUESTIONS)
+    // =========================================================================
+    function renderListView() {
+      listViewContainer.innerHTML = '';
+      QUESTIONS.forEach((q, idx) => {
+        const card = createListQuestionElement(q, idx);
+        listViewContainer.appendChild(card);
+      });
+    }
+
+    function createListQuestionElement(q, idx) {
+      const card = document.createElement('article');
+      card.className = 'question-card';
+      card.id = 'listQCard_' + q.id;
+
+      const isMSQ = q.type === 'MSQ';
+      const isAnswered = state.userAnswers[q.id] !== undefined;
+
+      // Meta
+      const metaRow = document.createElement('div');
+      metaRow.className = 'q-meta-row';
+      metaRow.innerHTML = `
+        <div class="q-tags">
+          <span class="badge badge-qnum">Question ${idx + 1} of ${TOTAL_Q}</span>
+          <span class="badge ${isMSQ ? 'badge-msq' : 'badge-mcq'}">${q.type}</span>
+        </div>
+        <button class="flag-btn ${state.flagged.has(q.id) ? 'flagged' : ''}" id="listFlag_${q.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>${state.flagged.has(q.id) ? 'Flagged' : 'Flag'}</span>
+        </button>
+      `;
+
+      metaRow.querySelector('#listFlag_' + q.id).addEventListener('click', () => {
+        if (state.flagged.has(q.id)) state.flagged.delete(q.id);
+        else state.flagged.add(q.id);
+        renderListCard(q);
+        updateMatrixVisuals();
+      });
+
+      card.appendChild(metaRow);
+
+      // Title & Prompt
+      const titleEl = document.createElement('h2');
+      titleEl.className = 'q-title';
+      titleEl.innerHTML = q.title;
+      card.appendChild(titleEl);
+
+      const promptEl = document.createElement('div');
+      promptEl.className = 'q-prompt';
+      promptEl.innerHTML = q.question_html;
+      card.appendChild(promptEl);
+
+      if (isMSQ) {
+        const msqHint = document.createElement('div');
+        msqHint.className = 'msq-hint';
+        msqHint.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Select all matching options, then click Submit Answer.`;
+        card.appendChild(msqHint);
+      }
+
+      // Options
+      const optsGrid = document.createElement('div');
+      optsGrid.className = 'options-grid';
+
+      if (isMSQ && !state.msqTempSelections[q.id]) {
+        state.msqTempSelections[q.id] = new Set(state.userAnswers[q.id] || []);
+      }
+
+      q.options_html.forEach((optHtml, optIdx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn' + (isMSQ ? ' opt-btn-msq' : '');
+        const letter = String.fromCharCode(65 + optIdx);
+        
+        let isSelected = false;
+        if (isAnswered) {
+          isSelected = state.userAnswers[q.id].includes(optIdx);
+        } else if (isMSQ) {
+          isSelected = state.msqTempSelections[q.id].has(optIdx);
+        }
+
+        if (isAnswered) {
+          btn.classList.add('locked');
+          const isCorrect = q.answer.includes(optIdx);
+          if (isSelected && isCorrect) btn.classList.add('state-chosen-correct');
+          else if (isSelected && !isCorrect) btn.classList.add('state-chosen-incorrect');
+          else if (!isSelected && isCorrect) btn.classList.add('state-target-correct');
+        } else if (isMSQ && isSelected) {
+          btn.classList.add('state-msq-selected');
+        }
+
+        btn.innerHTML = `<span class="opt-letter">${letter}</span><span class="opt-text">${optHtml}</span>`;
+
+        btn.addEventListener('click', () => {
+          if (state.userAnswers[q.id] !== undefined) return;
+          if (isMSQ) {
+            if (state.msqTempSelections[q.id].has(optIdx)) {
+              state.msqTempSelections[q.id].delete(optIdx);
+            } else {
+              state.msqTempSelections[q.id].add(optIdx);
+            }
+            renderListCard(q);
+          } else {
+            handleAnswerSubmit(q, [optIdx]);
+          }
+        });
+
+        optsGrid.appendChild(btn);
+      });
+      card.appendChild(optsGrid);
+
+      // Submit Button for MSQ
+      if (isMSQ && !isAnswered) {
+        const subBtn = document.createElement('button');
+        subBtn.className = 'msq-submit-btn';
+        subBtn.innerHTML = `Submit Answer <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+        subBtn.disabled = state.msqTempSelections[q.id].size === 0;
+        subBtn.onclick = () => {
+          const chosen = Array.from(state.msqTempSelections[q.id]).sort();
+          handleAnswerSubmit(q, chosen);
+        };
+        card.appendChild(subBtn);
+      }
+
+      // Feedback Panel
+      if (isAnswered) {
+        const fbPanel = document.createElement('div');
+        const fbStatus = document.createElement('div');
+        const fbAnsCallout = document.createElement('div');
+        const fbExp = document.createElement('div');
+        renderFeedbackPanel(fbPanel, fbStatus, fbAnsCallout, fbExp, q);
+        card.appendChild(fbPanel);
+      }
+
+      return card;
+    }
+
+    function renderListCard(q) {
+      const existing = document.getElementById('listQCard_' + q.id);
+      if (!existing) return;
+      const idx = QUESTIONS.findIndex(item => item.id === q.id);
+      const updated = createListQuestionElement(q, idx);
+      existing.replaceWith(updated);
+    }
+
+    // =========================================================================
+    // EVENT HANDLERS
+    // =========================================================================
+    function setupEvents() {
+      // Mode toggle
+      btnModeCard.addEventListener('click', () => {
+        state.viewMode = 'card';
+        btnModeCard.classList.add('active');
+        btnModeList.classList.remove('active');
+        cardViewContainer.style.display = 'block';
+        listViewContainer.style.display = 'none';
+        renderCurrentCard();
+      });
+
+      btnModeList.addEventListener('click', () => {
+        state.viewMode = 'list';
+        btnModeList.classList.add('active');
+        btnModeCard.classList.remove('active');
+        cardViewContainer.style.display = 'none';
+        listViewContainer.style.display = 'block';
+        renderListView();
+      });
+
+      // Card Navigation Prev / Next
+      btnPrev.addEventListener('click', () => {
+        if (state.currentIdx > 0) {
+          state.currentIdx--;
+          renderCurrentCard();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      btnNext.addEventListener('click', () => {
+        if (state.currentIdx < TOTAL_Q - 1) {
+          state.currentIdx++;
+          renderCurrentCard();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          showSummaryModal();
+        }
+      });
+
+      // Card Flag Button
+      cardFlagBtn.addEventListener('click', () => {
+        const q = QUESTIONS[state.currentIdx];
+        if (state.flagged.has(q.id)) {
+          state.flagged.delete(q.id);
+        } else {
+          state.flagged.add(q.id);
+        }
+        renderCurrentCard();
+      });
+
+      // Navigator Modal Open/Close
+      btnOpenNav.addEventListener('click', openNavModal);
+      btnCloseNav.addEventListener('click', closeNavModal);
+      navModalBackdrop.addEventListener('click', (e) => {
+        if (e.target === navModalBackdrop) closeNavModal();
+      });
+
+      // Summary Modal Actions
+      btnSumReview.addEventListener('click', () => {
+        summaryModalBackdrop.classList.remove('open');
+      });
+
+      btnSumRetake.addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset all answers and retake Week ' + WEEK_NUM + '?')) {
+          state.userAnswers = {};
+          state.userResults = {};
+          state.msqTempSelections = {};
+          state.currentIdx = 0;
+          state.summaryShown = false;
+          summaryModalBackdrop.classList.remove('open');
+          renderCurrentCard();
+          if (state.viewMode === 'list') renderListView();
+          updateScoreboard();
+        }
+      });
+
+      // Keyboard navigation (Card mode)
+      document.addEventListener('keydown', (e) => {
+        if (navModalBackdrop.classList.contains('open') || summaryModalBackdrop.classList.contains('open')) return;
+        
+        if (e.key === 'ArrowLeft') {
+          btnPrev.click();
+        } else if (e.key === 'ArrowRight') {
+          btnNext.click();
+        } else if (['1', '2', '3', '4'].includes(e.key) && state.viewMode === 'card') {
+          const optIdx = parseInt(e.key) - 1;
+          const optBtn = document.getElementById('cardOpt_' + optIdx);
+          if (optBtn) optBtn.click();
+        }
+      });
+    }
+
+    function openNavModal() {
+      updateMatrixVisuals();
+      navModalBackdrop.classList.add('open');
+    }
+
+    function closeNavModal() {
+      navModalBackdrop.classList.remove('open');
+    }
+
+    function showSummaryModal() {
+      const answeredKeys = Object.keys(state.userResults);
+      let correct = 0;
+      answeredKeys.forEach(k => {
+        if (state.userResults[k] === true) correct++;
+      });
+      const incorrect = answeredKeys.length - correct;
+      const pct = (correct / TOTAL_Q) * 100;
+
+      sumScoreVal.textContent = correct;
+      sumAccuracyVal.textContent = pct.toFixed(1) + '%';
+      sumCorrectVal.textContent = correct;
+      sumIncorrectVal.textContent = incorrect;
+
+      if (pct >= 90) {
+        sumBadge.className = 'summary-badge badge-gold';
+        sumBadge.textContent = 'Elite + Gold Medal (Top 1%)';
+      } else if (pct >= 75) {
+        sumBadge.className = 'summary-badge badge-silver';
+        sumBadge.textContent = 'Elite + Silver Medal';
+      } else if (pct >= 60) {
+        sumBadge.className = 'summary-badge badge-elite';
+        sumBadge.textContent = 'Elite Certificate';
+      } else if (pct >= 40) {
+        sumBadge.className = 'summary-badge badge-pass';
+        sumBadge.textContent = 'Successfully Completed';
+      } else {
+        sumBadge.className = 'summary-badge badge-fail';
+        sumBadge.textContent = 'Needs Practice (< 40%)';
+      }
+
+      summaryModalBackdrop.classList.add('open');
+    }
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Week 12: 5G Era, Cyber-Physical Systems, Spatial Cloud & IoHT — 30 NPTEL Exam Questions</title>
+  <style>
+    /* ==========================================================================
+       MODERN OFFLINE DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-math: "Cambria Math", "Latin Modern Math", "STIX Two Math", "Times New Roman", serif;
+      
+      /* Dark Theme Tokens (Default) */
+      --bg-body: #0b0f19;
+      --bg-surface: #111827;
+      --bg-surface-elevated: #1e293b;
+      --bg-card: #151e2e;
+      --bg-card-hover: #1c283f;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.16);
+      --border-focus: #38bdf8;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --primary: #38bdf8;
+      --primary-rgb: 56, 189, 248;
+      --primary-hover: #0ea5e9;
+      
+      --accent: #6366f1;
+      --accent-rgb: 99, 102, 241;
+      
+      --success: #10b981;
+      --success-rgb: 16, 185, 129;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --success-border: #059669;
+      
+      --danger: #ef4444;
+      --danger-rgb: 239, 68, 68;
+      --danger-bg: rgba(239, 68, 68, 0.14);
+      --danger-border: #dc2626;
+      
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      
+      --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-surface-elevated: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --border-subtle: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --border-focus: #0284c7;
+      
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      
+      --primary: #0284c7;
+      --primary-rgb: 2, 132, 199;
+      --primary-hover: #0369a1;
+      
+      --accent: #4f46e5;
+      --accent-rgb: 79, 70, 229;
+      
+      --success: #059669;
+      --success-rgb: 5, 150, 105;
+      --success-bg: rgba(5, 150, 105, 0.1);
+      --success-border: #10b981;
+      
+      --danger: #dc2626;
+      --danger-rgb: 220, 38, 38;
+      --danger-bg: rgba(220, 38, 38, 0.08);
+      --danger-border: #ef4444;
+      
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.1);
+      
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* Typography & Offline Math */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      background: rgba(var(--primary-rgb), 0.12);
+      color: var(--primary);
+      padding: 0.15em 0.4em;
+      border-radius: var(--radius-sm);
+    }
+
+    .math-inline {
+      font-family: var(--font-math);
+      font-style: italic;
+      padding: 0 0.15em;
+      color: var(--text-main);
+    }
+    .math-txt {
+      font-family: var(--font-sans);
+      font-style: normal;
+      font-size: 0.95em;
+    }
+    .frac {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+      padding: 0 0.2em;
+      font-size: 0.9em;
+      line-height: 1;
+    }
+    .frac .num {
+      border-bottom: 1px solid currentColor;
+      padding-bottom: 1px;
+    }
+    .frac .den {
+      padding-top: 1px;
+    }
+
+    /* Top Sticky Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(8px);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .hub-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.4rem 0.65rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-subtle);
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+    .hub-link:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+      background: rgba(var(--primary-rgb), 0.08);
+    }
+
+    .week-badge-header {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .q-counter-pill {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-full);
+      background: rgba(var(--accent-rgb), 0.15);
+      color: #a5b4fc;
+      border: 1px solid rgba(var(--accent-rgb), 0.3);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-full);
+      background: rgba(var(--success-rgb), 0.12);
+      border: 1px solid rgba(var(--success-rgb), 0.3);
+      color: var(--success);
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .icon-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+    }
+
+    /* Main Layout */
+    .main-container {
+      max-width: 900px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* View Controls Bar */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .view-toggle-group {
+      display: inline-flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 3px;
+    }
+    .toggle-opt-btn {
+      background: transparent;
+      border: none;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .toggle-opt-btn.active {
+      background: var(--primary);
+      color: #0b0f19;
+      font-weight: 700;
+    }
+
+    .nav-drawer-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .nav-drawer-trigger:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-surface-elevated);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 300ms ease;
+    }
+
+    /* Question Card Styling */
+    .question-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 1.75rem;
+      transition: border-color var(--transition);
+    }
+
+    .q-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .q-tags {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-qnum {
+      background: var(--bg-surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+    .badge-mcq {
+      background: rgba(var(--primary-rgb), 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(var(--primary-rgb), 0.3);
+    }
+    .badge-msq {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .flag-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.3rem 0.5rem;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition);
+    }
+    .flag-btn:hover {
+      color: var(--warning);
+    }
+    .flag-btn.flagged {
+      color: var(--warning);
+    }
+
+    .q-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+    }
+
+    .q-prompt {
+      font-size: 1.02rem;
+      line-height: 1.7;
+      color: var(--text-main);
+      margin-bottom: 1.5rem;
+    }
+
+    .msq-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.9rem;
+      background: var(--warning-bg);
+      border-left: 3px solid var(--warning);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      color: #fbbf24;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Options List */
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .option-btn {
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.15rem;
+      min-height: 54px;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      color: var(--text-main);
+      font-size: 0.98rem;
+      line-height: 1.55;
+      width: 100%;
+      transition: all var(--transition);
+      position: relative;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .option-btn:hover:not(.locked) {
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+      transform: translateY(-1px);
+    }
+    .option-btn:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+
+    .opt-letter {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--radius-full);
+      border: 1.5px solid var(--border-medium);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: all var(--transition);
+    }
+    .opt-btn-msq .opt-letter {
+      border-radius: var(--radius-sm);
+    }
+
+    .opt-text {
+      flex: 1;
+    }
+
+    /* Instant Feedback Visual States */
+    .option-btn.state-chosen-correct {
+      border-color: var(--success) !important;
+      background: var(--success-bg) !important;
+    }
+    .option-btn.state-chosen-correct .opt-letter {
+      border-color: var(--success) !important;
+      background: var(--success) !important;
+      color: #0b0f19 !important;
+    }
+
+    .option-btn.state-chosen-incorrect {
+      border-color: var(--danger) !important;
+      background: var(--danger-bg) !important;
+    }
+    .option-btn.state-chosen-incorrect .opt-letter {
+      border-color: var(--danger) !important;
+      background: var(--danger) !important;
+      color: #ffffff !important;
+    }
+
+    .option-btn.state-target-correct {
+      border-color: var(--success) !important;
+      border-style: solid !important;
+      background: rgba(var(--success-rgb), 0.08) !important;
+    }
+    .option-btn.state-target-correct .opt-letter {
+      border-color: var(--success) !important;
+      color: var(--success) !important;
+      font-weight: 800;
+    }
+
+    .option-btn.state-msq-selected {
+      border-color: var(--primary);
+      background: rgba(var(--primary-rgb), 0.1);
+    }
+    .option-btn.state-msq-selected .opt-letter {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #0b0f19;
+    }
+
+    .option-btn.locked {
+      cursor: default;
+    }
+
+    /* MSQ Submit Button */
+    .msq-submit-btn {
+      background: var(--primary);
+      color: #0b0f19;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all var(--transition);
+      margin-bottom: 1.25rem;
+      min-height: 48px;
+    }
+    .msq-submit-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .msq-submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Instant Feedback & Explanation Container */
+    .feedback-panel {
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-top: 1.25rem;
+      animation: fadeInSlide 250ms ease forwards;
+    }
+    @keyframes fadeInSlide {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .feedback-panel.status-correct {
+      background: var(--success-bg);
+      border: 1.5px solid var(--success-border);
+    }
+    .feedback-panel.status-incorrect {
+      background: var(--danger-bg);
+      border: 1.5px solid var(--danger-border);
+    }
+
+    .fb-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .fb-status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+    .feedback-panel.status-correct .fb-status-tag {
+      color: var(--success);
+    }
+    .feedback-panel.status-incorrect .fb-status-tag {
+      color: var(--danger);
+    }
+
+    .fb-ans-callout {
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .fb-explanation-body {
+      font-size: 0.94rem;
+      line-height: 1.65;
+      color: var(--text-main);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 0.75rem;
+    }
+    [data-theme="light"] .fb-explanation-body {
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    /* Single Question Card Navigation Footer */
+    .card-nav-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .nav-action-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.75rem 1.25rem;
+      min-height: 48px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all var(--transition);
+      user-select: none;
+    }
+    .nav-action-btn:hover:not(:disabled) {
+      border-color: var(--border-medium);
+      background: var(--bg-card-hover);
+    }
+    .nav-action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .nav-action-btn.btn-next-highlight {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+      font-weight: 700;
+    }
+    .nav-action-btn.btn-next-highlight:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Navigator Modal / Drawer */
+    .nav-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .nav-modal-backdrop.open {
+      display: flex;
+    }
+
+    .nav-modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      max-width: 600px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+    .modal-head h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 480px) {
+      .matrix-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+
+    .matrix-btn {
+      height: 48px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all var(--transition);
+    }
+    .matrix-btn:hover {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+    .matrix-btn.current {
+      border: 2px solid var(--primary) !important;
+      box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.4);
+    }
+    .matrix-btn.correct {
+      background: var(--success-bg) !important;
+      border-color: var(--success) !important;
+      color: var(--success) !important;
+    }
+    .matrix-btn.incorrect {
+      background: var(--danger-bg) !important;
+      border-color: var(--danger) !important;
+      color: var(--danger) !important;
+    }
+    .matrix-btn.flagged::after {
+      content: "★";
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 0.65rem;
+      color: var(--warning);
+    }
+
+    .matrix-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 1rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Summary Modal */
+    .summary-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
+      z-index: 110;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .summary-modal-backdrop.open {
+      display: flex;
+    }
+
+    .summary-modal {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      max-width: 520px;
+      width: 100%;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .summary-badge {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-full);
+      margin-bottom: 1rem;
+    }
+    .badge-gold {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border: 1px solid #fbbf24;
+    }
+    .badge-silver {
+      background: rgba(203, 213, 225, 0.2);
+      color: #cbd5e1;
+      border: 1px solid #cbd5e1;
+    }
+    .badge-elite {
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      border: 1px solid #818cf8;
+    }
+    .badge-pass {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border: 1px solid #10b981;
+    }
+    .badge-fail {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+    }
+
+    .summary-score-large {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+      color: var(--text-main);
+    }
+    .summary-denom {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    .stat-box {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 0.5rem;
+    }
+    .stat-box-val {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 0.15rem;
+    }
+    .stat-box-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .summary-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    /* Bottom Sticky Week Switcher Footer */
+    .page-footer-nav {
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-subtle);
+      padding: 1rem;
+      margin-top: 2rem;
+    }
+    .footer-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 640px) {
+      .header-content {
+        padding: 0.6rem 0.75rem;
+      }
+      .week-badge-header span.week-title-short {
+        display: none;
+      }
+      .question-card {
+        padding: 1.15rem;
+      }
+      .q-title {
+        font-size: 1.05rem;
+      }
+      .q-prompt {
+        font-size: 0.95rem;
+      }
+      .option-btn {
+        padding: 0.85rem 1rem;
+        font-size: 0.92rem;
+      }
+      .nav-action-btn {
+        padding: 0.65rem 0.9rem;
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Top Header -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="header-left">
+        <a href="index.html" class="hub-link" title="Return to Course Hub">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Hub
+        </a>
+        <div class="week-badge-header">
+          <span>Week 12</span>
+          <span class="week-title-short" style="font-weight: 500; font-size: 0.85rem; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">— Week 12: 5G Era, Cyber-Physical Systems, Spatial Cloud & IoHT</span>
+          <span class="q-counter-pill" id="headerQCtr">Q 1 / 30</span>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <div class="score-pill" id="scoreBadge" title="Live Correct Answers">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="scoreText">0 / 0</span>
+        </div>
+        <button class="icon-btn" id="btnThemeToggle" title="Toggle Dark/Light Mode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Progress & View Controls -->
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="controls-bar">
+      <div class="view-toggle-group">
+        <button class="toggle-opt-btn active" id="btnModeCard">Card Mode</button>
+        <button class="toggle-opt-btn" id="btnModeList">List Mode</button>
+      </div>
+
+      <button class="nav-drawer-trigger" id="btnOpenNav">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Question Matrix (1–30)
+      </button>
+    </div>
+
+    <!-- Active Question Card (Used in Card Mode) -->
+    <div id="cardViewContainer">
+      <article class="question-card" id="activeCard">
+        <div class="q-meta-row">
+          <div class="q-tags">
+            <span class="badge badge-qnum" id="cardQNumBadge">Question 1 of 30</span>
+            <span class="badge" id="cardTypeBadge">MCQ</span>
+          </div>
+          <button class="flag-btn" id="cardFlagBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span id="flagBtnText">Flag</span>
+          </button>
+        </div>
+
+        <h2 class="q-title" id="cardTitle"></h2>
+        <div class="q-prompt" id="cardPrompt"></div>
+        <div class="msq-hint" id="cardMsqHint" style="display: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Multiple Choice: Select all matching options, then click Submit Answer.
+        </div>
+
+        <!-- Options Container -->
+        <div class="options-grid" id="cardOptionsContainer"></div>
+
+        <button class="msq-submit-btn" id="cardMsqSubmitBtn" style="display: none;">
+          Submit Answer
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+
+        <!-- Instant Explanation Area -->
+        <div class="feedback-panel" id="cardFeedbackPanel" style="display: none;">
+          <div class="fb-header">
+            <div class="fb-status-tag" id="cardFbStatus"></div>
+            <div class="fb-ans-callout" id="cardFbAnswerCallout"></div>
+          </div>
+          <div class="fb-explanation-body" id="cardFbExplanation"></div>
+        </div>
+
+        <!-- Footer Navigation Controls -->
+        <div class="card-nav-footer">
+          <button class="nav-action-btn" id="btnPrev">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Previous
+          </button>
+          <button class="nav-action-btn" id="btnNext">
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <!-- List View Container (All 30 Questions) -->
+    <div id="listViewContainer" style="display: none;"></div>
+  </main>
+
+  <!-- Question Matrix Modal / Drawer -->
+  <div class="nav-modal-backdrop" id="navModalBackdrop">
+    <div class="nav-modal">
+      <div class="modal-head">
+        <h3>Question Navigator (Week 12)</h3>
+        <button class="icon-btn" id="btnCloseNav">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="matrix-grid" id="matrixGrid"></div>
+
+      <div class="matrix-legend">
+        <div class="legend-item"><div class="legend-dot" style="background: var(--bg-surface-elevated); border: 1px solid var(--border-medium);"></div> Unanswered</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--success);"></div> Correct</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--danger);"></div> Incorrect</div>
+        <div class="legend-item"><span>★</span> Flagged</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Score & Certification Summary Modal -->
+  <div class="summary-modal-backdrop" id="summaryModalBackdrop">
+    <div class="summary-modal">
+      <div class="summary-badge" id="sumBadge">Elite + Gold Medal</div>
+      <h2 style="font-size: 1.6rem; margin-bottom: 0.35rem;">Assessment Completed!</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Week 12 &bull; Week 12: 5G Era, Cyber-Physical Systems, Spatial Cloud & IoHT</p>
+
+      <div class="summary-score-large" id="sumScoreVal">0</div>
+      <div class="summary-denom">out of 30 questions</div>
+
+      <div class="summary-stats-grid">
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumAccuracyVal" style="color: var(--primary);">0%</div>
+          <div class="stat-box-label">Accuracy</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumCorrectVal" style="color: var(--success);">0</div>
+          <div class="stat-box-label">Correct</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="sumIncorrectVal" style="color: var(--danger);">0</div>
+          <div class="stat-box-label">Incorrect</div>
+        </div>
+      </div>
+
+      <div class="summary-actions">
+        <button class="nav-action-btn btn-next-highlight" id="btnSumReview">Review All Answers</button>
+        <button class="nav-action-btn" id="btnSumRetake">Retake This Week</button>
+        <a href="index.html" class="nav-action-btn" style="text-decoration: none; justify-content: center; background: rgba(var(--accent-rgb), 0.15); border-color: rgba(var(--accent-rgb), 0.4); color: #a5b4fc;">
+          Back to Hub &rarr;
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Link Footer -->
+  <footer class="page-footer-nav">
+    <div class="footer-inner">
+      <a href="quiz_week11.html" class="hub-link">&larr; Week 11</a>
+      <span style="font-size: 0.85rem; color: var(--text-dim); text-align: center;">NPTEL Cloud Computing &bull; IIT Kharagpur</span>
+      <a href="index.html" class="hub-link">Back to Hub &rarr;</a>
+    </div>
+  </footer>
+
+  <!-- Quiz Engine Script -->
+  <script>
+    const QUESTIONS = [{"id": 1, "week": "Week 12", "type": "MCQ", "title": "Generational Evolution of Mobile Networks", "question": "Which generation of mobile cellular networks first introduced <strong>mobile data</strong> (e.g., CDMA2000, UMTS) to general consumers?", "options": ["First Generation (1G)", "Second Generation (2G)", "Third Generation (3G)", "Fourth Generation (4G LTE)"], "answer": [2], "explanation": "<strong>3G (early 2000s)</strong> brought mobile packet data (e.g., CDMA2000, UMTS). 1G (1980s) delivered analog voice; 2G (early 1990s) introduced digital voice (GSM, CDMA); 4G LTE (2010s) ushered in high-speed mobile broadband.", "question_html": "Which generation of mobile cellular networks first introduced <strong>mobile data</strong> (e.g., CDMA2000, UMTS) to general consumers?", "options_html": ["First Generation (1G)", "Second Generation (2G)", "Third Generation (3G)", "Fourth Generation (4G LTE)"], "explanation_html": "<strong>3G (early 2000s)</strong> brought mobile packet data (e.g., CDMA2000, UMTS). 1G (1980s) delivered analog voice; 2G (early 1990s) introduced digital voice (GSM, CDMA); 4G LTE (2010s) ushered in high-speed mobile broadband."}, {"id": 2, "week": "Week 12", "type": "MCQ", "title": "The Three Pillars of 5G Networks", "question": "The ITU IMT-2020 standard classifies 5G usage scenarios into which three fundamental service categories?", "options": ["SaaS, PaaS, and IaaS", "eMBB, URLLC, and mMTC", "Wi-Fi, Bluetooth, and ZigBee", "TCP, UDP, and SCTP"], "answer": [1], "explanation": "The three standardized pillars of 5G are: <strong>eMBB</strong> (Enhanced Mobile Broadband), <strong>URLLC</strong> (Ultra-Reliable and Low-Latency Communications), and <strong>mMTC</strong> (Massive Machine-Type Communications).", "question_html": "The ITU IMT-2020 standard classifies 5G usage scenarios into which three fundamental service categories?", "options_html": ["SaaS, PaaS, and IaaS", "eMBB, URLLC, and mMTC", "Wi-Fi, Bluetooth, and ZigBee", "TCP, UDP, and SCTP"], "explanation_html": "The three standardized pillars of 5G are: <strong>eMBB</strong> (Enhanced Mobile Broadband), <strong>URLLC</strong> (Ultra-Reliable and Low-Latency Communications), and <strong>mMTC</strong> (Massive Machine-Type Communications)."}, {"id": 3, "week": "Week 12", "type": "MCQ", "title": "5G Service Matching: Autonomous Driving", "question": "Which 5G service category is specifically engineered to support autonomous vehicular safety and remote telesurgery requiring sub-millisecond latency and $99.999\\%$ reliability?", "options": ["eMBB (Enhanced Mobile Broadband)", "URLLC (Ultra-Reliable and Low-Latency Communications)", "mMTC (Massive Machine-Type Communications)", "NB-IoT (Narrowband IoT)"], "answer": [1], "explanation": "<strong>URLLC</strong> provides radio interface latency below $1\\text{ ms}$ and five-nines ($99.999\\%$) transmission reliability, making it essential for mission-critical applications like autonomous vehicle collision avoidance, smart grids, and remote surgical robotics.", "question_html": "Which 5G service category is specifically engineered to support autonomous vehicular safety and remote telesurgery requiring sub-millisecond latency and <span class=\"math-inline\">99.999\\%</span> reliability?", "options_html": ["eMBB (Enhanced Mobile Broadband)", "URLLC (Ultra-Reliable and Low-Latency Communications)", "mMTC (Massive Machine-Type Communications)", "NB-IoT (Narrowband IoT)"], "explanation_html": "<strong>URLLC</strong> provides radio interface latency below <span class=\"math-inline\">1<span class=\"math-txt\"> ms</span></span> and five-nines (<span class=\"math-inline\">99.999\\%</span>) transmission reliability, making it essential for mission-critical applications like autonomous vehicle collision avoidance, smart grids, and remote surgical robotics."}, {"id": 4, "week": "Week 12", "type": "MCQ", "title": "5G Service Matching: Dense Agricultural Sensors", "question": "Deploying 100,000 low-power, battery-operated humidity sensors across an agricultural valley requires which 5G service pillar?", "options": ["eMBB", "URLLC", "mMTC", "Fixed Wireless Access (FWA)"], "answer": [2], "explanation": "<strong>mMTC (Massive Machine-Type Communications)</strong> is designed to connect up to $10^6\\text{ devices/km}^2$ with low data rates, ultra-low power consumption, and multi-year battery lifespans for massive IoT deployments.", "question_html": "Deploying 100,000 low-power, battery-operated humidity sensors across an agricultural valley requires which 5G service pillar?", "options_html": ["eMBB", "URLLC", "mMTC", "Fixed Wireless Access (FWA)"], "explanation_html": "<strong>mMTC (Massive Machine-Type Communications)</strong> is designed to connect up to <span class=\"math-inline\">10<sup>6</sup><span class=\"math-txt\"> devices/km</span><sup>2</sup></span> with low data rates, ultra-low power consumption, and multi-year battery lifespans for massive IoT deployments."}, {"id": 5, "week": "Week 12", "type": "MCQ", "title": "5G Network Softwarization: SDN and NFV", "question": "How are 5G telecommunication networks undergoing 'cloudification'?", "options": ["By replacing all cellular radio antennas with physical fiber-optic cables", "Through Software-Defined Networking (SDN) and Network Functions Virtualization (NFV) running on commodity cloud servers", "By abandoning IP packet switching in favor of analog circuit switching", "By requiring all mobile devices to connect via satellite dishes"], "answer": [1], "explanation": "5G undergoes <strong>cloudification</strong> through network softwarization: <strong>SDN</strong> decouples the control and data planes, while <strong>NFV</strong> replaces proprietary telecom hardware with virtualized network functions (VNFs) executing on commodity cloud servers.", "question_html": "How are 5G telecommunication networks undergoing 'cloudification'?", "options_html": ["By replacing all cellular radio antennas with physical fiber-optic cables", "Through Software-Defined Networking (SDN) and Network Functions Virtualization (NFV) running on commodity cloud servers", "By abandoning IP packet switching in favor of analog circuit switching", "By requiring all mobile devices to connect via satellite dishes"], "explanation_html": "5G undergoes <strong>cloudification</strong> through network softwarization: <strong>SDN</strong> decouples the control and data planes, while <strong>NFV</strong> replaces proprietary telecom hardware with virtualized network functions (VNFs) executing on commodity cloud servers."}, {"id": 6, "week": "Week 12", "type": "MCQ", "title": "Network Slicing in 5G", "question": "What is the primary objective of <strong>Network Slicing</strong> in a 5G cloud architecture?", "options": ["Physical slicing of optical fiber cables into multiple strands", "Creating multiple isolated virtual end-to-end networks on a single shared physical infrastructure, each tailored to specific QoS requirements", "Partitioning hard drives on mobile smartphones", "Splitting video files into small MP4 chunks"], "answer": [1], "explanation": "<strong>Network Slicing</strong> uses SDN/NFV virtualization to run multiple isolated, end-to-end logical networks on shared physical infrastructure—e.g., one slice optimized for high-bandwidth eMBB and another for low-latency URLLC.", "question_html": "What is the primary objective of <strong>Network Slicing</strong> in a 5G cloud architecture?", "options_html": ["Physical slicing of optical fiber cables into multiple strands", "Creating multiple isolated virtual end-to-end networks on a single shared physical infrastructure, each tailored to specific QoS requirements", "Partitioning hard drives on mobile smartphones", "Splitting video files into small MP4 chunks"], "explanation_html": "<strong>Network Slicing</strong> uses SDN/NFV virtualization to run multiple isolated, end-to-end logical networks on shared physical infrastructure—e.g., one slice optimized for high-bandwidth eMBB and another for low-latency URLLC."}, {"id": 7, "week": "Week 12", "type": "MCQ", "title": "Multi-Access Edge Computing (MEC) vs Cloud", "question": "Where does Multi-Access Edge Computing (MEC) position computational resources to overcome remote cloud latency?", "options": ["In underwater oceanic data centers exclusively", "At the cellular Radio Access Network (RAN) base stations and aggregation points, one hop from the user equipment", "Inside the central core office of national telecom carriers only", "Directly on remote web servers located in foreign countries"], "answer": [1], "explanation": "Standardized by ETSI, <strong>MEC</strong> places compute, storage, and application services at the cellular edge (near base stations/gNodeBs). This reduces latency from $50\\text{--}150\\text{ ms}$ (remote cloud) to under $5\\text{ ms}$ (local edge).", "question_html": "Where does Multi-Access Edge Computing (MEC) position computational resources to overcome remote cloud latency?", "options_html": ["In underwater oceanic data centers exclusively", "At the cellular Radio Access Network (RAN) base stations and aggregation points, one hop from the user equipment", "Inside the central core office of national telecom carriers only", "Directly on remote web servers located in foreign countries"], "explanation_html": "Standardized by ETSI, <strong>MEC</strong> places compute, storage, and application services at the cellular edge (near base stations/gNodeBs). This reduces latency from <span class=\"math-inline\">50<span class=\"math-txt\">--</span>150<span class=\"math-txt\"> ms</span></span> (remote cloud) to under <span class=\"math-inline\">5<span class=\"math-txt\"> ms</span></span> (local edge)."}, {"id": 8, "week": "Week 12", "type": "MCQ", "title": "Origins of Cyber-Physical Systems (CPS)", "question": "Who coined the term <strong>Cyber-Physical Systems (CPS)</strong> in 2006 at the US National Science Foundation (NSF)?", "options": ["John McCarthy", "Helen Gill", "Rajkumar Buyya", "Tim Berners-Lee"], "answer": [1], "explanation": "The term <strong>Cyber-Physical Systems (CPS)</strong> was coined in <strong>2006 by Helen Gill</strong> at the National Science Foundation (NSF), USA, to describe systems where computation is deeply intertwined with physical processes.", "question_html": "Who coined the term <strong>Cyber-Physical Systems (CPS)</strong> in 2006 at the US National Science Foundation (NSF)?", "options_html": ["John McCarthy", "Helen Gill", "Rajkumar Buyya", "Tim Berners-Lee"], "explanation_html": "The term <strong>Cyber-Physical Systems (CPS)</strong> was coined in <strong>2006 by Helen Gill</strong> at the National Science Foundation (NSF), USA, to describe systems where computation is deeply intertwined with physical processes."}, {"id": 9, "week": "Week 12", "type": "MCQ", "title": "Core Definition of Cyber-Physical Systems", "question": "Which statement precisely characterizes the conceptual foundation of Cyber-Physical Systems (CPS)?", "options": ["CPS is the union of all web pages and internet-connected personal computers", "CPS is about the intersection, not the union, of the physical and cyber worlds, linking computation to physical processes via closed feedback loops", "CPS is a purely theoretical model for quantum hardware architecture", "CPS represents the replacement of all mechanical actuators with software simulation"], "answer": [1], "explanation": "CPS is about the <strong>intersection, not the union</strong>, of physical processes and computational algorithms. Embedded computers monitor and control physical processes via closed-loop feedback, where physical dynamics affect computations and vice-versa.", "question_html": "Which statement precisely characterizes the conceptual foundation of Cyber-Physical Systems (CPS)?", "options_html": ["CPS is the union of all web pages and internet-connected personal computers", "CPS is about the intersection, not the union, of the physical and cyber worlds, linking computation to physical processes via closed feedback loops", "CPS is a purely theoretical model for quantum hardware architecture", "CPS represents the replacement of all mechanical actuators with software simulation"], "explanation_html": "CPS is about the <strong>intersection, not the union</strong>, of physical processes and computational algorithms. Embedded computers monitor and control physical processes via closed-loop feedback, where physical dynamics affect computations and vice-versa."}, {"id": 10, "week": "Week 12", "type": "MCQ", "title": "CPS Operational Formula", "question": "As articulated in NPTEL Lecture 57, which equation summarizes the multi-disciplinary components of Cyber-Physical Systems?", "options": ["$\\text{CPS} = \\text{Hardware} + \\text{Software} + \\text{Internet}$", "$\\text{CPS} = \\text{Cyber} + \\text{Physical} + \\text{Computation} + \\text{Dynamics} + \\text{Communication} + \\text{Security} + \\text{Safety}$", "$\\text{CPS} = \\text{CPU} \\times \\text{RAM} \\times \\text{Disk}$", "$\\text{CPS} = \\text{Client} + \\text{Server} + \\text{Database}$"], "answer": [1], "explanation": "CPS brings together transdisciplinary foundations: <strong>Cyber + Physical + Computation + Dynamics + Communication + Security + Safety</strong>, viewing computing as an active physical act in the physical world.", "question_html": "As articulated in NPTEL Lecture 57, which equation summarizes the multi-disciplinary components of Cyber-Physical Systems?", "options_html": ["<span class=\"math-inline\"><span class=\"math-txt\">CPS</span> = <span class=\"math-txt\">Hardware</span> + <span class=\"math-txt\">Software</span> + <span class=\"math-txt\">Internet</span></span>", "<span class=\"math-inline\"><span class=\"math-txt\">CPS</span> = <span class=\"math-txt\">Cyber</span> + <span class=\"math-txt\">Physical</span> + <span class=\"math-txt\">Computation</span> + <span class=\"math-txt\">Dynamics</span> + <span class=\"math-txt\">Communication</span> + <span class=\"math-txt\">Security</span> + <span class=\"math-txt\">Safety</span></span>", "<span class=\"math-inline\"><span class=\"math-txt\">CPS</span> = <span class=\"math-txt\">CPU</span> &times; <span class=\"math-txt\">RAM</span> &times; <span class=\"math-txt\">Disk</span></span>", "<span class=\"math-inline\"><span class=\"math-txt\">CPS</span> = <span class=\"math-txt\">Client</span> + <span class=\"math-txt\">Server</span> + <span class=\"math-txt\">Database</span></span>"], "explanation_html": "CPS brings together transdisciplinary foundations: <strong>Cyber + Physical + Computation + Dynamics + Communication + Security + Safety</strong>, viewing computing as an active physical act in the physical world."}, {"id": 11, "week": "Week 12", "type": "MCQ", "title": "NIST Cyber-Physical Cloud Computing (CPCC)", "question": "According to the NIST 2013 Report, what is <strong>Cyber-Physical Cloud Computing (CPCC)</strong>?", "options": ["A cloud data center submerged in liquid coolant", "A system environment that can rapidly build, modify, and provision cyber-physical systems composed of a set of cloud computing-based sensor, processing, control, and data services", "A protocol for encrypting biometric data on fitness wristbands", "A commercial service for leasing robotic vacuum cleaners"], "answer": [1], "explanation": "NIST defines CPCC as a system environment that can rapidly build, modify, and provision cyber-physical systems composed of cloud computing-based sensor, processing, control, and data services.", "question_html": "According to the NIST 2013 Report, what is <strong>Cyber-Physical Cloud Computing (CPCC)</strong>?", "options_html": ["A cloud data center submerged in liquid coolant", "A system environment that can rapidly build, modify, and provision cyber-physical systems composed of a set of cloud computing-based sensor, processing, control, and data services", "A protocol for encrypting biometric data on fitness wristbands", "A commercial service for leasing robotic vacuum cleaners"], "explanation_html": "NIST defines CPCC as a system environment that can rapidly build, modify, and provision cyber-physical systems composed of cloud computing-based sensor, processing, control, and data services."}, {"id": 12, "week": "Week 12", "type": "MCQ", "title": "Geospatial Data 3-Tuple Representation", "question": "In Spatial Cloud Computing, spatial (geospatial) data is fundamentally modeled as a combination of which three elements?", "options": ["IP address, Port number, and Protocol", "Location information, Attribute information, and Temporal information ($\\langle \\mathbf{L}, \\mathbf{A}, \\mathbf{T} \\rangle$)", "Username, Password, and Biometric hash", "Voltage, Current, and Resistance"], "answer": [1], "explanation": "Geospatial data combines <strong>Location $\\mathbf{L}$</strong> (coordinates on earth), <strong>Attribute $\\mathbf{A}$</strong> (characteristics of the object or event), and <strong>Temporal $\\mathbf{T}$</strong> (time or lifespan during which location and attributes exist).", "question_html": "In Spatial Cloud Computing, spatial (geospatial) data is fundamentally modeled as a combination of which three elements?", "options_html": ["IP address, Port number, and Protocol", "Location information, Attribute information, and Temporal information (<span class=\"math-inline\">&lang; \\mathbf{L}, \\mathbf{A}, \\mathbf{T} &rang;</span>)", "Username, Password, and Biometric hash", "Voltage, Current, and Resistance"], "explanation_html": "Geospatial data combines <strong>Location <span class=\"math-inline\">\\mathbf{L}</span></strong> (coordinates on earth), <strong>Attribute <span class=\"math-inline\">\\mathbf{A}</span></strong> (characteristics of the object or event), and <strong>Temporal <span class=\"math-inline\">\\mathbf{T}</span></strong> (time or lifespan during which location and attributes exist)."}, {"id": 13, "week": "Week 12", "type": "MCQ", "title": "Spatial Cloud Computing Definition", "question": "What is the defining attribute of <strong>Spatial Cloud Computing</strong>?", "options": ["A cloud computing paradigm driven by geospatial sciences and optimized by spatiotemporal principles for scientific discoveries in distributed environments", "A cloud where servers are physically arranged in a circular geometrical shape", "A cloud service exclusively accessible from space stations and satellites", "A cloud database that stores files in 3D holographic crystal cubes"], "answer": [0], "explanation": "<strong>Spatial Cloud Computing</strong> refers to the cloud computing paradigm that is driven by geospatial sciences and optimized by spatiotemporal principles for enabling geospatial scientific discoveries within distributed computing environments.", "question_html": "What is the defining attribute of <strong>Spatial Cloud Computing</strong>?", "options_html": ["A cloud computing paradigm driven by geospatial sciences and optimized by spatiotemporal principles for scientific discoveries in distributed environments", "A cloud where servers are physically arranged in a circular geometrical shape", "A cloud service exclusively accessible from space stations and satellites", "A cloud database that stores files in 3D holographic crystal cubes"], "explanation_html": "<strong>Spatial Cloud Computing</strong> refers to the cloud computing paradigm that is driven by geospatial sciences and optimized by spatiotemporal principles for enabling geospatial scientific discoveries within distributed computing environments."}, {"id": 14, "week": "Week 12", "type": "MCQ", "title": "Tobler's First Law in Spatial Cloud", "question": "Which foundational geographic principle is applied in spatial cloud databases to cluster proximate data points onto the same physical server nodes?", "options": ["Moore's Law", "Tobler's First Law of Geography ('Near things are more related than distant things')", "Amdahl's Law", "Metcalfe's Law"], "answer": [1], "explanation": "<strong>Tobler's First Law of Geography</strong> states that 'everything is related to everything else, but near things are more related than distant things.' Spatial clouds use this principle to partition data geographically, minimizing inter-node network communication during spatial queries.", "question_html": "Which foundational geographic principle is applied in spatial cloud databases to cluster proximate data points onto the same physical server nodes?", "options_html": ["Moore's Law", "Tobler's First Law of Geography ('Near things are more related than distant things')", "Amdahl's Law", "Metcalfe's Law"], "explanation_html": "<strong>Tobler's First Law of Geography</strong> states that 'everything is related to everything else, but near things are more related than distant things.' Spatial clouds use this principle to partition data geographically, minimizing inter-node network communication during spatial queries."}, {"id": 15, "week": "Week 12", "type": "MCQ", "title": "Traj-Cloud Architecture and Components", "question": "In the Traj-Cloud framework developed at IIT Kharagpur, which three core microservices form the end-to-end processing pipeline?", "options": ["Authentication Service, Billing Service, and Notification Service", "Trajectory Indexing Service (TS1), Trajectory Map-Matching Service (TS2), and Trajectory Query Service (TS3)", "Video Encoding Service, Audio Mixing Service, and Subtitle Service", "Compiler Service, Linker Service, and Debugger Service"], "answer": [1], "explanation": "<strong>Traj-Cloud</strong> comprises: <strong>TS1</strong> (Trajectory Data Indexing Service using BigQuery/Cloud SQL), <strong>TS2</strong> (Trajectory Map-Matching Service using MapReduce on Compute Engine), and <strong>TS3</strong> (Trajectory Query Service).", "question_html": "In the Traj-Cloud framework developed at IIT Kharagpur, which three core microservices form the end-to-end processing pipeline?", "options_html": ["Authentication Service, Billing Service, and Notification Service", "Trajectory Indexing Service (TS1), Trajectory Map-Matching Service (TS2), and Trajectory Query Service (TS3)", "Video Encoding Service, Audio Mixing Service, and Subtitle Service", "Compiler Service, Linker Service, and Debugger Service"], "explanation_html": "<strong>Traj-Cloud</strong> comprises: <strong>TS1</strong> (Trajectory Data Indexing Service using BigQuery/Cloud SQL), <strong>TS2</strong> (Trajectory Map-Matching Service using MapReduce on Compute Engine), and <strong>TS3</strong> (Trajectory Query Service)."}, {"id": 16, "week": "Week 12", "type": "MCQ", "title": "Traj-Cloud Map-Matching Service (TS2)", "question": "What is the primary role of the <strong>Trajectory Map-Matching Service (TS2)</strong> in Traj-Cloud?", "options": ["Compressing video streams from traffic surveillance cameras", "Projecting noisy, drifting raw GPS trajectory traces $G$ onto the topological digital road network $R$ using distributed MapReduce", "Generating electronic toll invoices for highway vehicles", "Calculating fuel consumption rates for diesel locomotives"], "answer": [1], "explanation": "<strong>TS2</strong> takes raw GPS traces $G$ and the topological road network $R$ and projects the trajectory onto the correct road segments using MapReduce on Google Compute Engine to handle high data volumes in near real-time.", "question_html": "What is the primary role of the <strong>Trajectory Map-Matching Service (TS2)</strong> in Traj-Cloud?", "options_html": ["Compressing video streams from traffic surveillance cameras", "Projecting noisy, drifting raw GPS trajectory traces <span class=\"math-inline\">G</span> onto the topological digital road network <span class=\"math-inline\">R</span> using distributed MapReduce", "Generating electronic toll invoices for highway vehicles", "Calculating fuel consumption rates for diesel locomotives"], "explanation_html": "<strong>TS2</strong> takes raw GPS traces <span class=\"math-inline\">G</span> and the topological road network <span class=\"math-inline\">R</span> and projects the trajectory onto the correct road segments using MapReduce on Google Compute Engine to handle high data volumes in near real-time."}, {"id": 17, "week": "Week 12", "type": "MCQ", "title": "Internet of Health Things (IoHT) Hierarchy", "question": "In the four-level hierarchical network model for IoHT presented in Lecture 59, which tier corresponds to <strong>Level 2</strong>?", "options": ["Cloud Datacenter (Level 0)", "ISP Gateway (Level 1)", "Area Gateway / Fog Node (Level 2)", "Edge Devices / IoT Sensors (Level 3)"], "answer": [2], "explanation": "The 4-level IoHT hierarchy is: <strong>Level 0:</strong> Cloud Datacenter, <strong>Level 1:</strong> ISP Gateway, <strong>Level 2:</strong> Area Gateway (Fog Node), and <strong>Level 3:</strong> Edge / IoT Sensor Devices.", "question_html": "In the four-level hierarchical network model for IoHT presented in Lecture 59, which tier corresponds to <strong>Level 2</strong>?", "options_html": ["Cloud Datacenter (Level 0)", "ISP Gateway (Level 1)", "Area Gateway / Fog Node (Level 2)", "Edge Devices / IoT Sensors (Level 3)"], "explanation_html": "The 4-level IoHT hierarchy is: <strong>Level 0:</strong> Cloud Datacenter, <strong>Level 1:</strong> ISP Gateway, <strong>Level 2:</strong> Area Gateway (Fog Node), and <strong>Level 3:</strong> Edge / IoT Sensor Devices."}, {"id": 18, "week": "Week 12", "type": "MCQ", "title": "iFogSim IoHT Link Latency Parameters", "question": "In the empirical iFogSim healthcare simulation model, what is the communication latency assigned between the <strong>ISP Gateway and the Cloud Datacenter</strong>?", "options": ["$1\\text{ ms}$", "$2\\text{ ms}$", "$10\\text{ ms}$", "$100\\text{ ms}$"], "answer": [3], "explanation": "In the empirical configuration: Body sensor to Mobile is $1\\text{ ms}$, Mobile to Area GW is $2\\text{ ms}$, Area GW to ISP GW is $2\\text{ ms}$, while the wide-area transit between <strong>ISP Gateway and Cloud Datacenter is $100\\text{ ms}$</strong>.", "question_html": "In the empirical iFogSim healthcare simulation model, what is the communication latency assigned between the <strong>ISP Gateway and the Cloud Datacenter</strong>?", "options_html": ["<span class=\"math-inline\">1<span class=\"math-txt\"> ms</span></span>", "<span class=\"math-inline\">2<span class=\"math-txt\"> ms</span></span>", "<span class=\"math-inline\">10<span class=\"math-txt\"> ms</span></span>", "<span class=\"math-inline\">100<span class=\"math-txt\"> ms</span></span>"], "explanation_html": "In the empirical configuration: Body sensor to Mobile is <span class=\"math-inline\">1<span class=\"math-txt\"> ms</span></span>, Mobile to Area GW is <span class=\"math-inline\">2<span class=\"math-txt\"> ms</span></span>, Area GW to ISP GW is <span class=\"math-inline\">2<span class=\"math-txt\"> ms</span></span>, while the wide-area transit between <strong>ISP Gateway and Cloud Datacenter is <span class=\"math-inline\">100<span class=\"math-txt\"> ms</span></span></strong>."}, {"id": 19, "week": "Week 12", "type": "MCQ", "title": "IoHT Application Module Placement in Fog Model", "question": "In the Fog-based healthcare architecture, where are the <strong>Data Filtering Module</strong> and <strong>Data Processing Module</strong> deployed?", "options": ["At the Cloud Datacenter (Level 0)", "At the ISP Gateway (Level 1)", "At the Area Gateway (Fog Node, Level 2)", "Directly inside the body sensor electrode"], "answer": [2], "explanation": "In the Fog model, the <strong>Data Filtering, Data Processing, and Event Handler modules</strong> are deployed on the <strong>Area Gateway (Level 2)</strong>. Only the Confirmatory Module is placed on the Cloud Datacenter.", "question_html": "In the Fog-based healthcare architecture, where are the <strong>Data Filtering Module</strong> and <strong>Data Processing Module</strong> deployed?", "options_html": ["At the Cloud Datacenter (Level 0)", "At the ISP Gateway (Level 1)", "At the Area Gateway (Fog Node, Level 2)", "Directly inside the body sensor electrode"], "explanation_html": "In the Fog model, the <strong>Data Filtering, Data Processing, and Event Handler modules</strong> are deployed on the <strong>Area Gateway (Level 2)</strong>. Only the Confirmatory Module is placed on the Cloud Datacenter."}, {"id": 20, "week": "Week 12", "type": "MCQ", "title": "IoHT Confirmatory Module Role", "question": "In both the Cloud-based and Fog-based models of IoHT, where is the <strong>Confirmatory Module</strong> placed, and when is it triggered?", "options": ["Placed on the Mobile device, triggered on every single sensor heartbeat", "Placed on the Cloud Datacenter, triggered only when a potential cardiac anomaly or positive event is detected by the fog node", "Placed on the body accelerometer, triggered during sleep", "Placed on the ISP router, triggered on every packet drop"], "answer": [1], "explanation": "The <strong>Confirmatory Module</strong> resides on the <strong>Cloud Datacenter</strong> in both models. In the Fog architecture, it is accessed only for the small percentage of positive anomaly detections, minimizing WAN bandwidth and cloud compute costs.", "question_html": "In both the Cloud-based and Fog-based models of IoHT, where is the <strong>Confirmatory Module</strong> placed, and when is it triggered?", "options_html": ["Placed on the Mobile device, triggered on every single sensor heartbeat", "Placed on the Cloud Datacenter, triggered only when a potential cardiac anomaly or positive event is detected by the fog node", "Placed on the body accelerometer, triggered during sleep", "Placed on the ISP router, triggered on every packet drop"], "explanation_html": "The <strong>Confirmatory Module</strong> resides on the <strong>Cloud Datacenter</strong> in both models. In the Fog architecture, it is accessed only for the small percentage of positive anomaly detections, minimizing WAN bandwidth and cloud compute costs."}, {"id": 21, "week": "Week 12", "type": "MCQ", "title": "Control Loop Latency: Fog vs Cloud Model", "question": "What did empirical iFogSim simulations demonstrate regarding the <strong>control loop latency</strong> as the number of monitored patients scaled from 4 to 64?", "options": ["Fog latency increased exponentially, while Cloud latency remained constant", "Fog latency remained virtually constant and low (~5--8 ms), whereas Cloud latency was high (>210 ms) and grew with load", "Both models exhibited identical latencies of 100 ms", "The Cloud model had lower latency than the Fog model"], "answer": [1], "explanation": "In the Fog model, because control-loop feedback occurs entirely at the local Area Gateway (Level 2), <strong>latency remains constant and minimal (~5--8 ms)</strong>. In the Cloud model, round-trip transit to the distant datacenter causes latency exceeding <strong>210 ms</strong>.", "question_html": "What did empirical iFogSim simulations demonstrate regarding the <strong>control loop latency</strong> as the number of monitored patients scaled from 4 to 64?", "options_html": ["Fog latency increased exponentially, while Cloud latency remained constant", "Fog latency remained virtually constant and low (~5--8 ms), whereas Cloud latency was high (>210 ms) and grew with load", "Both models exhibited identical latencies of 100 ms", "The Cloud model had lower latency than the Fog model"], "explanation_html": "In the Fog model, because control-loop feedback occurs entirely at the local Area Gateway (Level 2), <strong>latency remains constant and minimal (~5--8 ms)</strong>. In the Cloud model, round-trip transit to the distant datacenter causes latency exceeding <strong>210 ms</strong>."}, {"id": 22, "week": "Week 12", "type": "MCQ", "title": "Cost of Execution in IoHT", "question": "Why is the total operational cost of execution substantially lower in the Fog-based healthcare model compared to the pure Cloud model?", "options": ["Because fog nodes do not consume any electrical power", "Because Fog nodes (Area Gateways, Raspberry Pis) are local capital equipment incurring $0 per-second cloud billing; only rare confirmatory calls incur cloud fees", "Because cloud providers offer free computing to all healthcare users", "Because the Fog model eliminates all sensors"], "answer": [1], "explanation": "Local Fog gateways and routers are owned/operated by the local healthcare facility (Cost/MIPS = $0.00). In the Fog model, only occasional anomaly confirmations use Cloud resources, saving thousands of dollars in continuous cloud MIPS billing.", "question_html": "Why is the total operational cost of execution substantially lower in the Fog-based healthcare model compared to the pure Cloud model?", "options_html": ["Because fog nodes do not consume any electrical power", "Because Fog nodes (Area Gateways, Raspberry Pis) are local capital equipment incurring $0 per-second cloud billing; only rare confirmatory calls incur cloud fees", "Because cloud providers offer free computing to all healthcare users", "Because the Fog model eliminates all sensors"], "explanation_html": "Local Fog gateways and routers are owned/operated by the local healthcare facility (Cost/MIPS = $0.00). In the Fog model, only occasional anomaly confirmations use Cloud resources, saving thousands of dollars in continuous cloud MIPS billing."}, {"id": 23, "week": "Week 12", "type": "MCQ", "title": "IoHT Hardware Prototype Devices", "question": "In the physical hardware implementation described in Lecture 60, which microcontroller and fog platform were used to validate the IoHT system?", "options": ["Intel Core i9 and Cray Supercomputer", "NodeMCU ESP8266 (Edge) and Raspberry Pi 3 (Fog Gateway)", "Commodore 64 and IBM Mainframe", "Arduino Uno and PlayStation 5"], "answer": [1], "explanation": "The experimental hardware setup utilized a <strong>NodeMCU ESP8266</strong> board (with Wi-Fi) as the edge acquisition unit and a <strong>Raspberry Pi 3</strong> (64-bit quad-core, 1 GB RAM) as the local Fog device.", "question_html": "In the physical hardware implementation described in Lecture 60, which microcontroller and fog platform were used to validate the IoHT system?", "options_html": ["Intel Core i9 and Cray Supercomputer", "NodeMCU ESP8266 (Edge) and Raspberry Pi 3 (Fog Gateway)", "Commodore 64 and IBM Mainframe", "Arduino Uno and PlayStation 5"], "explanation_html": "The experimental hardware setup utilized a <strong>NodeMCU ESP8266</strong> board (with Wi-Fi) as the edge acquisition unit and a <strong>Raspberry Pi 3</strong> (64-bit quad-core, 1 GB RAM) as the local Fog device."}, {"id": 24, "week": "Week 12", "type": "MCQ", "title": "ADXL345 Composite Acceleration Calculation", "question": "Given 3-axis accelerometer readings $x = 0.6\\text{ g}$, $y = 0.8\\text{ g}$, and $z = 0.0\\text{ g}$, what is the composite acceleration magnitude $A$?", "options": ["$0.7\\text{ g}$", "$1.0\\text{ g}$", "$1.4\\text{ g}$", "$1.96\\text{ g}$"], "answer": [1], "explanation": "$A = \\sqrt{x^2 + y^2 + z^2} = \\sqrt{0.6^2 + 0.8^2 + 0.0^2} = \\sqrt{0.36 + 0.64 + 0} = \\sqrt{1.00} = 1.0\\text{ g}$.", "question_html": "Given 3-axis accelerometer readings <span class=\"math-inline\">x = 0.6<span class=\"math-txt\"> g</span></span>, <span class=\"math-inline\">y = 0.8<span class=\"math-txt\"> g</span></span>, and <span class=\"math-inline\">z = 0.0<span class=\"math-txt\"> g</span></span>, what is the composite acceleration magnitude <span class=\"math-inline\">A</span>?", "options_html": ["<span class=\"math-inline\">0.7<span class=\"math-txt\"> g</span></span>", "<span class=\"math-inline\">1.0<span class=\"math-txt\"> g</span></span>", "<span class=\"math-inline\">1.4<span class=\"math-txt\"> g</span></span>", "<span class=\"math-inline\">1.96<span class=\"math-txt\"> g</span></span>"], "explanation_html": "<span class=\"math-inline\">A = \\sqrt{x<sup>2</sup> + y<sup>2</sup> + z<sup>2</sup>} = \\sqrt{0.6<sup>2</sup> + 0.8<sup>2</sup> + 0.0<sup>2</sup>} = \\sqrt{0.36 + 0.64 + 0} = \\sqrt{1.00} = 1.0<span class=\"math-txt\"> g</span></span>."}, {"id": 25, "week": "Week 12", "type": "MCQ", "title": "5-Point Moving Average Smoothing", "question": "Why is a <strong>5-point smoothing filter</strong> applied to the extracted acceleration signal in the IoHT wearable pipeline?", "options": ["To encrypt the data before cloud transmission", "To reduce high-frequency transient electronic noise and sensor jitter by averaging each point with its two predecessors and two successors", "To increase the sample rate by a factor of 5", "To convert analog voltages into binary pulses"], "answer": [1], "explanation": "The 5-point moving average filter computes $\\bar{A}[t] = \\frac{A[t-2] + A[t-1] + A[t] + A[t+1] + A[t+2]}{5}$, effectively suppressing random electronic noise and motion artifacts without distorting the underlying movement envelope.", "question_html": "Why is a <strong>5-point smoothing filter</strong> applied to the extracted acceleration signal in the IoHT wearable pipeline?", "options_html": ["To encrypt the data before cloud transmission", "To reduce high-frequency transient electronic noise and sensor jitter by averaging each point with its two predecessors and two successors", "To increase the sample rate by a factor of 5", "To convert analog voltages into binary pulses"], "explanation_html": "The 5-point moving average filter computes <span class=\"math-inline\">\\bar{A}[t] = <span class=\"frac\"><span class=\"num\">A[t-2] + A[t-1] + A[t] + A[t+1] + A[t+2]</span><span class=\"den\">5</span></span></span>, effectively suppressing random electronic noise and motion artifacts without distorting the underlying movement envelope."}, {"id": 26, "week": "Week 12", "type": "MCQ", "title": "KNN Parameter Selection for Activity Recognition", "question": "In the activity classification step of the IoHT case study, which $k$-value was determined to be optimal via 5-fold cross validation?", "options": ["$k = 1$", "$k = 3$", "$k = 10$", "$k = 50$"], "answer": [1], "explanation": "In Lecture 60, 5-fold cross validation using the `GridSearchCV` library established that <strong>$k = 3$</strong> provided optimal classification accuracy for the K-Nearest Neighbors classifier.", "question_html": "In the activity classification step of the IoHT case study, which <span class=\"math-inline\">k</span>-value was determined to be optimal via 5-fold cross validation?", "options_html": ["<span class=\"math-inline\">k = 1</span>", "<span class=\"math-inline\">k = 3</span>", "<span class=\"math-inline\">k = 10</span>", "<span class=\"math-inline\">k = 50</span>"], "explanation_html": "In Lecture 60, 5-fold cross validation using the `GridSearchCV` library established that <strong><span class=\"math-inline\">k = 3</span></strong> provided optimal classification accuracy for the K-Nearest Neighbors classifier."}, {"id": 27, "week": "Week 12", "type": "MCQ", "title": "Cardiac Alert Thresholds in IoHT Case Study", "question": "In the demonstration cardiac attack prediction logic presented in Lecture 60, what are the alarm threshold criteria for scaled pulse ($p$), systolic ($s$), and diastolic ($d$) pressures?", "options": ["$p \\ge 100$, $s \\ge 120$, $d \\ge 80$", "$p \\ge 170$, $s \\ge 180$, $d \\ge 120$", "$p \\ge 200$, $s \\ge 220$, $d \\ge 140$", "$p \\ge 60$, $s \\ge 90$, $d \\ge 60$"], "answer": [1], "explanation": "The demonstrative condition triggers when $(p \\ge 170) \\land (s \\ge 180) \\land (d \\ge 120)$, raising `HeartAttackAlarm = true` to dispatch urgent localized medical intervention.", "question_html": "In the demonstration cardiac attack prediction logic presented in Lecture 60, what are the alarm threshold criteria for scaled pulse (<span class=\"math-inline\">p</span>), systolic (<span class=\"math-inline\">s</span>), and diastolic (<span class=\"math-inline\">d</span>) pressures?", "options_html": ["<span class=\"math-inline\">p &ge; 100</span>, <span class=\"math-inline\">s &ge; 120</span>, <span class=\"math-inline\">d &ge; 80</span>", "<span class=\"math-inline\">p &ge; 170</span>, <span class=\"math-inline\">s &ge; 180</span>, <span class=\"math-inline\">d &ge; 120</span>", "<span class=\"math-inline\">p &ge; 200</span>, <span class=\"math-inline\">s &ge; 220</span>, <span class=\"math-inline\">d &ge; 140</span>", "<span class=\"math-inline\">p &ge; 60</span>, <span class=\"math-inline\">s &ge; 90</span>, <span class=\"math-inline\">d &ge; 60</span>"], "explanation_html": "The demonstrative condition triggers when <span class=\"math-inline\">(p &ge; 170) \\land (s &ge; 180) \\land (d &ge; 120)</span>, raising `HeartAttackAlarm = true` to dispatch urgent localized medical intervention."}, {"id": 28, "week": "Week 12", "type": "MCQ", "title": "Dew Computing Healthcare Resilience", "question": "In the Dew-based Cloud-Fog-Edge-IoHT workflow, what action is taken when <strong>both Cloud and Fog connectivity are unavailable</strong>?", "options": ["The system immediately terminates and discards all vital sensor data", "The wearable edge device executes autonomous Dew-based processing, issues local acoustic alarms, caches data locally in SQLite, and synchronizes when connectivity is restored", "The mobile phone enters deep sleep mode to preserve battery", "The device displays a blue screen error message"], "answer": [1], "explanation": "Under <strong>Dew Computing</strong>, the mobile/edge device operates autonomously: vital signs are evaluated locally against emergency rules, local warnings sound, and delta readings are cached in local storage until network connectivity is re-established.", "question_html": "In the Dew-based Cloud-Fog-Edge-IoHT workflow, what action is taken when <strong>both Cloud and Fog connectivity are unavailable</strong>?", "options_html": ["The system immediately terminates and discards all vital sensor data", "The wearable edge device executes autonomous Dew-based processing, issues local acoustic alarms, caches data locally in SQLite, and synchronizes when connectivity is restored", "The mobile phone enters deep sleep mode to preserve battery", "The device displays a blue screen error message"], "explanation_html": "Under <strong>Dew Computing</strong>, the mobile/edge device operates autonomously: vital signs are evaluated locally against emergency rules, local warnings sound, and delta readings are cached in local storage until network connectivity is re-established."}, {"id": 29, "week": "Week 12", "type": "MCQ", "title": "Comparative Uptime in Health Monitoring", "question": "From a healthcare service provider perspective, how does system <strong>Uptime and Availability</strong> compare across Pure Cloud vs. Cloud-Fog-Edge with Dew?", "options": ["Pure Cloud has the highest uptime; Dew has the lowest", "Pure Cloud has low availability (vulnerable to any Internet outage); Cloud-Fog-Edge with Dew achieves maximum availability due to local offline independence", "Both models have identical availability of 90%", "Dew computing reduces uptime because mobile batteries discharge rapidly"], "answer": [1], "explanation": "A pure Cloud system suffers from low overall uptime because any ISP drop or WAN congestion halts monitoring. Adding Fog and <strong>Dew Computing</strong> maximizes uptime by guaranteeing zero-downtime offline monitoring even during complete network partitions.", "question_html": "From a healthcare service provider perspective, how does system <strong>Uptime and Availability</strong> compare across Pure Cloud vs. Cloud-Fog-Edge with Dew?", "options_html": ["Pure Cloud has the highest uptime; Dew has the lowest", "Pure Cloud has low availability (vulnerable to any Internet outage); Cloud-Fog-Edge with Dew achieves maximum availability due to local offline independence", "Both models have identical availability of 90%", "Dew computing reduces uptime because mobile batteries discharge rapidly"], "explanation_html": "A pure Cloud system suffers from low overall uptime because any ISP drop or WAN congestion halts monitoring. Adding Fog and <strong>Dew Computing</strong> maximizes uptime by guaranteeing zero-downtime offline monitoring even during complete network partitions."}, {"id": 30, "week": "Week 12", "type": "MCQ", "title": "Energy Consumption at Mobile Tier", "question": "In the iFogSim IoHT simulation results, why did the energy consumption at the <strong>Mobile Devices</strong> remain virtually identical between the Fog-based and Cloud-based models?", "options": ["Because mobile devices do not use electrical energy", "Because mobile devices performed the exact same sensor data acquisition and local display workload regardless of whether upstream processing was handled by Fog or Cloud", "Because the simulator clamped all battery levels to 100%", "Because the mobile phones were permanently plugged into AC wall chargers"], "answer": [1], "explanation": "The mobile edge device runs the same Client Module (sensor ingestion, basic telemetry packaging, and display rendering) under both architectures. Hence, its local workload and energy consumption remain essentially constant; the massive energy savings occur at the Cloud Datacenter tier.", "question_html": "In the iFogSim IoHT simulation results, why did the energy consumption at the <strong>Mobile Devices</strong> remain virtually identical between the Fog-based and Cloud-based models?", "options_html": ["Because mobile devices do not use electrical energy", "Because mobile devices performed the exact same sensor data acquisition and local display workload regardless of whether upstream processing was handled by Fog or Cloud", "Because the simulator clamped all battery levels to 100%", "Because the mobile phones were permanently plugged into AC wall chargers"], "explanation_html": "The mobile edge device runs the same Client Module (sensor ingestion, basic telemetry packaging, and display rendering) under both architectures. Hence, its local workload and energy consumption remain essentially constant; the massive energy savings occur at the Cloud Datacenter tier."}];
+    const TOTAL_Q = QUESTIONS.length;
+    const WEEK_NUM = 12;
+
+    // User State
+    const state = {
+      currentIdx: 0,
+      userAnswers: {},       // qId -> [selectedIdxs]
+      userResults: {},       // qId -> boolean (true=correct, false=incorrect)
+      flagged: new Set(),
+      viewMode: 'card',       // 'card' or 'list'
+      msqTempSelections: {}  // qId -> Set of selected indices before submit
+    };
+
+    // DOM Elements
+    const cardViewContainer = document.getElementById('cardViewContainer');
+    const listViewContainer = document.getElementById('listViewContainer');
+    const headerQCtr = document.getElementById('headerQCtr');
+    const scoreText = document.getElementById('scoreText');
+    const progressFill = document.getElementById('progressFill');
+    const btnModeCard = document.getElementById('btnModeCard');
+    const btnModeList = document.getElementById('btnModeList');
+    const btnThemeToggle = document.getElementById('btnThemeToggle');
+    const btnOpenNav = document.getElementById('btnOpenNav');
+    const btnCloseNav = document.getElementById('btnCloseNav');
+    const navModalBackdrop = document.getElementById('navModalBackdrop');
+    const matrixGrid = document.getElementById('matrixGrid');
+
+    // Card View DOM
+    const cardQNumBadge = document.getElementById('cardQNumBadge');
+    const cardTypeBadge = document.getElementById('cardTypeBadge');
+    const cardFlagBtn = document.getElementById('cardFlagBtn');
+    const flagBtnText = document.getElementById('flagBtnText');
+    const cardTitle = document.getElementById('cardTitle');
+    const cardPrompt = document.getElementById('cardPrompt');
+    const cardMsqHint = document.getElementById('cardMsqHint');
+    const cardOptionsContainer = document.getElementById('cardOptionsContainer');
+    const cardMsqSubmitBtn = document.getElementById('cardMsqSubmitBtn');
+    const cardFeedbackPanel = document.getElementById('cardFeedbackPanel');
+    const cardFbStatus = document.getElementById('cardFbStatus');
+    const cardFbAnswerCallout = document.getElementById('cardFbAnswerCallout');
+    const cardFbExplanation = document.getElementById('cardFbExplanation');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+
+    // Summary Modal DOM
+    const summaryModalBackdrop = document.getElementById('summaryModalBackdrop');
+    const sumBadge = document.getElementById('sumBadge');
+    const sumScoreVal = document.getElementById('sumScoreVal');
+    const sumAccuracyVal = document.getElementById('sumAccuracyVal');
+    const sumCorrectVal = document.getElementById('sumCorrectVal');
+    const sumIncorrectVal = document.getElementById('sumIncorrectVal');
+    const btnSumReview = document.getElementById('btnSumReview');
+    const btnSumRetake = document.getElementById('btnSumRetake');
+
+    // Init Theme
+    (function initTheme() {
+      const savedTheme = localStorage.getItem('nptel_quiz_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+
+    btnThemeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('nptel_quiz_theme', next);
+    });
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    function init() {
+      buildMatrix();
+      renderCurrentCard();
+      updateScoreboard();
+      setupEvents();
+    }
+
+    function buildMatrix() {
+      matrixGrid.innerHTML = '';
+      QUESTIONS.forEach((q, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'matrix-btn';
+        btn.id = 'matBtn_' + q.id;
+        btn.textContent = q.id;
+        btn.addEventListener('click', () => {
+          state.currentIdx = idx;
+          if (state.viewMode === 'card') {
+            renderCurrentCard();
+          } else {
+            const el = document.getElementById('listQCard_' + q.id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          closeNavModal();
+        });
+        matrixGrid.appendChild(btn);
+      });
+      updateMatrixVisuals();
+    }
+
+    function updateMatrixVisuals() {
+      QUESTIONS.forEach((q, idx) => {
+        const btn = document.getElementById('matBtn_' + q.id);
+        if (!btn) return;
+        
+        btn.classList.toggle('current', idx === state.currentIdx);
+        btn.classList.toggle('flagged', state.flagged.has(q.id));
+        
+        if (state.userResults[q.id] === true) {
+          btn.className = 'matrix-btn correct' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        } else if (state.userResults[q.id] === false) {
+          btn.className = 'matrix-btn incorrect' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        } else {
+          btn.className = 'matrix-btn' + (idx === state.currentIdx ? ' current' : '') + (state.flagged.has(q.id) ? ' flagged' : '');
+        }
+      });
+    }
+
+    function updateScoreboard() {
+      const answeredKeys = Object.keys(state.userResults);
+      const totalAnswered = answeredKeys.length;
+      let correctCount = 0;
+      answeredKeys.forEach(k => {
+        if (state.userResults[k] === true) correctCount++;
+      });
+
+      headerQCtr.textContent = 'Q ' + (state.currentIdx + 1) + ' / ' + TOTAL_Q;
+      scoreText.textContent = correctCount + ' / ' + totalAnswered;
+      
+      const pct = (totalAnswered / TOTAL_Q) * 100;
+      progressFill.style.width = pct + '%';
+      
+      updateMatrixVisuals();
+
+      // Check if all answered
+      if (totalAnswered === TOTAL_Q && !state.summaryShown) {
+        state.summaryShown = true;
+        setTimeout(showSummaryModal, 600);
+      }
+    }
+
+    // =========================================================================
+    // CARD MODE RENDERER
+    // =========================================================================
+    function renderCurrentCard() {
+      const q = QUESTIONS[state.currentIdx];
+      const isMSQ = q.type === 'MSQ';
+      const isAnswered = state.userAnswers[q.id] !== undefined;
+
+      // Meta
+      cardQNumBadge.textContent = 'Question ' + (state.currentIdx + 1) + ' of ' + TOTAL_Q;
+      cardTypeBadge.textContent = q.type;
+      cardTypeBadge.className = 'badge ' + (isMSQ ? 'badge-msq' : 'badge-mcq');
+      
+      // Flag state
+      const isFlagged = state.flagged.has(q.id);
+      cardFlagBtn.classList.toggle('flagged', isFlagged);
+      flagBtnText.textContent = isFlagged ? 'Flagged' : 'Flag';
+
+      // Title & Prompt
+      cardTitle.innerHTML = q.title;
+      cardPrompt.innerHTML = q.question_html;
+      cardMsqHint.style.display = isMSQ ? 'flex' : 'none';
+
+      // Options
+      cardOptionsContainer.innerHTML = '';
+      
+      // Initialize temp selections for MSQ
+      if (isMSQ && !state.msqTempSelections[q.id]) {
+        state.msqTempSelections[q.id] = new Set(state.userAnswers[q.id] || []);
+      }
+
+      q.options_html.forEach((optHtml, optIdx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn' + (isMSQ ? ' opt-btn-msq' : '');
+        btn.id = 'cardOpt_' + optIdx;
+
+        const letter = String.fromCharCode(65 + optIdx);
+        
+        let isSelected = false;
+        if (isAnswered) {
+          isSelected = state.userAnswers[q.id].includes(optIdx);
+        } else if (isMSQ) {
+          isSelected = state.msqTempSelections[q.id].has(optIdx);
+        }
+
+        // Format classes if answered
+        if (isAnswered) {
+          btn.classList.add('locked');
+          const isCorrect = q.answer.includes(optIdx);
+          if (isSelected && isCorrect) {
+            btn.classList.add('state-chosen-correct');
+          } else if (isSelected && !isCorrect) {
+            btn.classList.add('state-chosen-incorrect');
+          } else if (!isSelected && isCorrect) {
+            btn.classList.add('state-target-correct');
+          }
+        } else if (isMSQ && isSelected) {
+          btn.classList.add('state-msq-selected');
+        }
+
+        btn.innerHTML = `
+          <span class="opt-letter">${letter}</span>
+          <span class="opt-text">${optHtml}</span>
+        `;
+
+        btn.addEventListener('click', () => {
+          if (state.userAnswers[q.id] !== undefined) return; // Locked
+
+          if (isMSQ) {
+            // Toggle MSQ
+            if (state.msqTempSelections[q.id].has(optIdx)) {
+              state.msqTempSelections[q.id].delete(optIdx);
+            } else {
+              state.msqTempSelections[q.id].add(optIdx);
+            }
+            renderCurrentCard();
+          } else {
+            // Instant MCQ Answer
+            handleAnswerSubmit(q, [optIdx]);
+          }
+        });
+
+        cardOptionsContainer.appendChild(btn);
+      });
+
+      // MSQ Submit Button
+      if (isMSQ && !isAnswered) {
+        cardMsqSubmitBtn.style.display = 'inline-flex';
+        cardMsqSubmitBtn.disabled = state.msqTempSelections[q.id].size === 0;
+        cardMsqSubmitBtn.onclick = () => {
+          const chosen = Array.from(state.msqTempSelections[q.id]).sort();
+          handleAnswerSubmit(q, chosen);
+        };
+      } else {
+        cardMsqSubmitBtn.style.display = 'none';
+      }
+
+      // Feedback & Explanation
+      if (isAnswered) {
+        renderFeedbackPanel(cardFeedbackPanel, cardFbStatus, cardFbAnswerCallout, cardFbExplanation, q);
+        cardFeedbackPanel.style.display = 'block';
+      } else {
+        cardFeedbackPanel.style.display = 'none';
+      }
+
+      // Prev / Next button states
+      btnPrev.disabled = state.currentIdx === 0;
+      if (state.currentIdx === TOTAL_Q - 1) {
+        btnNext.innerHTML = `View Summary <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`;
+        btnNext.classList.add('btn-next-highlight');
+      } else {
+        btnNext.innerHTML = `Next Question <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+        if (isAnswered) {
+          btnNext.classList.add('btn-next-highlight');
+        } else {
+          btnNext.classList.remove('btn-next-highlight');
+        }
+      }
+
+      updateScoreboard();
+    }
+
+    // =========================================================================
+    // ANSWER PROCESSING & INSTANT FEEDBACK
+    // =========================================================================
+    function handleAnswerSubmit(q, selectedIndices) {
+      state.userAnswers[q.id] = selectedIndices;
+      
+      // Evaluate correctness
+      const correctIndices = [...q.answer].sort();
+      const userSorted = [...selectedIndices].sort();
+      
+      const isAllCorrect = (correctIndices.length === userSorted.length) &&
+        correctIndices.every((val, i) => val === userSorted[i]);
+      
+      state.userResults[q.id] = isAllCorrect;
+
+      if (state.viewMode === 'card') {
+        renderCurrentCard();
+      } else {
+        renderListCard(q);
+      }
+
+      updateScoreboard();
+    }
+
+    function renderFeedbackPanel(panelEl, statusEl, ansCalloutEl, expEl, q) {
+      const isCorrect = state.userResults[q.id];
+      const correctLetters = q.answer.map(idx => String.fromCharCode(65 + idx)).join(', ');
+
+      if (isCorrect) {
+        panelEl.className = 'feedback-panel status-correct';
+        statusEl.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          Correct! (+1 Mark)
+        `;
+      } else {
+        panelEl.className = 'feedback-panel status-incorrect';
+        statusEl.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Incorrect (0 Marks)
+        `;
+      }
+
+      ansCalloutEl.innerHTML = '<strong>Correct Answer:</strong> Option ' + correctLetters;
+      expEl.innerHTML = `<strong>Explanation:</strong> ` + q.explanation_html;
+    }
+
+    // =========================================================================
+    // LIST VIEW RENDERER (ALL 30 QUESTIONS)
+    // =========================================================================
+    function renderListView() {
+      listViewContainer.innerHTML = '';
+      QUESTIONS.forEach((q, idx) => {
+        const card = createListQuestionElement(q, idx);
+        listViewContainer.appendChild(card);
+      });
+    }
+
+    function createListQuestionElement(q, idx) {
+      const card = document.createElement('article');
+      card.className = 'question-card';
+      card.id = 'listQCard_' + q.id;
+
+      const isMSQ = q.type === 'MSQ';
+      const isAnswered = state.userAnswers[q.id] !== undefined;
+
+      // Meta
+      const metaRow = document.createElement('div');
+      metaRow.className = 'q-meta-row';
+      metaRow.innerHTML = `
+        <div class="q-tags">
+          <span class="badge badge-qnum">Question ${idx + 1} of ${TOTAL_Q}</span>
+          <span class="badge ${isMSQ ? 'badge-msq' : 'badge-mcq'}">${q.type}</span>
+        </div>
+        <button class="flag-btn ${state.flagged.has(q.id) ? 'flagged' : ''}" id="listFlag_${q.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>${state.flagged.has(q.id) ? 'Flagged' : 'Flag'}</span>
+        </button>
+      `;
+
+      metaRow.querySelector('#listFlag_' + q.id).addEventListener('click', () => {
+        if (state.flagged.has(q.id)) state.flagged.delete(q.id);
+        else state.flagged.add(q.id);
+        renderListCard(q);
+        updateMatrixVisuals();
+      });
+
+      card.appendChild(metaRow);
+
+      // Title & Prompt
+      const titleEl = document.createElement('h2');
+      titleEl.className = 'q-title';
+      titleEl.innerHTML = q.title;
+      card.appendChild(titleEl);
+
+      const promptEl = document.createElement('div');
+      promptEl.className = 'q-prompt';
+      promptEl.innerHTML = q.question_html;
+      card.appendChild(promptEl);
+
+      if (isMSQ) {
+        const msqHint = document.createElement('div');
+        msqHint.className = 'msq-hint';
+        msqHint.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Select all matching options, then click Submit Answer.`;
+        card.appendChild(msqHint);
+      }
+
+      // Options
+      const optsGrid = document.createElement('div');
+      optsGrid.className = 'options-grid';
+
+      if (isMSQ && !state.msqTempSelections[q.id]) {
+        state.msqTempSelections[q.id] = new Set(state.userAnswers[q.id] || []);
+      }
+
+      q.options_html.forEach((optHtml, optIdx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn' + (isMSQ ? ' opt-btn-msq' : '');
+        const letter = String.fromCharCode(65 + optIdx);
+        
+        let isSelected = false;
+        if (isAnswered) {
+          isSelected = state.userAnswers[q.id].includes(optIdx);
+        } else if (isMSQ) {
+          isSelected = state.msqTempSelections[q.id].has(optIdx);
+        }
+
+        if (isAnswered) {
+          btn.classList.add('locked');
+          const isCorrect = q.answer.includes(optIdx);
+          if (isSelected && isCorrect) btn.classList.add('state-chosen-correct');
+          else if (isSelected && !isCorrect) btn.classList.add('state-chosen-incorrect');
+          else if (!isSelected && isCorrect) btn.classList.add('state-target-correct');
+        } else if (isMSQ && isSelected) {
+          btn.classList.add('state-msq-selected');
+        }
+
+        btn.innerHTML = `<span class="opt-letter">${letter}</span><span class="opt-text">${optHtml}</span>`;
+
+        btn.addEventListener('click', () => {
+          if (state.userAnswers[q.id] !== undefined) return;
+          if (isMSQ) {
+            if (state.msqTempSelections[q.id].has(optIdx)) {
+              state.msqTempSelections[q.id].delete(optIdx);
+            } else {
+              state.msqTempSelections[q.id].add(optIdx);
+            }
+            renderListCard(q);
+          } else {
+            handleAnswerSubmit(q, [optIdx]);
+          }
+        });
+
+        optsGrid.appendChild(btn);
+      });
+      card.appendChild(optsGrid);
+
+      // Submit Button for MSQ
+      if (isMSQ && !isAnswered) {
+        const subBtn = document.createElement('button');
+        subBtn.className = 'msq-submit-btn';
+        subBtn.innerHTML = `Submit Answer <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+        subBtn.disabled = state.msqTempSelections[q.id].size === 0;
+        subBtn.onclick = () => {
+          const chosen = Array.from(state.msqTempSelections[q.id]).sort();
+          handleAnswerSubmit(q, chosen);
+        };
+        card.appendChild(subBtn);
+      }
+
+      // Feedback Panel
+      if (isAnswered) {
+        const fbPanel = document.createElement('div');
+        const fbStatus = document.createElement('div');
+        const fbAnsCallout = document.createElement('div');
+        const fbExp = document.createElement('div');
+        renderFeedbackPanel(fbPanel, fbStatus, fbAnsCallout, fbExp, q);
+        card.appendChild(fbPanel);
+      }
+
+      return card;
+    }
+
+    function renderListCard(q) {
+      const existing = document.getElementById('listQCard_' + q.id);
+      if (!existing) return;
+      const idx = QUESTIONS.findIndex(item => item.id === q.id);
+      const updated = createListQuestionElement(q, idx);
+      existing.replaceWith(updated);
+    }
+
+    // =========================================================================
+    // EVENT HANDLERS
+    // =========================================================================
+    function setupEvents() {
+      // Mode toggle
+      btnModeCard.addEventListener('click', () => {
+        state.viewMode = 'card';
+        btnModeCard.classList.add('active');
+        btnModeList.classList.remove('active');
+        cardViewContainer.style.display = 'block';
+        listViewContainer.style.display = 'none';
+        renderCurrentCard();
+      });
+
+      btnModeList.addEventListener('click', () => {
+        state.viewMode = 'list';
+        btnModeList.classList.add('active');
+        btnModeCard.classList.remove('active');
+        cardViewContainer.style.display = 'none';
+        listViewContainer.style.display = 'block';
+        renderListView();
+      });
+
+      // Card Navigation Prev / Next
+      btnPrev.addEventListener('click', () => {
+        if (state.currentIdx > 0) {
+          state.currentIdx--;
+          renderCurrentCard();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+
+      btnNext.addEventListener('click', () => {
+        if (state.currentIdx < TOTAL_Q - 1) {
+          state.currentIdx++;
+          renderCurrentCard();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          showSummaryModal();
+        }
+      });
+
+      // Card Flag Button
+      cardFlagBtn.addEventListener('click', () => {
+        const q = QUESTIONS[state.currentIdx];
+        if (state.flagged.has(q.id)) {
+          state.flagged.delete(q.id);
+        } else {
+          state.flagged.add(q.id);
+        }
+        renderCurrentCard();
+      });
+
+      // Navigator Modal Open/Close
+      btnOpenNav.addEventListener('click', openNavModal);
+      btnCloseNav.addEventListener('click', closeNavModal);
+      navModalBackdrop.addEventListener('click', (e) => {
+        if (e.target === navModalBackdrop) closeNavModal();
+      });
+
+      // Summary Modal Actions
+      btnSumReview.addEventListener('click', () => {
+        summaryModalBackdrop.classList.remove('open');
+      });
+
+      btnSumRetake.addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset all answers and retake Week ' + WEEK_NUM + '?')) {
+          state.userAnswers = {};
+          state.userResults = {};
+          state.msqTempSelections = {};
+          state.currentIdx = 0;
+          state.summaryShown = false;
+          summaryModalBackdrop.classList.remove('open');
+          renderCurrentCard();
+          if (state.viewMode === 'list') renderListView();
+          updateScoreboard();
+        }
+      });
+
+      // Keyboard navigation (Card mode)
+      document.addEventListener('keydown', (e) => {
+        if (navModalBackdrop.classList.contains('open') || summaryModalBackdrop.classList.contains('open')) return;
+        
+        if (e.key === 'ArrowLeft') {
+          btnPrev.click();
+        } else if (e.key === 'ArrowRight') {
+          btnNext.click();
+        } else if (['1', '2', '3', '4'].includes(e.key) && state.viewMode === 'card') {
+          const optIdx = parseInt(e.key) - 1;
+          const optBtn = document.getElementById('cardOpt_' + optIdx);
+          if (optBtn) optBtn.click();
+        }
+      });
+    }
+
+    function openNavModal() {
+      updateMatrixVisuals();
+      navModalBackdrop.classList.add('open');
+    }
+
+    function closeNavModal() {
+      navModalBackdrop.classList.remove('open');
+    }
+
+    function showSummaryModal() {
+      const answeredKeys = Object.keys(state.userResults);
+      let correct = 0;
+      answeredKeys.forEach(k => {
+        if (state.userResults[k] === true) correct++;
+      });
+      const incorrect = answeredKeys.length - correct;
+      const pct = (correct / TOTAL_Q) * 100;
+
+      sumScoreVal.textContent = correct;
+      sumAccuracyVal.textContent = pct.toFixed(1) + '%';
+      sumCorrectVal.textContent = correct;
+      sumIncorrectVal.textContent = incorrect;
+
+      if (pct >= 90) {
+        sumBadge.className = 'summary-badge badge-gold';
+        sumBadge.textContent = 'Elite + Gold Medal (Top 1%)';
+      } else if (pct >= 75) {
+        sumBadge.className = 'summary-badge badge-silver';
+        sumBadge.textContent = 'Elite + Silver Medal';
+      } else if (pct >= 60) {
+        sumBadge.className = 'summary-badge badge-elite';
+        sumBadge.textContent = 'Elite Certificate';
+      } else if (pct >= 40) {
+        sumBadge.className = 'summary-badge badge-pass';
+        sumBadge.textContent = 'Successfully Completed';
+      } else {
+        sumBadge.className = 'summary-badge badge-fail';
+        sumBadge.textContent = 'Needs Practice (< 40%)';
+      }
+
+      summaryModalBackdrop.classList.add('open');
+    }
+
+    // Boot
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
